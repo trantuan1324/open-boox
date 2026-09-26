@@ -102,4 +102,16 @@ describe('proxy', () => {
     const res = await proxy(new NextRequest('http://localhost/admin', { headers: { cookie: `access_token=${customer}` } }));
     expect(res.headers.get('location')).toBe('http://localhost/');
   });
+
+  it('fails fast when JWT_ACCESS_SECRET is missing', async () => {
+    vi.stubEnv('JWT_ACCESS_SECRET', '');
+    await expect(proxy(new NextRequest('http://localhost/books'))).rejects.toThrow('JWT_ACCESS_SECRET');
+  });
+
+  it('forwards the current path and query to Server Components, overwriting any client value', async () => {
+    const res = await proxy(
+      new NextRequest('http://localhost/books?q=nha&page=2', { headers: { 'x-request-path': '/spoofed' } }),
+    );
+    expect(res.headers.get('x-middleware-request-x-request-path')).toBe('/books?q=nha&page=2');
+  });
 });

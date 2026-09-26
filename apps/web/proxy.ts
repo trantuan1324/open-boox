@@ -1,10 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { ACCESS_COOKIE, REFRESH_COOKIE } from '@open-boox/shared';
 import { decideAccess } from './lib/auth/route-access';
 import { needsRefresh, verifyAccessToken } from './lib/auth/session';
 import { parseSetCookie } from './lib/auth/set-cookie';
-
-const ACCESS_COOKIE = 'access_token';
-const REFRESH_COOKIE = 'refresh_token';
+import { REQUEST_PATH_HEADER } from './lib/request-path';
 
 async function callRefresh(request: NextRequest): Promise<string[] | null> {
   const apiUrl = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
@@ -21,7 +20,8 @@ async function callRefresh(request: NextRequest): Promise<string[] | null> {
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  const secret = process.env.JWT_ACCESS_SECRET ?? '';
+  const secret = process.env.JWT_ACCESS_SECRET;
+  if (!secret) throw new Error('JWT_ACCESS_SECRET is not set');
   let claims = await verifyAccessToken(request.cookies.get(ACCESS_COOKIE)?.value, secret);
   const setCookies: string[] = [];
 
@@ -40,6 +40,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     }
   }
 
+  request.headers.set(REQUEST_PATH_HEADER, request.nextUrl.pathname + request.nextUrl.search);
   const decision = decideAccess(request.nextUrl.pathname, request.nextUrl.search, claims);
   const response =
     decision.type === 'redirect'

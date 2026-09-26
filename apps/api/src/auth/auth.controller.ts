@@ -1,8 +1,15 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res } from '@nestjs/common';
-import { type LoginInput, loginSchema, type PublicUser, type RegisterInput, registerSchema } from '@open-boox/shared';
+import {
+  type LoginInput,
+  loginSchema,
+  type PublicUser,
+  REFRESH_COOKIE,
+  type RegisterInput,
+  registerSchema,
+} from '@open-boox/shared';
 import type { Request, Response } from 'express';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
-import { clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from './auth.cookies';
+import { clearAuthCookies, setAuthCookies } from './auth.cookies';
 import { AuthService } from './auth.service';
 import type { AuthUser } from './auth-user';
 import { CurrentUser } from './decorators/current-user.decorator';

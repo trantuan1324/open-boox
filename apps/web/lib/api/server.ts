@@ -1,7 +1,8 @@
 import 'server-only';
 import type { PublicUser } from '@open-boox/shared';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { REQUEST_PATH_HEADER } from '../request-path';
 import { ApiError } from './error';
 
 const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
@@ -14,9 +15,12 @@ async function forward(path: string, init: RequestInit): Promise<Response> {
   });
 }
 
-export async function apiServer<T>(path: string, init: RequestInit = { cache: 'no-store' }): Promise<T> {
-  const res = await forward(path, init);
-  if (res.status === 401) redirect('/login');
+export async function apiServer<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await forward(path, { cache: 'no-store', ...init });
+  if (res.status === 401) {
+    const current = (await headers()).get(REQUEST_PATH_HEADER) ?? '/';
+    redirect(`/login?next=${encodeURIComponent(current)}`);
+  }
   if (!res.ok) throw await ApiError.fromResponse(res);
   return (await res.json()) as T;
 }

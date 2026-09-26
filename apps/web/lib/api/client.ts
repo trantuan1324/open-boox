@@ -30,6 +30,6 @@ export async function apiClient<T>(path: string, options: Options = {}): Promise
   });
   if (refreshed.ok) return parse<T>(await send(path, options));
 
-  window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+  window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
   throw await ApiError.fromResponse(res);
 }

@@ -11,7 +11,7 @@ describe('apiClient', () => {
   const fetchMock = vi.fn();
 
   beforeEach(() => {
-    vi.stubGlobal('window', { location: { pathname: '/account', assign } });
+    vi.stubGlobal('window', { location: { pathname: '/account', search: '?tab=2', assign } });
     vi.stubGlobal('fetch', fetchMock);
   });
   afterEach(() => {
@@ -45,7 +45,7 @@ describe('apiClient', () => {
   it('redirects to login with next when the refresh fails', async () => {
     fetchMock.mockResolvedValueOnce(unauthenticated()).mockResolvedValueOnce(unauthenticated());
     await expect(apiClient('/things')).rejects.toBeInstanceOf(ApiError);
-    expect(assign).toHaveBeenCalledWith('/login?next=%2Faccount');
+    expect(assign).toHaveBeenCalledWith('/login?next=%2Faccount%3Ftab%3D2');
   });
 
   it('never refreshes for /auth/* calls such as a wrong-password login', async () => {

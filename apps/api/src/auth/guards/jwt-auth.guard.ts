@@ -1,8 +1,8 @@
 import { type CanActivate, type ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ACCESS_COOKIE } from '@open-boox/shared';
 import type { Request } from 'express';
 import { DomainError } from '../../common/errors/domain-error';
-import { ACCESS_COOKIE } from '../auth.cookies';
 import type { AuthUser } from '../auth-user';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { TokensService } from '../tokens.service';

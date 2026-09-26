@@ -1,6 +1,9 @@
+import { Logger } from '@nestjs/common';
 import type { ApiErrorBody } from '@open-boox/shared';
 import type { NextFunction, Request, Response } from 'express';
 import { toErrorBody } from '../errors/to-error-body';
+
+const logger = new Logger('Exceptions');
 
 function isBodyParserError(err: unknown): boolean {
   return (
@@ -20,5 +23,6 @@ export function bodyParseErrorHandler(err: unknown, _req: Request, res: Response
     return;
   }
   const body = toErrorBody(err);
+  if (body.statusCode >= 500) logger.error(err instanceof Error ? err.stack : String(err));
   res.status(body.statusCode).json(body);
 }
