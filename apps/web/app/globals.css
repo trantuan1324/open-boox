@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "./theme.css";
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  background: var(--color-walnut-shadow);
+  color: var(--color-warm-cream);
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-walnut-shadow);
+  color: var(--color-warm-cream);
+}
