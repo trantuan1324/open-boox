@@ -21,9 +21,16 @@ export async function apiServer<T>(path: string, init: RequestInit = { cache: 'n
   return (await res.json()) as T;
 }
 
+// Used by the root layout header: an unreachable or failing API must not take down every page,
+// so anything other than a successful response is treated as "not signed in".
 export async function getCurrentUser(): Promise<PublicUser | null> {
-  const res = await forward('/auth/me', { cache: 'no-store' });
-  if (res.status === 401) return null;
-  if (!res.ok) throw await ApiError.fromResponse(res);
-  return (await res.json()) as PublicUser;
+  try {
+    const res = await forward('/auth/me', { cache: 'no-store' });
+    if (res.status === 401) return null;
+    if (!res.ok) throw await ApiError.fromResponse(res);
+    return (await res.json()) as PublicUser;
+  } catch (error) {
+    console.error('getCurrentUser failed', error);
+    return null;
+  }
 }

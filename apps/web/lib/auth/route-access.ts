@@ -18,7 +18,13 @@ export function decideAccess(pathname: string, search: string, session: { role: 
   return ALLOW;
 }
 
+const SAME_ORIGIN_BASE = 'http://same-origin.invalid';
+
 export function safeNextPath(raw: string | null | undefined, fallback = '/account'): string {
-  if (!raw || !raw.startsWith('/') || raw.startsWith('//') || raw.startsWith('/\\')) return fallback;
-  return raw;
+  if (!raw || !raw.startsWith('/')) return fallback;
+  // Let the WHATWG URL parser decide, the same way the browser will: it strips tab/newline
+  // characters, so "/\t/evil.com" becomes "//evil.com" and must be rejected.
+  const url = new URL(raw, SAME_ORIGIN_BASE);
+  if (url.origin !== SAME_ORIGIN_BASE) return fallback;
+  return url.pathname + url.search + url.hash;
 }

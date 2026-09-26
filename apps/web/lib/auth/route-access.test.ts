@@ -41,7 +41,18 @@ describe('safeNextPath', () => {
     expect(safeNextPath('/account/orders?page=2')).toBe('/account/orders?page=2');
   });
 
-  it.each([undefined, null, '', 'https://evil.com', '//evil.com', '/\\evil.com', 'account'])(
+  it.each([
+    undefined,
+    null,
+    '',
+    'https://evil.com',
+    '//evil.com',
+    '/\\evil.com',
+    'account',
+    '/\t/evil.com',
+    '/\n/evil.com',
+    '/\r/evil.com',
+  ])(
     'falls back to /account for %s',
     (raw) => {
       expect(safeNextPath(raw)).toBe('/account');
