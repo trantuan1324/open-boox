@@ -1,3 +1,5 @@
 .DS_Store
 AGENTS.md
 .agents/
+.worktrees/
+.superpowers/
