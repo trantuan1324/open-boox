@@ -16,7 +16,7 @@
 
 **Giả định:** giao diện tiếng Việt, tiền VND; giao diện theo design system trong `ui_design/`.
 
-**Không làm:** đánh giá/review, gợi ý sách, email thật, đa ngôn ngữ, ứng dụng mobile, hoàn tiền, đổi gói, tự động trừ tiền định kỳ, vai trò shipper, trang admin quản lý gói.
+**Không làm:** đánh giá/review, gợi ý sách, email thật, đa ngôn ngữ, ứng dụng mobile, hoàn tiền, đổi gói, tự động trừ tiền định kỳ, vai trò shipper, trang admin quản lý gói, khách tự hủy yêu cầu mượn (loan `REQUESTED` chỉ bị hủy qua luồng shipment `FAILED` của admin — xem 4.6).
 
 **Tiêu chí thành công:**
 - Chạy local bằng `pnpm dev` (sau lần đầu `pnpm install` + `pnpm db:setup`).
@@ -109,15 +109,19 @@ Tiền là **số nguyên VND**. Id là `cuid`. Enum viết hoa. Các thời đi
 
 - Interface `PaymentGateway.createCheckout(payment) → { redirectUrl }`. Bản `MockGateway` trả `/checkout/mock/:paymentId`.
 - Trang mock có hai nút "Thanh toán thành công" / "Thất bại", gọi `POST /payments/:id/mock-callback { success }`.
-- Callback **idempotent**: payment không còn `PENDING` → trả trạng thái hiện tại, không làm gì thêm.
-- Trong một transaction: cập nhật `Payment.status`, rồi gọi handler tương ứng.
+- **Một chủ sở hữu duy nhất:** mọi chuyển `Payment` khỏi `PENDING` đều đi qua `PaymentsService.settle(paymentId, SUCCEEDED | FAILED)` — dùng bởi mock callback, lệnh hủy đơn của khách và cron. `settle` chạy trong một transaction: `UPDATE "Payment" SET status = … WHERE id = … AND status = 'PENDING'`; 0 dòng bị ảnh hưởng → payment đã được xử lý, trả trạng thái hiện tại, không gọi handler (idempotent, và khi callback thành công đua với cron thì chỉ một bên thắng). Nếu cập nhật được → gọi handler tương ứng trong cùng transaction.
+- Handler **không bao giờ** tự đổi `Payment`; Order/Subscription không bị module nào khác hủy trực tiếp mà luôn đi qua `settle(…, FAILED)`.
+- Nếu `PaymentSucceededHandler` ném domain error (xung đột nghiệp vụ lúc kích hoạt), transaction bị rollback, rồi `settle` chuyển payment sang `FAILED` (mock: coi như cổng thanh toán từ chối) và gọi `PaymentFailedHandler`.
 
 ### 4.2 Gói đăng ký
 
 - **Đăng ký** `POST /subscriptions { planCode }`: tạo `Subscription PENDING_PAYMENT` + `Payment`. Nếu user đã có subscription `PENDING_PAYMENT` hoặc `ACTIVE` → `409 SUBSCRIPTION_ALREADY_EXISTS` (index ở 3.3 đảm bảo cả khi request song song).
   - Thanh toán thành công → `ACTIVE`, `currentPeriodStart = now`, `currentPeriodEnd = now + 30 ngày`.
   - Thanh toán thất bại → `CANCELLED`.
-- **Gia hạn** `POST /subscriptions/renew`: trả trước thủ công cho subscription gần nhất của user ở trạng thái `ACTIVE` hoặc `EXPIRED`. Thành công → `currentPeriodEnd = max(now, currentPeriodEnd) + 30 ngày`, trạng thái `ACTIVE`. Thất bại → subscription giữ nguyên. Nếu việc kích hoạt lại vi phạm index (user đã có subscription mở khác) → `409 SUBSCRIPTION_ALREADY_EXISTS`.
+- **Gia hạn** `POST /subscriptions/renew`: **chỉ** áp dụng cho subscription `ACTIVE` của user (tối đa một, do index); không có → `409 SUBSCRIPTION_INACTIVE`. Gói đã `EXPIRED` thì user **đăng ký mới** (được chọn lại cùng gói) — không có đường "kích hoạt lại" một subscription `EXPIRED` qua API.
+  - Thành công → `currentPeriodEnd = max(now, currentPeriodEnd) + 30 ngày`, trạng thái `ACTIVE`. (Nếu cron đã chuyển subscription sang `EXPIRED` trong lúc payment gia hạn đang chờ, bước này đưa nó về `ACTIVE`; nếu user đã kịp đăng ký subscription khác nên vi phạm index → rollback và payment `FAILED` theo 4.1.)
+  - Thất bại → subscription giữ nguyên.
+- `PaymentFailedHandler` cho subscription: subscription đang `PENDING_PAYMENT` → `CANCELLED`; trạng thái khác (payment gia hạn) → giữ nguyên.
 - **Hết hạn:** cron hằng ngày chuyển `ACTIVE` có `currentPeriodEnd < now` sang `EXPIRED`. Khi mượn, service vẫn kiểm tra `currentPeriodEnd > now` để không phụ thuộc độ trễ của cron.
 - **Gói hết hạn khi còn sách:** user giữ sách đến khi trả, không phạt, không mượn thêm được; giao diện nhắc trả sách.
 
@@ -148,7 +152,7 @@ Trong một transaction:
 Sau đó:
 - Thanh toán thành công → `PAID`, tạo `Shipment ORDER_DELIVERY`.
 - Thanh toán thất bại → `CANCELLED`, hoàn kho.
-- Khách hủy được chỉ khi `PENDING_PAYMENT` (`POST /orders/:id/cancel`) → `CANCELLED`, hoàn kho, payment `PENDING` → `FAILED`; ngược lại → `409 ORDER_NOT_CANCELLABLE`.
+- Khách hủy được chỉ khi `PENDING_PAYMENT` (`POST /orders/:id/cancel`): gọi `settle(payment, FAILED)`, handler hủy đơn + hoàn kho. Đơn không còn `PENDING_PAYMENT` → `409 ORDER_NOT_CANCELLABLE`.
 - Shipment `PICKED_UP` → đơn `SHIPPING`; `DELIVERED` → đơn `DELIVERED`.
 
 ### 4.6 Shipment
@@ -161,7 +165,7 @@ Sau đó:
 
 | Loại | Hành động admin |
 |---|---|
-| `ORDER_DELIVERY` | Chỉ **retry**; đơn giữ `SHIPPING`. |
+| `ORDER_DELIVERY` | Chỉ **retry**; đơn giữ nguyên trạng thái (`PAID` hoặc `SHIPPING`) và tiếp tục khi shipment mới tiến triển. |
 | `LOAN_DELIVERY` | **Retry**, hoặc **hủy** (`POST /admin/shipments/:id/cancel-loans`): loan → `CANCELLED`, bản sách → `AVAILABLE`. |
 | `LOAN_PICKUP` | Chỉ **retry**. |
 
@@ -174,7 +178,7 @@ Mỗi job nhận một `Clock` được inject để test gọi trực tiếp v�
 | Job | Tần suất | Việc làm |
 |---|---|---|
 | `expireSubscriptions` | hằng ngày 00:00 | `ACTIVE` có `currentPeriodEnd < now` → `EXPIRED` |
-| `cancelStalePending` | mỗi 5 phút | `Order PENDING_PAYMENT` quá 30 phút → `CANCELLED` + hoàn kho; `Subscription PENDING_PAYMENT` quá 30 phút → `CANCELLED`; mọi `Payment PENDING` quá 30 phút (kể cả payment gia hạn) → `FAILED` |
+| `failStalePayments` | mỗi 5 phút | **Chỉ** gọi `settle(…, FAILED)` cho mọi `Payment PENDING` quá 30 phút. Việc hủy đơn + hoàn kho, hủy subscription `PENDING_PAYMENT` do `PaymentFailedHandler` đảm nhận; payment gia hạn thất bại không đổi subscription. |
 
 ## 5. Xác thực và bảo mật
 
@@ -258,7 +262,8 @@ Tập trung vào luật nghiệp vụ và race condition; không test UI vụn v
     - Sách còn 1 bản cho mượn, 2 user mượn song song → đúng 1 thành công, 1 `NO_COPY_AVAILABLE`.
     - 2 request đăng ký gói song song của cùng user → đúng 1 thành công, 1 `SUBSCRIPTION_ALREADY_EXISTS`.
     - 3 request refresh song song với cùng refresh token → cả 3 thành công.
-  - **Luồng:** thanh toán thành công/thất bại cho đơn và gói; callback gọi lặp (idempotent); retry và hủy loan khi shipment `FAILED`; chuyển trạng thái shipment sai; cron `cancelStalePending` (hoàn kho); cron `expireSubscriptions` (gọi trực tiếp với `Clock` giả, kiểm tra user hết hạn không mượn được nhưng vẫn trả được); RBAC (customer gọi API admin → 403); endpoint ghi nhận body không phải JSON → 415.
+    - Callback thanh toán thành công và `failStalePayments` chạy đồng thời trên cùng payment → đúng một bên thắng, handler chạy đúng một lần.
+  - **Luồng:** thanh toán thành công/thất bại cho đơn và gói; callback gọi lặp (idempotent); retry và hủy loan khi shipment `FAILED`; chuyển trạng thái shipment sai; cron `failStalePayments` (đơn bị hủy và hoàn kho **đúng một lần**; subscription `PENDING_PAYMENT` bị hủy; payment gia hạn quá hạn → `FAILED` mà subscription `ACTIVE` giữ nguyên); khách hủy đơn rồi callback thành công đến sau → không đổi gì; gia hạn thành công → `currentPeriodEnd` kéo dài đúng (còn hạn: cộng từ `currentPeriodEnd`); gia hạn khi không có subscription `ACTIVE` → `SUBSCRIPTION_INACTIVE`; cron đã expire subscription trong lúc payment gia hạn chờ → thanh toán thành công đưa về `ACTIVE`, còn nếu user đã có subscription mở khác → payment `FAILED`, không vi phạm index; cron `expireSubscriptions` (gọi trực tiếp với `Clock` giả, kiểm tra user hết hạn không mượn được nhưng vẫn trả được); RBAC (customer gọi API admin → 403); endpoint ghi nhận body không phải JSON → 415.
 - **E2E (Playwright):**
   1. Đăng ký gói → mượn → admin giao → trả → admin thu hồi.
   2. Mua → thanh toán mock → admin giao.
@@ -285,7 +290,7 @@ Mỗi mốc có implementation plan riêng và chạy được độc lập khi 
 |---|---|
 | **M0** | Monorepo, Docker Compose, Prisma + migration nền, `packages/shared`, auth (register/login/refresh/logout, grace period), RBAC, exception filter, layout web + design system, middleware |
 | **M1** | Danh mục sách, tồn kho bán, bản cho mượn; trang `/books`, `/books/[slug]`; `/admin/books`; seed |
-| **M2** | Địa chỉ, giỏ hàng, đơn mua, thanh toán mock, cron `cancelStalePending` (phần đơn); trang checkout, `/account/orders` |
+| **M2** | Địa chỉ, giỏ hàng, đơn mua, thanh toán mock, cron `failStalePayments` + `PaymentFailedHandler` cho đơn; trang checkout, `/account/orders` |
 | **M3** | Shipments (máy trạng thái, event, retry), handler cho đơn mua; `/admin/orders`, `/admin/shipments`, timeline giao hàng |
-| **M4** | Gói đăng ký, gia hạn, cron `expireSubscriptions` và phần subscription của `cancelStalePending`; mượn/trả sách, handler cho loan, hủy loan; `/plans`, `/borrow/confirm`, `/account/loans`, `/account/subscription`, `/admin/loans` |
+| **M4** | Gói đăng ký, gia hạn, cron `expireSubscriptions`, `PaymentFailedHandler` cho subscription; mượn/trả sách, handler cho loan, hủy loan; `/plans`, `/borrow/confirm`, `/account/loans`, `/account/subscription`, `/admin/loans` |
 | **M5** | Playwright E2E, GitHub Actions CI |
