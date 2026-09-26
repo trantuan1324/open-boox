@@ -182,9 +182,10 @@ Mỗi job nhận một `Clock` được inject để test gọi trực tiếp v�
 
 ## 5. Xác thực và bảo mật
 
-- **JWT HS256**: `access_token` 15 phút, `refresh_token` 7 ngày. Cả hai là cookie `httpOnly`, `SameSite=Lax`, `Secure` ở production. Refresh cookie có `Path=/api/auth` (cố định — client retry phải gọi đúng `/api/auth/refresh`).
+- **JWT HS256**: `access_token` 15 phút, `refresh_token` 7 ngày. Cả hai là cookie `httpOnly`, `SameSite=Lax`, `Secure` ở production. Cả hai cookie đều `Path=/` — refresh cookie **phải** là `/` vì proxy (6.3) chạy trên route trang như `/account` và trình duyệt chỉ gửi cookie tới path khớp. Refresh token là chuỗi ngẫu nhiên 32 byte (không phải JWT); DB lưu `tokenHash = HMAC-SHA256(JWT_REFRESH_SECRET, token)`.
+- NestJS dùng global prefix `/api`; Next.js rewrite `/api/:path*` → `${API_INTERNAL_URL}/api/:path*`. Các endpoint dưới đây viết tương đối với `/api`.
 - **Cùng origin:** Next.js rewrite `/api/*` → NestJS. Không cấu hình CORS; không token nào nằm trong JavaScript.
-- **Endpoint:** `POST /auth/register`, `/auth/login`, `/auth/refresh` (xoay vòng, áp grace period ở 3.1), `/auth/logout` (đặt `revokedAt`), `GET /auth/me`.
+- **Endpoint:** `POST /auth/register`, `/auth/login`, `/auth/refresh` (xoay vòng, áp grace period ở 3.1), `/auth/logout` (đặt `revokedAt`), `GET /auth/me`. Sai email/mật khẩu → `401 INVALID_CREDENTIALS` (cùng một mã cho cả hai trường hợp). Refresh thất bại → 401 và xóa cả hai cookie.
 - **CSRF (quyết định có chủ ý):** `SameSite=Lax` + cùng origin + mọi endpoint ghi **chỉ nhận `application/json`** (khác → `415 UNSUPPORTED_MEDIA_TYPE`).
 - **Phân quyền:** `JwtAuthGuard` + `RolesGuard` ở NestJS là nguồn sự thật.
 
@@ -213,7 +214,9 @@ Mọi danh sách có trạng thái rỗng (giỏ trống, chưa mượn, chưa c
 - Bộ lọc `/books` dùng **URL searchParams**, render phía server.
 - **Ghi:** Client Component gọi `apiClient()` (fetch tới `/api/*`), thành công thì `router.refresh()`. Gặp 401 → gọi `/api/auth/refresh` một lần rồi thử lại; vẫn lỗi → chuyển `/login`.
 
-### 6.3 Middleware
+### 6.3 Proxy (middleware)
+
+Next.js 16 đặt tên file là `proxy.ts` (hàm `proxy`) thay cho `middleware.ts`; logic dưới đây giữ nguyên.
 
 1. **Refresh:** nếu access token còn < 60 giây (hoặc đã hết) và có refresh token → gọi `/api/auth/refresh`, ghi cookie mới vào **cả request (`NextResponse.next({ request: { headers } })`) lẫn response**, để Server Component trong cùng lượt đọc được token mới. Refresh thất bại → cho request đi tiếp (API trả 401, `apiServer()` xử lý).
 2. **Điều hướng:** verify JWT bằng `jose` (HS256, dùng chung `JWT_ACCESS_SECRET`). Chưa đăng nhập vào `/account/*`, `/checkout/*`, `/borrow/*` → `/login?next=…`. Role khác `ADMIN` vào `/admin/*` → `/`.
@@ -237,7 +240,7 @@ Mọi danh sách có trạng thái rỗng (giỏ trống, chưa mượn, chưa c
 | HTTP | `code` |
 |---|---|
 | 400 | `VALIDATION_ERROR` (kèm `fields`) |
-| 401 | `UNAUTHENTICATED` |
+| 401 | `UNAUTHENTICATED`, `INVALID_CREDENTIALS` |
 | 403 | `FORBIDDEN` |
 | 404 | `NOT_FOUND` |
 | 409 | `LOAN_LIMIT_EXCEEDED`, `OUT_OF_STOCK`, `NO_COPY_AVAILABLE`, `SUBSCRIPTION_INACTIVE`, `SUBSCRIPTION_ALREADY_EXISTS`, `ORDER_NOT_CANCELLABLE`, `INVALID_SHIPMENT_TRANSITION`, `LOAN_NOT_RETURNABLE`, `DUPLICATE`, `IN_USE` |
@@ -254,7 +257,7 @@ Nguyên tắc: **409 cho mọi xung đột với trạng thái hiện tại.**
 
 Tập trung vào luật nghiệp vụ và race condition; không test UI vụn vặt.
 
-- **Unit (Jest):** máy trạng thái shipment; tính phí ship; tính kỳ hạn gói (đăng ký, gia hạn khi còn hạn/đã hết hạn); kiểm tra hạn mức mượn; điều kiện hợp lệ của refresh token (grace period, logout).
+- **Unit:** Jest cho `apps/api`; Vitest cho `packages/shared` và `apps/web` (hợp với ESM của `jose`/Next). Nội dung: máy trạng thái shipment; tính phí ship; tính kỳ hạn gói (đăng ký, gia hạn khi còn hạn/đã hết hạn); kiểm tra hạn mức mượn; điều kiện hợp lệ của refresh token (grace period, logout).
 - **Integration (Jest + Supertest) trên Postgres thật** (`bookstore_test`). `globalSetup` chạy `prisma migrate deploy` bằng cùng bộ migration (gồm migration SQL viết tay); truncate dữ liệu giữa các test.
   - **Race:**
     - Gói `maxBooks = 2`, 5 request mượn song song (mỗi request 1 cuốn) → đúng 2 thành công, 3 nhận `LOAN_LIMIT_EXCEEDED`.
