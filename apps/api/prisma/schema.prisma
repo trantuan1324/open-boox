@@ -35,3 +35,52 @@ model RefreshToken {
 
   @@index([userId])
 }
+
+enum CopyStatus {
+  AVAILABLE
+  RESERVED
+  ON_LOAN
+  LOST
+}
+
+model Category {
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
+  books Book[]
+}
+
+model Book {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  title       String
+  author      String
+  isbn        String     @unique
+  description String
+  coverUrl    String?
+  categoryId  String
+  category    Category   @relation(fields: [categoryId], references: [id])
+  salePrice   Int?
+  createdAt   DateTime   @default(now()) @db.Timestamptz(3)
+  saleStock   SaleStock?
+  copies      BookCopy[]
+
+  @@index([categoryId])
+}
+
+model SaleStock {
+  bookId   String @id
+  book     Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  quantity Int    @default(0)
+}
+
+model BookCopy {
+  id        String     @id @default(cuid())
+  bookId    String
+  book      Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  barcode   String     @unique
+  status    CopyStatus @default(AVAILABLE)
+  createdAt DateTime   @default(now()) @db.Timestamptz(3)
+
+  @@index([bookId, status])
+}
