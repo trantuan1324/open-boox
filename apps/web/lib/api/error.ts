@@ -23,3 +23,8 @@ export class ApiError extends Error {
     return new ApiError(res.status, res.status === 401 ? 'UNAUTHENTICATED' : 'INTERNAL_ERROR', res.statusText);
   }
 }
+
+export function nullOn404(error: unknown): null {
+  if (error instanceof ApiError && error.status === 404) return null;
+  throw error;
+}

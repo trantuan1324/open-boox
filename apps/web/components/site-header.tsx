@@ -9,8 +9,12 @@ export async function SiteHeader() {
         Open Boox
       </Link>
       <nav className="flex gap-6 text-[12px] font-medium uppercase">
+        <Link href="/books">Sách</Link>
         {user ? (
-          <Link href="/account">Tài khoản</Link>
+          <>
+            {user.role === 'ADMIN' && <Link href="/admin">Quản trị</Link>}
+            <Link href="/account">Tài khoản</Link>
+          </>
         ) : (
           <>
             <Link href="/login">Đăng nhập</Link>

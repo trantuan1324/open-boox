@@ -11,7 +11,7 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
-const { apiServer, getCurrentUser } = await import('./server');
+const { apiServer, apiPublic, getCurrentUser } = await import('./server');
 const { redirect } = await import('next/navigation');
 
 describe('getCurrentUser', () => {
@@ -73,5 +73,28 @@ describe('apiServer', () => {
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 401 }));
     await expect(apiServer('/things')).rejects.toThrow('NEXT_REDIRECT');
     expect(redirect).toHaveBeenCalledWith('/login?next=%2Faccount%2Forders%3Fpage%3D2');
+  });
+});
+
+describe('apiPublic', () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    fetchMock.mockReset();
+  });
+
+  it('fetches without cookies and revalidates every 60 seconds', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json([{ id: 'c1' }]));
+    await expect(apiPublic('/categories')).resolves.toEqual([{ id: 'c1' }]);
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringMatching(/\/api\/categories$/), { next: { revalidate: 60 } });
+  });
+
+  it('throws ApiError with the status on failure', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ statusCode: 404, code: 'NOT_FOUND', message: 'x' }, { status: 404 }));
+    await expect(apiPublic('/books/nope')).rejects.toMatchObject({ status: 404, code: 'NOT_FOUND' });
   });
 });

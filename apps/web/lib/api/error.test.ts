@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ApiError } from './error';
+import { ApiError, nullOn404 } from './error';
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -25,5 +25,17 @@ describe('ApiError.fromResponse', () => {
   it('ignores unknown codes', async () => {
     const err = await ApiError.fromResponse(json(418, { code: 'TEAPOT', message: 'x' }));
     expect(err.code).toBe('INTERNAL_ERROR');
+  });
+});
+
+describe('nullOn404', () => {
+  it('returns null for a 404 ApiError', () => {
+    expect(nullOn404(new ApiError(404, 'NOT_FOUND', 'x'))).toBeNull();
+  });
+
+  it('rethrows anything else', () => {
+    const boom = new ApiError(500, 'INTERNAL_ERROR', 'x');
+    expect(() => nullOn404(boom)).toThrow(boom);
+    expect(() => nullOn404(new Error('network'))).toThrow('network');
   });
 });

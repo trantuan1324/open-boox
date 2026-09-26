@@ -25,6 +25,13 @@ export async function apiServer<T>(path: string, init: RequestInit = {}): Promis
   return (await res.json()) as T;
 }
 
+// Public catalog data: no cookies, so the response is shared by every visitor and cached for 60s (spec §6.2).
+export async function apiPublic<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_URL}/api${path}`, { next: { revalidate: 60 } });
+  if (!res.ok) throw await ApiError.fromResponse(res);
+  return (await res.json()) as T;
+}
+
 // Used by the root layout header: an unreachable or failing API must not take down every page,
 // so anything other than a successful response is treated as "not signed in".
 export async function getCurrentUser(): Promise<PublicUser | null> {
