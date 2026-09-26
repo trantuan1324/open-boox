@@ -60,9 +60,12 @@ Tiền là **số nguyên VND**. Id là `cuid`. Enum viết hoa. Các thời đi
 ### 3.2 Danh mục và kho
 
 - **`Category`**: `name`, `slug` (unique).
-- **`Book`**: `slug` (unique), `title`, `author` (chuỗi), `isbn`, `description`, `coverUrl?`, `categoryId`, `salePrice?` (null = không bán).
-- **`SaleStock`**: `bookId` (PK), `quantity` (≥ 0). Tồn kho bán, theo số lượng.
-- **`BookCopy`**: `bookId`, `barcode` (unique), `status` `AVAILABLE | RESERVED | ON_LOAN | LOST`. Mỗi cuốn cho mượn là một bản ghi.
+- **`Book`**: `slug` (unique), `title`, `author` (chuỗi), `isbn` (unique), `description`, `coverUrl?`, `categoryId`, `salePrice?` (null = không bán).
+  - `slug` sinh từ `title` lúc tạo (bỏ dấu, `đ → d`, trùng thì thêm `-2`, `-3`, …) và **không đổi** khi sửa `title`, để link cũ không chết.
+- **`SaleStock`**: `bookId` (PK), `quantity` (≥ 0, CHECK constraint). Tồn kho bán, theo số lượng. Được tạo (quantity 0) **cùng transaction** với `Book`, nên mọi sách luôn có đúng một dòng stock.
+- **`BookCopy`**: `bookId`, `barcode` (unique, tự sinh dạng `OB-000001`), `status` `AVAILABLE | RESERVED | ON_LOAN | LOST`. Mỗi cuốn cho mượn là một bản ghi.
+- **Xóa `Book`:** `SaleStock` và `BookCopy` bị xóa theo (cascade). Từ M2/M4, `OrderItem` và `Loan` tham chiếu với `onDelete: Restrict` → xóa sách đã phát sinh giao dịch bị `P2003` → `409 IN_USE` (§7).
+- **Tìm kiếm không phân biệt dấu:** migration SQL viết tay bật extension `unaccent` và tạo hàm `immutable_unaccent(text)` (wrapper `IMMUTABLE`). Không có index trigram — dữ liệu nhỏ.
 
 | Sự kiện | `BookCopy.status` |
 |---|---|
@@ -70,7 +73,7 @@ Tiền là **số nguyên VND**. Id là `cuid`. Enum viết hoa. Các thời đi
 | Giao sách mượn thành công | `RESERVED → ON_LOAN` |
 | Hủy yêu cầu mượn | `RESERVED → AVAILABLE` |
 | Sách thu hồi về tới kho | `ON_LOAN → AVAILABLE` |
-| Admin đánh dấu mất | `→ LOST` |
+| Admin đánh dấu mất | `AVAILABLE → LOST` (trạng thái khác → `409 INVALID_COPY_STATE`; bản đang `RESERVED`/`ON_LOAN` do luồng mượn xử lý) |
 
 ### 3.3 Mượn theo gói
 
@@ -180,6 +183,26 @@ Mỗi job nhận một `Clock` được inject để test gọi trực tiếp v�
 | `expireSubscriptions` | hằng ngày 00:00 | `ACTIVE` có `currentPeriodEnd < now` → `EXPIRED` |
 | `failStalePayments` | mỗi 5 phút | **Chỉ** gọi `settle(…, FAILED)` cho mọi `Payment PENDING` quá 30 phút. Việc hủy đơn + hoàn kho, hủy subscription `PENDING_PAYMENT` do `PaymentFailedHandler` đảm nhận; payment gia hạn thất bại không đổi subscription. |
 
+### 4.8 Danh mục và kho
+
+Module `catalog` sở hữu `Category`, `Book` (đọc công khai + CRUD admin). Module `inventory` sở hữu `SaleStock`, `BookCopy` và là **nơi duy nhất ghi** vào hai bảng này; nó export `InventoryService` (các hàm nhận `tx`) để `catalog` (tạo dòng stock khi tạo sách), `orders` (M2) và `loans` (M4) gọi. Việc xóa theo khi xóa sách do cascade của DB đảm nhận. `catalog` được **đọc** số lượng tồn trực tiếp qua Prisma để hiển thị.
+
+**Công khai:**
+- `GET /categories` — thể loại chỉ đến từ seed, không có API quản lý.
+- `GET /books?q=&category=<slug>&availability=sale|loan&page=` → `{ items, total, page, pageSize }`, `pageSize = 12`, sắp theo `title`.
+  - `q`: `immutable_unaccent(title|author) ILIKE immutable_unaccent('%q%')` (gõ "nha gia kim" ra "Nhà giả kim").
+  - `availability=sale`: `salePrice` khác null **và** `SaleStock.quantity > 0`. `availability=loan`: có ít nhất một `BookCopy AVAILABLE`.
+  - Mỗi item kèm `saleStock` (số lượng) và `availableCopies`.
+- `GET /books/:slug` → chi tiết + `categoryName`, `saleStock`, `availableCopies`; không có → `404 NOT_FOUND`.
+
+**Admin** (`@Roles('ADMIN')`):
+- `GET /admin/books?q=&page=` (kèm số bản theo từng trạng thái), `GET /admin/books/:id` (kèm danh sách bản), `POST /admin/books`, `PATCH /admin/books/:id`, `DELETE /admin/books/:id`. ISBN trùng → `409 DUPLICATE`.
+- `POST /admin/books/:id/stock { delta }` (số nguyên khác 0): `UPDATE "SaleStock" SET quantity = quantity + $delta WHERE "bookId" = $id AND quantity + $delta >= 0`; 0 dòng → `409 OUT_OF_STOCK`. Theo **delta** chứ không đặt số tuyệt đối, để không ghi đè lượt trừ kho của đơn mua đang chạy song song.
+- `POST /admin/books/:id/copies { count }` (1–50): tạo `count` bản `AVAILABLE`.
+- `POST /admin/copies/:id/lost`: `UPDATE … SET status = 'LOST' WHERE id = … AND status = 'AVAILABLE'`; 0 dòng → `409 INVALID_COPY_STATE` (hoặc `404` nếu không tồn tại).
+
+Schema Zod cho query/body nằm trong `packages/shared/src/catalog.ts`.
+
 ## 5. Xác thực và bảo mật
 
 - **JWT HS256**: `access_token` 15 phút, `refresh_token` 7 ngày. Cả hai là cookie `httpOnly`, `SameSite=Lax`, `Secure` ở production. Cả hai cookie đều `Path=/` — refresh cookie **phải** là `/` vì proxy (6.3) chạy trên route trang như `/account` và trình duyệt chỉ gửi cookie tới path khớp. Refresh token là chuỗi ngẫu nhiên 32 byte (không phải JWT); DB lưu `tokenHash = HMAC-SHA256(JWT_REFRESH_SECRET, token)`.
@@ -188,6 +211,8 @@ Mỗi job nhận một `Clock` được inject để test gọi trực tiếp v�
 - **Endpoint:** `POST /auth/register`, `/auth/login`, `/auth/refresh` (xoay vòng, áp grace period ở 3.1), `/auth/logout` (đặt `revokedAt`), `GET /auth/me`. Sai email/mật khẩu → `401 INVALID_CREDENTIALS` (cùng một mã cho cả hai trường hợp). Refresh thất bại → 401 và xóa cả hai cookie.
 - **CSRF (quyết định có chủ ý):** `SameSite=Lax` + cùng origin + mọi endpoint ghi **chỉ nhận `application/json`** (khác → `415 UNSUPPORTED_MEDIA_TYPE`).
 - **Phân quyền:** `JwtAuthGuard` + `RolesGuard` ở NestJS là nguồn sự thật.
+- **Rate limit:** `@nestjs/throttler` (lưu in-memory) chỉ trên `POST /auth/login` (10 request/phút) và `POST /auth/register` (5 request/phút), khóa theo IP client → vượt ngưỡng `429 TOO_MANY_REQUESTS`. Vì mọi request đi qua rewrite của Next.js, API phải lấy IP thật từ `X-Forwarded-For` (`trust proxy` chỉ tin loopback); nếu không, cả hệ thống dùng chung một hạn mức.
+- Tên cookie (`access_token`, `refresh_token`) là hằng số trong `packages/shared`, dùng chung cho API và proxy.
 
 ## 6. Frontend (apps/web)
 
@@ -200,18 +225,19 @@ Mỗi job nhận một `Clock` được inject để test gọi trực tiếp v�
 | Công khai | `/` (landing 3 dịch vụ) · `/books` (tìm kiếm, lọc thể loại, lọc "có bán"/"cho mượn") · `/books/[slug]` · `/plans` · `/login` · `/register` |
 | Khách hàng | `/cart` (hai danh sách "Mua" và "Mượn" trong localStorage, mỗi danh sách một nút tiếp tục) · `/checkout` · `/borrow/confirm` · `/checkout/mock/[paymentId]` |
 | Tài khoản | `/account` · `/account/orders` · `/account/orders/[id]` (timeline giao hàng) · `/account/loans` (chọn nhiều cuốn để trả) · `/account/subscription` (gói hiện tại, gia hạn) · `/account/addresses` |
-| Admin | `/admin` → chuyển hướng `/admin/orders` · `/admin/books` (CRUD sách, chỉnh tồn kho bán, thêm/đánh dấu mất bản cho mượn) · `/admin/orders` · `/admin/shipments` (đổi trạng thái, retry, hủy loan) · `/admin/loans` (chỉ xem). Chung một layout admin. |
+| Admin | `/admin` → chuyển hướng `/admin/orders` (trước M3: `/admin/books`) · `/admin/books` (danh sách) + `/admin/books/new` + `/admin/books/[id]` (sửa sách, nhập/xuất kho bán theo delta, thêm/đánh dấu mất bản cho mượn) · `/admin/orders` · `/admin/shipments` (đổi trạng thái, retry, hủy loan) · `/admin/loans` (chỉ xem). Chung một layout admin. |
 
 Mọi danh sách có trạng thái rỗng (giỏ trống, chưa mượn, chưa có đơn).
 
 ### 6.2 Server / Client Components
 
 - **Mặc định Server Component.** Đọc dữ liệu qua `apiServer()`: `fetch` tới URL nội bộ của NestJS, chuyển tiếp cookie.
-  - Danh mục công khai: `revalidate: 60` — chấp nhận chậm tối đa 60 giây sau khi admin sửa; không sai nghiệp vụ vì checkout/mượn luôn kiểm tra lại phía server.
+  - Danh mục công khai: đọc qua `apiPublic()` — **không** chuyển tiếp cookie (để cache dùng chung cho mọi người), `revalidate: 60` — chấp nhận chậm tối đa 60 giây sau khi admin sửa; không sai nghiệp vụ vì checkout/mượn luôn kiểm tra lại phía server. API trả 404 → trang gọi `notFound()`.
   - Dữ liệu riêng của user và **toàn bộ `/admin/*`**: `cache: 'no-store'`.
-  - `apiServer()` gặp 401 → `redirect('/login?next=…')`.
+  - `apiServer()` merge `init` của caller với mặc định `cache: 'no-store'`; gặp 401 → `redirect('/login?next=…')` (path + query hiện tại).
 - **Client Component** chỉ cho đảo tương tác: nút thêm giỏ mua/mượn, trang `/cart`, form, điều khiển admin, `BookCover` (fallback ảnh).
-- Bộ lọc `/books` dùng **URL searchParams**, render phía server.
+- Bộ lọc `/books` dùng **URL searchParams**, render phía server: ô tìm là form GET; chip thể loại / "Có bán" / "Cho mượn" và phân trang là link — đổi một tham số thì giữ các tham số khác và đặt lại `page`.
+- `/books/[slug]` chỉ hiển thị thông tin, giá và tình trạng ("Còn N cuốn để bán", "Còn N bản cho mượn"); nút mua/mượn thêm ở M2/M4.
 - **Ghi:** Client Component gọi `apiClient()` (fetch tới `/api/*`), thành công thì `router.refresh()`. Gặp 401 → gọi `/api/auth/refresh` một lần rồi thử lại; vẫn lỗi → chuyển `/login`.
 
 ### 6.3 Proxy (middleware)
@@ -243,13 +269,14 @@ Next.js 16 đặt tên file là `proxy.ts` (hàm `proxy`) thay cho `middleware.t
 | 401 | `UNAUTHENTICATED`, `INVALID_CREDENTIALS` |
 | 403 | `FORBIDDEN` |
 | 404 | `NOT_FOUND` |
-| 409 | `LOAN_LIMIT_EXCEEDED`, `OUT_OF_STOCK`, `NO_COPY_AVAILABLE`, `SUBSCRIPTION_INACTIVE`, `SUBSCRIPTION_ALREADY_EXISTS`, `ORDER_NOT_CANCELLABLE`, `INVALID_SHIPMENT_TRANSITION`, `LOAN_NOT_RETURNABLE`, `DUPLICATE`, `IN_USE` |
+| 409 | `LOAN_LIMIT_EXCEEDED`, `OUT_OF_STOCK`, `NO_COPY_AVAILABLE`, `SUBSCRIPTION_INACTIVE`, `SUBSCRIPTION_ALREADY_EXISTS`, `ORDER_NOT_CANCELLABLE`, `INVALID_SHIPMENT_TRANSITION`, `LOAN_NOT_RETURNABLE`, `INVALID_COPY_STATE`, `DUPLICATE`, `IN_USE` |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` |
+| 429 | `TOO_MANY_REQUESTS` |
 | 500 | `INTERNAL_ERROR` |
 
 Nguyên tắc: **409 cho mọi xung đột với trạng thái hiện tại.**
 
-- **Backend:** service ném domain error; một global exception filter chuyển thành JSON trên. Validate bằng `ZodValidationPipe` tự viết, dùng schema chung.
+- **Backend:** service ném `DomainError` (không dùng `HttpException` của Nest — status không có trong bảng trên rơi về 500 `INTERNAL_ERROR`); một global exception filter chuyển thành JSON trên. Validate bằng `ZodValidationPipe` tự viết, dùng schema chung.
 - **Lỗi Prisma:** `P2002` → 409 `DUPLICATE`; `P2003` → 409 `IN_USE` (vd. xóa sách đã phát sinh giao dịch); `P2025` → 404 `NOT_FOUND`. Lỗi khác → 500, ghi log bằng `Logger` của NestJS.
 - **Frontend:** `error.tsx` và `not-found.tsx` cho từng nhóm route; `global-error.tsx` ở gốc app.
 
@@ -265,7 +292,9 @@ Tập trung vào luật nghiệp vụ và race condition; không test UI vụn v
     - Sách còn 1 bản cho mượn, 2 user mượn song song → đúng 1 thành công, 1 `NO_COPY_AVAILABLE`.
     - 2 request đăng ký gói song song của cùng user → đúng 1 thành công, 1 `SUBSCRIPTION_ALREADY_EXISTS`.
     - 3 request refresh song song với cùng refresh token → cả 3 thành công.
+    - Tồn kho bán còn 1, 2 request admin `delta: -1` song song → đúng 1 thành công, 1 `OUT_OF_STOCK`.
     - Callback thanh toán thành công và `failStalePayments` chạy đồng thời trên cùng payment → đúng một bên thắng, handler chạy đúng một lần.
+  - **Danh mục (M1):** tìm không dấu; lọc thể loại / `sale` / `loan` đúng định nghĩa 4.8; phân trang và `total`; slug không tồn tại → 404; tạo sách có dòng `SaleStock` = 0; ISBN trùng → `DUPLICATE`; sửa `title` không đổi `slug`; xóa sách xóa theo stock và bản; delta làm âm → `OUT_OF_STOCK`; đánh dấu mất bản không `AVAILABLE` → `INVALID_COPY_STATE`; customer gọi `/admin/books*` → 403; vượt rate limit đăng nhập → 429.
   - **Luồng:** thanh toán thành công/thất bại cho đơn và gói; callback gọi lặp (idempotent); retry và hủy loan khi shipment `FAILED`; chuyển trạng thái shipment sai; cron `failStalePayments` (đơn bị hủy và hoàn kho **đúng một lần**; subscription `PENDING_PAYMENT` bị hủy; payment gia hạn quá hạn → `FAILED` mà subscription `ACTIVE` giữ nguyên); khách hủy đơn rồi callback thành công đến sau → không đổi gì; gia hạn thành công → `currentPeriodEnd` kéo dài đúng (còn hạn: cộng từ `currentPeriodEnd`); gia hạn khi không có subscription `ACTIVE` → `SUBSCRIPTION_INACTIVE`; cron đã expire subscription trong lúc payment gia hạn chờ → thanh toán thành công đưa về `ACTIVE`, còn nếu user đã có subscription mở khác → payment `FAILED`, không vi phạm index; cron `expireSubscriptions` (gọi trực tiếp với `Clock` giả, kiểm tra user hết hạn không mượn được nhưng vẫn trả được); RBAC (customer gọi API admin → 403); endpoint ghi nhận body không phải JSON → 415.
 - **E2E (Playwright):**
   1. Đăng ký gói → mượn → admin giao → trả → admin thu hồi.
@@ -280,7 +309,10 @@ Tập trung vào luật nghiệp vụ và race condition; không test UI vụn v
   - `pnpm test` → unit + integration
   - `pnpm test:e2e` → Playwright
 - **`.env.example`:** `DATABASE_URL`, `DATABASE_URL_TEST`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `API_INTERNAL_URL`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_CUSTOMER_EMAIL`, `SEED_CUSTOMER_PASSWORD`.
-- **Seed:** 1 admin, 1 customer (thông tin từ biến môi trường); ~30 sách thuộc 6 thể loại, mỗi sách có bản cho mượn và/hoặc tồn kho bán; 3 gói — **Basic** 2 cuốn / 79.000 đ, **Standard** 3 cuốn / 119.000 đ, **Premium** 5 cuốn / 179.000 đ. `coverUrl` ghép từ ISBN theo URL Open Library (seed không cần mạng); `next.config` khai báo `remotePatterns` cho `covers.openlibrary.org`; `BookCover` hiển thị placeholder khi `coverUrl` null hoặc ảnh lỗi.
+- **Seed:** 1 admin, 1 customer (thông tin từ biến môi trường); ~30 sách thuộc 6 thể loại (M1); 3 gói — **Basic** 2 cuốn / 79.000 đ, **Standard** 3 cuốn / 119.000 đ, **Premium** 5 cuốn / 179.000 đ (thêm ở M4, khi có model `Plan`).
+  - Sách phối trộn để mọi bộ lọc và nhãn đều có dữ liệu: đa số vừa bán vừa cho mượn; vài cuốn chỉ cho mượn (`salePrice` null); vài cuốn chỉ bán (0 bản); 1–2 cuốn hết hàng.
+  - **Idempotent:** upsert theo `isbn`; tồn kho và bản cho mượn chỉ tạo khi sách vừa được tạo, nên chạy lại `pnpm db:setup` không nhân đôi.
+  - `coverUrl = https://covers.openlibrary.org/b/isbn/<isbn>-L.jpg?default=false` (seed không cần mạng; `default=false` làm Open Library trả 404 thay vì ảnh trắng khi không có bìa). `next.config` khai báo `remotePatterns` cho `covers.openlibrary.org`; `BookCover` hiển thị placeholder khi `coverUrl` null hoặc ảnh lỗi.
 - **CI (GitHub Actions):**
   - Mỗi push/PR: lint, typecheck, unit, integration (Postgres service container).
   - Nightly + `workflow_dispatch`: Playwright.
@@ -292,8 +324,8 @@ Mỗi mốc có implementation plan riêng và chạy được độc lập khi 
 | Mốc | Nội dung |
 |---|---|
 | **M0** | Monorepo, Docker Compose, Prisma + migration nền, `packages/shared`, auth (register/login/refresh/logout, grace period), RBAC, exception filter, layout web + design system, middleware |
-| **M1** | Danh mục sách, tồn kho bán, bản cho mượn; trang `/books`, `/books/[slug]`; `/admin/books`; seed |
+| **M1** | Danh mục sách, tồn kho bán, bản cho mượn (4.8); trang `/books`, `/books/[slug]`; `/admin/books`; seed sách. Kèm nợ từ review M0: rate limit auth, hằng số tên cookie, sửa `apiServer` (merge `init`, `next` khi 401), proxy fail fast khi thiếu `JWT_ACCESS_SECRET`, log lỗi không phải parse trong `body-parse-error.handler.ts`, `apiClient` giữ `search` khi chuyển `/login` |
 | **M2** | Địa chỉ, giỏ hàng, đơn mua, thanh toán mock, cron `failStalePayments` + `PaymentFailedHandler` cho đơn; trang checkout, `/account/orders` |
 | **M3** | Shipments (máy trạng thái, event, retry), handler cho đơn mua; `/admin/orders`, `/admin/shipments`, timeline giao hàng |
-| **M4** | Gói đăng ký, gia hạn, cron `expireSubscriptions`, `PaymentFailedHandler` cho subscription; mượn/trả sách, handler cho loan, hủy loan; `/plans`, `/borrow/confirm`, `/account/loans`, `/account/subscription`, `/admin/loans` |
+| **M4** | Gói đăng ký (model `Plan` + seed 3 gói), gia hạn, cron `expireSubscriptions`, `PaymentFailedHandler` cho subscription; mượn/trả sách, handler cho loan, hủy loan; `/plans`, `/borrow/confirm`, `/account/loans`, `/account/subscription`, `/admin/loans` |
 | **M5** | Playwright E2E, GitHub Actions CI |
