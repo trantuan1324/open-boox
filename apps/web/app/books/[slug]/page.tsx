@@ -9,7 +9,7 @@ import { formatVnd } from '@/lib/format';
 
 export default async function BookPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const book = await apiPublic<BookDetail>(`/books/${encodeURIComponent(slug)}`).catch(nullOn404);
+  const book = await apiPublic<BookDetail>(`/books/${encodeURIComponent(slug)}`, { cache: 'no-store' }).catch(nullOn404);
   if (!book) notFound();
 
   return (

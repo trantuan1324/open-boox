@@ -26,8 +26,9 @@ export async function apiServer<T>(path: string, init: RequestInit = {}): Promis
 }
 
 // Public catalog data: no cookies, so the response is shared by every visitor and cached for 60s (spec §6.2).
-export async function apiPublic<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_URL}/api${path}`, { next: { revalidate: 60 } });
+// Callers needing no-store: the Data Cache never stores a 404 revalidation, so a cached 200 is never replaced — a deleted book would stay visible forever.
+export async function apiPublic<T>(path: string, init: RequestInit = { next: { revalidate: 60 } }): Promise<T> {
+  const res = await fetch(`${API_URL}/api${path}`, init);
   if (!res.ok) throw await ApiError.fromResponse(res);
   return (await res.json()) as T;
 }

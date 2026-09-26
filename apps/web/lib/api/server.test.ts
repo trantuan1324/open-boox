@@ -97,4 +97,16 @@ describe('apiPublic', () => {
     fetchMock.mockResolvedValueOnce(Response.json({ statusCode: 404, code: 'NOT_FOUND', message: 'x' }, { status: 404 }));
     await expect(apiPublic('/books/nope')).rejects.toMatchObject({ status: 404, code: 'NOT_FOUND' });
   });
+
+  it('supports cache: no-store for callers that must never serve stale data', async () => {
+    fetchMock
+      .mockResolvedValueOnce(Response.json({ id: 'b1' }))
+      .mockResolvedValueOnce(Response.json({ statusCode: 404, code: 'NOT_FOUND', message: 'x' }, { status: 404 }));
+    await expect(apiPublic('/books/some-slug', { cache: 'no-store' })).resolves.toEqual({ id: 'b1' });
+    await expect(apiPublic('/books/some-slug', { cache: 'no-store' })).rejects.toMatchObject({
+      status: 404,
+      code: 'NOT_FOUND',
+    });
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringMatching(/\/api\/books\/some-slug$/), { cache: 'no-store' });
+  });
 });
