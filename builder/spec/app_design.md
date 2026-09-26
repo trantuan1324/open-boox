@@ -207,7 +207,7 @@ Schema Zod cho query/body nằm trong `packages/shared/src/catalog.ts`.
 
 - **JWT HS256**: `access_token` 15 phút, `refresh_token` 7 ngày. Cả hai là cookie `httpOnly`, `SameSite=Lax`, `Secure` ở production. Cả hai cookie đều `Path=/` — refresh cookie **phải** là `/` vì proxy (6.3) chạy trên route trang như `/account` và trình duyệt chỉ gửi cookie tới path khớp. Refresh token là chuỗi ngẫu nhiên 32 byte (không phải JWT); DB lưu `tokenHash = HMAC-SHA256(JWT_REFRESH_SECRET, token)`.
 - NestJS dùng global prefix `/api`; Next.js rewrite `/api/:path*` → `${API_INTERNAL_URL}/api/:path*`. Các endpoint dưới đây viết tương đối với `/api`.
-- **Cùng origin:** Next.js rewrite `/api/*` → NestJS. Không cấu hình CORS; không token nào nằm trong JavaScript.
+- **Cùng origin** nhờ rewrite trên: không cấu hình CORS; không token nào nằm trong JavaScript.
 - **Endpoint:** `POST /auth/register`, `/auth/login`, `/auth/refresh` (xoay vòng, áp grace period ở 3.1), `/auth/logout` (đặt `revokedAt`), `GET /auth/me`. Sai email/mật khẩu → `401 INVALID_CREDENTIALS` (cùng một mã cho cả hai trường hợp). Refresh thất bại → 401 và xóa cả hai cookie.
 - **CSRF (quyết định có chủ ý):** `SameSite=Lax` + cùng origin + mọi endpoint ghi **chỉ nhận `application/json`** (khác → `415 UNSUPPORTED_MEDIA_TYPE`).
 - **Phân quyền:** `JwtAuthGuard` + `RolesGuard` ở NestJS là nguồn sự thật.
@@ -284,7 +284,7 @@ Nguyên tắc: **409 cho mọi xung đột với trạng thái hiện tại.**
 
 Tập trung vào luật nghiệp vụ và race condition; không test UI vụn vặt.
 
-- **Unit:** Jest cho `apps/api`; Vitest cho `packages/shared` và `apps/web` (hợp với ESM của `jose`/Next). Nội dung: máy trạng thái shipment; tính phí ship; tính kỳ hạn gói (đăng ký, gia hạn khi còn hạn/đã hết hạn); kiểm tra hạn mức mượn; điều kiện hợp lệ của refresh token (grace period, logout).
+- **Unit:** Jest cho `apps/api`; Vitest cho `packages/shared` và `apps/web` (hợp với ESM của `jose`/Next). Nội dung: máy trạng thái shipment; tính phí ship; tính kỳ hạn gói (đăng ký, gia hạn khi còn hạn/đã hết hạn — nhánh "đã hết hạn" chỉ xảy ra khi cron expire trong lúc payment gia hạn đang chờ, tức phép `max(now, currentPeriodEnd)`; không có API gia hạn gói `EXPIRED`); kiểm tra hạn mức mượn; điều kiện hợp lệ của refresh token (grace period, logout).
 - **Integration (Jest + Supertest) trên Postgres thật** (`bookstore_test`). `globalSetup` chạy `prisma migrate deploy` bằng cùng bộ migration (gồm migration SQL viết tay); truncate dữ liệu giữa các test.
   - **Race:**
     - Gói `maxBooks = 2`, 5 request mượn song song (mỗi request 1 cuốn) → đúng 2 thành công, 3 nhận `LOAN_LIMIT_EXCEEDED`.
