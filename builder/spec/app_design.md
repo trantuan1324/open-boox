@@ -211,7 +211,8 @@ Schema Zod cho query/body nằm trong `packages/shared/src/catalog.ts`.
 - **Endpoint:** `POST /auth/register`, `/auth/login`, `/auth/refresh` (xoay vòng, áp grace period ở 3.1), `/auth/logout` (đặt `revokedAt`), `GET /auth/me`. Sai email/mật khẩu → `401 INVALID_CREDENTIALS` (cùng một mã cho cả hai trường hợp). Refresh thất bại → 401 và xóa cả hai cookie.
 - **CSRF (quyết định có chủ ý):** `SameSite=Lax` + cùng origin + mọi endpoint ghi **chỉ nhận `application/json`** (khác → `415 UNSUPPORTED_MEDIA_TYPE`).
 - **Phân quyền:** `JwtAuthGuard` + `RolesGuard` ở NestJS là nguồn sự thật.
-- **Rate limit:** `@nestjs/throttler` (lưu in-memory) chỉ trên `POST /auth/login` (10 request/phút) và `POST /auth/register` (5 request/phút), khóa theo IP client → vượt ngưỡng `429 TOO_MANY_REQUESTS`. Vì mọi request đi qua rewrite của Next.js, API phải lấy IP thật từ `X-Forwarded-For` (`trust proxy` chỉ tin loopback); nếu không, cả hệ thống dùng chung một hạn mức.
+- **Rate limit:** `@nestjs/throttler` (lưu in-memory) chỉ trên `POST /auth/login` (10 request/phút) và `POST /auth/register` (5 request/phút), khóa theo `req.ip` với Express `trust proxy = 'loopback'` → vượt ngưỡng `429 TOO_MANY_REQUESTS`. Hạn mức đọc từ env `AUTH_LOGIN_RATE_LIMIT` / `AUTH_REGISTER_RATE_LIMIT` (mặc định 10 / 5) để test integration nâng được.
+  - **Đã kiểm chứng (Next 16.3.6):** rewrite `/api/*` **không** thêm `X-Forwarded-For`, chỉ chuyển nguyên header client gửi. Hệ quả: chạy local (không có reverse proxy phía trước), mọi request chung một khóa (IP của tiến trình Next) — chấp nhận cho dev. Khi deploy **bắt buộc** đặt reverse proxy (nginx…) append `X-Forwarded-For` trước Next.js; Express lấy địa chỉ không tin cậy gần nhất tính từ phải, nên giá trị client tự đặt ở đầu chuỗi không được dùng làm khóa.
 - Tên cookie (`access_token`, `refresh_token`) là hằng số trong `packages/shared`, dùng chung cho API và proxy.
 
 ## 6. Frontend (apps/web)
