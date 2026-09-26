@@ -15,6 +15,7 @@ export const ERROR_CODES = [
   'DUPLICATE',
   'IN_USE',
   'UNSUPPORTED_MEDIA_TYPE',
+  'TOO_MANY_REQUESTS',
   'INTERNAL_ERROR',
 ] as const;
 

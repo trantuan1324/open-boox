@@ -6,6 +6,8 @@ const envSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
   API_PORT: z.coerce.number().int().positive().default(4000),
+  AUTH_LOGIN_RATE_LIMIT: z.coerce.number().int().positive().default(10),
+  AUTH_REGISTER_RATE_LIMIT: z.coerce.number().int().positive().default(5),
 });
 
 export type Env = z.infer<typeof envSchema>;

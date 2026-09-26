@@ -1,4 +1,5 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import {
   type LoginInput,
   loginSchema,
@@ -8,6 +9,7 @@ import {
   registerSchema,
 } from '@open-boox/shared';
 import type { Request, Response } from 'express';
+import { getEnv } from '../config/env';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { clearAuthCookies, setAuthCookies } from './auth.cookies';
 import { AuthService } from './auth.service';
@@ -20,6 +22,8 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: () => getEnv().AUTH_REGISTER_RATE_LIMIT, ttl: 60_000 } })
   @Post('register')
   @HttpCode(201)
   async register(
@@ -32,6 +36,8 @@ export class AuthController {
   }
 
   @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: () => getEnv().AUTH_LOGIN_RATE_LIMIT, ttl: 60_000 } })
   @Post('login')
   @HttpCode(200)
   async login(

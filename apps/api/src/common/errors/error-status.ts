@@ -17,5 +17,6 @@ export const ERROR_STATUS: Record<ErrorCode, number> = {
   DUPLICATE: 409,
   IN_USE: 409,
   UNSUPPORTED_MEDIA_TYPE: 415,
+  TOO_MANY_REQUESTS: 429,
   INTERNAL_ERROR: 500,
 };

@@ -16,6 +16,7 @@ const HTTP_CODES: Record<number, ErrorCode> = {
   403: 'FORBIDDEN',
   404: 'NOT_FOUND',
   415: 'UNSUPPORTED_MEDIA_TYPE',
+  429: 'TOO_MANY_REQUESTS',
 };
 
 const INTERNAL: ApiErrorBody = { statusCode: 500, code: 'INTERNAL_ERROR', message: 'Internal server error' };

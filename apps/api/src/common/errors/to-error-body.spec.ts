@@ -1,4 +1,4 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, HttpException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DomainError } from './domain-error';
 import { toErrorBody } from './to-error-body';
@@ -36,6 +36,13 @@ describe('toErrorBody', () => {
   it('maps Nest HttpExceptions by status', () => {
     expect(toErrorBody(new ForbiddenException())).toMatchObject({ statusCode: 403, code: 'FORBIDDEN' });
     expect(toErrorBody(new NotFoundException())).toMatchObject({ statusCode: 404, code: 'NOT_FOUND' });
+  });
+
+  it('maps HTTP 429 to TOO_MANY_REQUESTS', () => {
+    expect(toErrorBody(new HttpException('Too Many Requests', 429))).toMatchObject({
+      statusCode: 429,
+      code: 'TOO_MANY_REQUESTS',
+    });
   });
 
   it('hides the message of unexpected errors', () => {

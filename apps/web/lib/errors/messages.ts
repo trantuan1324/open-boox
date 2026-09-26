@@ -17,6 +17,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   DUPLICATE: 'Dữ liệu đã tồn tại.',
   IN_USE: 'Dữ liệu đã phát sinh giao dịch, không thể xóa.',
   UNSUPPORTED_MEDIA_TYPE: 'Định dạng yêu cầu không được hỗ trợ.',
+  TOO_MANY_REQUESTS: 'Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút.',
   INTERNAL_ERROR: 'Đã có lỗi xảy ra, vui lòng thử lại.',
 };
 
