@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { AddressSnapshot } from './address';
-import type { ShipmentStatus } from './shipments';
+import type { ShipmentDto, ShipmentStatus } from './shipments';
 
 export const MAX_ORDER_QUANTITY = 10;
 export const MAX_ORDER_LINES = 20;
@@ -89,6 +89,7 @@ export interface OrderDetail extends OrderQuote {
   createdAt: string;
   address: AddressSnapshot;
   pendingPaymentId: string | null;
+  shipments: ShipmentDto[];
 }
 
 export interface PaymentDto {

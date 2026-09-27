@@ -15,6 +15,7 @@ import { DomainError } from '../common/errors/domain-error';
 import { InventoryService } from '../inventory/inventory.service';
 import { PaymentsService } from '../payments/payments.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ShipmentsService } from '../shipments/shipments.service';
 import { AddressesService } from '../users/addresses.service';
 import { priceOrder, type SellableBook } from './pricing';
 
@@ -27,6 +28,7 @@ export class OrdersService {
     private readonly inventory: InventoryService,
     private readonly payments: PaymentsService,
     private readonly addresses: AddressesService,
+    private readonly shipments: ShipmentsService,
   ) {}
 
   // Read-only: same pricing as place(), plus a stock check that names the short lines by index.
@@ -126,6 +128,7 @@ export class OrdersService {
       shippingFee: order.shippingFee,
       total: order.total,
       pendingPaymentId: order.payments.find((p) => p.status === 'PENDING')?.id ?? null,
+      shipments: await this.shipments.listForOrder(this.prisma, order.id),
     };
   }
 
