@@ -8,7 +8,7 @@
 **Mục đích:** dự án học tập / portfolio. Trọng tâm là kiến trúc Next.js + NestJS gọn, đúng chuẩn, có luật nghiệp vụ và xử lý đồng thời được kiểm thử. Mọi tích hợp bên ngoài (thanh toán, vận chuyển) đều mock sau interface rõ ràng.
 
 **Ba dịch vụ:**
-1. **Mượn sách theo gói đăng ký** — mỗi gói cho phép giữ tối đa N cuốn cùng lúc, không có hạn trả.
+1. **Mượn sách theo gói đăng ký** — mỗi gói cho phép giữ tối đa N cuốn cùng lúc, không có hạn trả. Gói tự gia hạn hằng tháng, đổi/hủy gói theo mô hình kiểu Netflix (4.2).
 2. **Bán sách** — giỏ hàng, thanh toán, đơn hàng, tồn kho.
 3. **Giao sách tận nơi** — dùng chung cho giao đơn mua, giao sách mượn và thu hồi sách mượn.
 
@@ -16,7 +16,7 @@
 
 **Giả định:** giao diện tiếng Việt, tiền VND; giao diện theo design system trong `ui_design/`.
 
-**Không làm:** đánh giá/review, gợi ý sách, email thật, đa ngôn ngữ, ứng dụng mobile, hoàn tiền, đổi gói, tự động trừ tiền định kỳ, vai trò shipper, trang admin quản lý gói, khách tự hủy yêu cầu mượn (loan `REQUESTED` chỉ bị hủy qua luồng shipment `FAILED` của admin — xem 4.6).
+**Không làm:** đánh giá/review, gợi ý sách, email thật, đa ngôn ngữ, ứng dụng mobile, hoàn tiền (kể cả tính tiền theo tỷ lệ khi đổi gói), thẻ/phương thức thanh toán lưu thật (tự trừ tiền định kỳ là mock — 4.2), vai trò shipper, trang admin quản lý gói, khách tự hủy yêu cầu mượn (loan `REQUESTED` chỉ bị hủy qua luồng shipment `FAILED` của admin — xem 4.6).
 
 **Tiêu chí thành công:**
 - Chạy local bằng `pnpm dev` (sau lần đầu `pnpm install` + `pnpm db:setup`).
@@ -41,7 +41,8 @@ packages/shared Schema Zod, kiểu dữ liệu, hằng số mã lỗi dùng chun
 `payments` và `shipments` là module cấp thấp, **không import** `orders`, `subscriptions`, `loans`. Chúng cung cấp **registry handler**:
 
 - `PaymentOutcomeHandler { onSucceeded(tx, payment); onFailed(tx, payment) }` — một handler cho mỗi đích thanh toán (order / subscription), đăng ký lúc `onModuleInit` bởi `orders` và `subscriptions` (NestJS không có multi-provider cho token tùy chọn, nên dùng registry). `settle` không tìm thấy handler cho đích → ném lỗi → `500 INTERNAL_ERROR`, rollback (không để payment thành công mà không có gì xảy ra).
-- `ShipmentStatusHandler` — đăng ký theo `Shipment.type` bởi `orders` (`ORDER_DELIVERY`) và `loans` (`LOAN_DELIVERY`, `LOAN_PICKUP`).
+- `ShipmentStatusHandler { onStatusChanged(tx, shipment); onRetried?(tx, failed, created) }` — đăng ký theo `Shipment.type` bởi `orders` (`ORDER_DELIVERY`) và `loans` (`LOAN_DELIVERY`, `LOAN_PICKUP`). `onRetried` tùy chọn (chỉ `loans` cài — 4.6).
+- `loans` import `subscriptions` và `shipments` (hướng cao → thấp); `subscriptions` không import `loans`.
 
 Handler được gọi **trong cùng Prisma interactive transaction** với thao tác gốc (tham số `tx`), nên thay đổi luôn nguyên tử; không dùng event bus.
 
@@ -81,11 +82,14 @@ Tiền là **số nguyên VND**. Id là `cuid`. Enum viết hoa. Các thời đi
 ### 3.3 Mượn theo gói
 
 - **`Plan`**: `code` (unique), `name`, `maxBooks`, `monthlyPrice`, `active`.
-- **`Subscription`**: `userId`, `planId`, `status` `PENDING_PAYMENT | ACTIVE | EXPIRED | CANCELLED`, `currentPeriodStart?`, `currentPeriodEnd?`, `createdAt`.
+- **`Subscription`**: `userId`, `planId`, `nextPlanId?` (gói hạ cấp chờ áp ở kỳ sau), `status` `PENDING_PAYMENT | ACTIVE | EXPIRED | CANCELLED`, `currentPeriodStart?`, `currentPeriodEnd?`, `cancelAtPeriodEnd` (mặc định `false`), `createdAt`.
   - **Partial unique index** (migration SQL viết tay, Prisma không khai báo được):
     `CREATE UNIQUE INDEX subscription_one_open_per_user ON "Subscription"("userId") WHERE status IN ('PENDING_PAYMENT','ACTIVE');`
-- **`Loan`**: `userId`, `subscriptionId`, `bookCopyId`, `status` `REQUESTED | ACTIVE | RETURN_REQUESTED | RETURNED | CANCELLED`, `deliveryShipmentId`, `returnShipmentId?`, `requestedAt`, `deliveredAt?`, `returnedAt?`.
-  - Tiến độ giao hàng xem ở `Shipment`, Loan không lặp trạng thái đó.
+  - Seed 3 gói (§9); không có API quản lý gói.
+- **`Loan`**: `userId`, `subscriptionId` (`Restrict`), `bookCopyId` (`Restrict`), `status` `REQUESTED | ACTIVE | RETURN_REQUESTED | RETURNED | CANCELLED`, `deliveryShipmentId` (FK → Shipment, `Restrict`), `returnShipmentId?` (FK → Shipment, `Restrict`), `requestedAt`, `deliveredAt?`, `returnedAt?`. Index `(userId, status)`, `(deliveryShipmentId)`, `(returnShipmentId)`.
+  - Tiến độ giao hàng xem ở `Shipment`, Loan không lặp trạng thái đó. Sau retry, `deliveryShipmentId`/`returnShipmentId` trỏ tới shipment **mới** (4.6).
+  - `bookCopyId` `Restrict`: xóa `Book` cascade sang `BookCopy` bị chặn khi bản đã từng được mượn → `P2003` → `409 IN_USE`.
+  - **Thứ tự khóa:** mọi thao tác ghi nhiều dòng `Loan` (trả sách, handler giao/thu hồi, `onRetried`, `cancel-loans`) trước hết khóa bằng `SELECT id FROM "Loan" WHERE … ORDER BY id FOR UPDATE` rồi mới `updateMany` — `UPDATE … WHERE id IN (…)` không đảm bảo thứ tự khóa dòng, hai transaction chồng nhau có thể deadlock (`40P01` → 500 thay vì 409).
   - **Loan đang mở** = trạng thái `REQUESTED | ACTIVE | RETURN_REQUESTED`.
   - **Luật hạn mức:** số loan đang mở **theo `userId`** + số sách yêu cầu ≤ `maxBooks` của gói đang hiệu lực. Đếm theo user (không theo subscription) để sách mượn từ gói cũ vẫn tính khi user đăng ký gói mới.
 
@@ -100,8 +104,8 @@ Tiền là **số nguyên VND**. Id là `cuid`. Enum viết hoa. Các thời đi
 
 - **`Payment`**: `userId`, `orderId?`, `subscriptionId?`, `amount`, `status` `PENDING | SUCCEEDED | FAILED`, `providerRef?`, `createdAt`.
   - CHECK constraint (migration SQL): đúng một trong `orderId`, `subscriptionId` khác null.
-  - M2 tạo sẵn cột `subscriptionId` (nullable, **chưa có FK** — thêm ở M4 cùng bảng `Subscription`).
-  - Một Order có đúng một Payment (payment thất bại → đơn `CANCELLED`, không bao giờ có payment thứ hai).
+  - M2 tạo sẵn cột `subscriptionId` (nullable, **chưa có FK** — thêm ở M4 cùng bảng `Subscription`). Index `(subscriptionId)`.
+  - Một Order có đúng một Payment (payment thất bại → đơn `CANCELLED`, không bao giờ có payment thứ hai). Một Subscription có nhiều Payment: lần đăng ký đầu + mỗi lần tự gia hạn; mỗi lúc tối đa một payment `PENDING` (4.2).
 
 ### 3.6 Giao hàng
 
@@ -117,6 +121,8 @@ Tiền là **số nguyên VND**. Id là `cuid`. Enum viết hoa. Các thời đi
 ### 4.1 Thanh toán mock
 
 - Interface `PaymentGateway.createCheckout(payment) → { redirectUrl }`. Bản `MockGateway` trả `/checkout/mock/:paymentId`.
+- `PaymentGateway.charge(payment) → 'SUCCEEDED' | 'FAILED'` (từ M4): trừ tiền không cần user (tự gia hạn gói, 4.2). `MockGateway` luôn trả `SUCCEEDED`; nhánh thất bại chỉ kiểm bằng test (gateway giả), không có nút demo trên giao diện.
+- `PaymentDto` = `{ id, amount, status, orderId, subscriptionId }` (từ M4 có `subscriptionId`, để trang mock biết chuyển về đâu).
 - Trang mock có hai nút "Thanh toán thành công" / "Thất bại", gọi `POST /payments/:id/mock-callback { success }`.
 - `GET /payments/:id` và `mock-callback` chỉ cho chủ payment; người khác → `404 NOT_FOUND`. Callback trên payment không còn `PENDING` → trả trạng thái hiện tại (idempotent); trang mock hiển thị trạng thái cuối thay vì nút.
 - **Một chủ sở hữu duy nhất:** mọi chuyển `Payment` khỏi `PENDING` đều đi qua `PaymentsService.settle(paymentId, SUCCEEDED | FAILED)` — dùng bởi mock callback, lệnh hủy đơn của khách và cron. `settle` chạy trong một transaction: `UPDATE "Payment" SET status = … WHERE id = … AND status = 'PENDING'`; 0 dòng bị ảnh hưởng → payment đã được xử lý, trả trạng thái hiện tại, không gọi handler (idempotent, và khi callback thành công đua với cron thì chỉ một bên thắng). Nếu cập nhật được → gọi handler tương ứng trong cùng transaction.
@@ -126,31 +132,63 @@ Tiền là **số nguyên VND**. Id là `cuid`. Enum viết hoa. Các thời đi
 
 ### 4.2 Gói đăng ký
 
-- **Đăng ký** `POST /subscriptions { planCode }`: tạo `Subscription PENDING_PAYMENT` + `Payment`. Nếu user đã có subscription `PENDING_PAYMENT` hoặc `ACTIVE` → `409 SUBSCRIPTION_ALREADY_EXISTS` (index ở 3.3 đảm bảo cả khi request song song).
-  - Thanh toán thành công → `ACTIVE`, `currentPeriodStart = now`, `currentPeriodEnd = now + 30 ngày`.
-  - Thanh toán thất bại → `CANCELLED`.
-- **Gia hạn** `POST /subscriptions/renew`: **chỉ** áp dụng cho subscription `ACTIVE` của user (tối đa một, do index); không có → `409 SUBSCRIPTION_INACTIVE`. Gói đã `EXPIRED` thì user **đăng ký mới** (được chọn lại cùng gói) — không có đường "kích hoạt lại" một subscription `EXPIRED` qua API.
-  - Thành công → `currentPeriodEnd = max(now, currentPeriodEnd) + 30 ngày`, trạng thái `ACTIVE`. (Nếu cron đã chuyển subscription sang `EXPIRED` trong lúc payment gia hạn đang chờ, bước này đưa nó về `ACTIVE`; nếu user đã kịp đăng ký subscription khác nên vi phạm index → rollback và payment `FAILED` theo 4.1.)
-  - Thất bại → subscription giữ nguyên.
-- `onFailed` cho subscription: subscription đang `PENDING_PAYMENT` → `CANCELLED`; trạng thái khác (payment gia hạn) → giữ nguyên.
-- **Hết hạn:** cron hằng ngày chuyển `ACTIVE` có `currentPeriodEnd < now` sang `EXPIRED`. Khi mượn, service vẫn kiểm tra `currentPeriodEnd > now` để không phụ thuộc độ trễ của cron.
-- **Gói hết hạn khi còn sách:** user giữ sách đến khi trả, không phạt, không mượn thêm được; giao diện nhắc trả sách.
+Mô hình kiểu Netflix: mỗi user tối đa **một** subscription mở; gói **tự gia hạn** mỗi 30 ngày (không có gia hạn thủ công, nên không bao giờ trả trước hai kỳ — không cộng dồn); nâng cấp có hiệu lực ngay, hạ cấp có hiệu lực từ kỳ sau; hủy thì dùng tới hết kỳ đã trả. Không hoàn tiền, không tính theo tỷ lệ.
+
+**Endpoint** (module `subscriptions`):
+
+| Endpoint | Luật |
+|---|---|
+| `GET /plans` (công khai) | Gói `active`, sắp theo `monthlyPrice` tăng dần. |
+| `GET /subscriptions/current` | Subscription mở (`PENDING_PAYMENT`/`ACTIVE`) của user kèm `plan`, `nextPlan?`, `pendingPaymentId?` (payment `PENDING` nếu có); không có → `null`. |
+| `POST /subscriptions { planCode }` | Tạo `Subscription PENDING_PAYMENT` + `Payment` (giá `monthlyPrice`), trả `{ subscriptionId, redirectUrl }`. Đã có subscription mở → `409 SUBSCRIPTION_ALREADY_EXISTS` (index ở 3.3 đảm bảo cả khi request song song). Gói `EXPIRED`/`CANCELLED` → user đăng ký mới (chọn lại gói nào cũng được). `planCode` không tồn tại/không `active` → `400 VALIDATION_ERROR`. |
+| `POST /subscriptions/change-plan { planCode }` | Chỉ khi có subscription `ACTIVE` (khác → `409 SUBSCRIPTION_INACTIVE`). Trong transaction, khóa dòng subscription (`FOR UPDATE`): gói **đắt hơn** `planId` hiện tại → đổi `planId` ngay, xóa `nextPlanId` (không thu tiền ngay; giá mới áp từ lần tự gia hạn kế tiếp, ngày gia hạn giữ nguyên); gói **rẻ hơn** → đặt `nextPlanId`; **đúng** gói hiện tại → xóa `nextPlanId` (bỏ lệnh hạ cấp). Không tạo payment; không đổi `cancelAtPeriodEnd`. Trả subscription hiện tại. |
+| `POST /subscriptions/cancel` · `POST /subscriptions/resume` | Đặt `cancelAtPeriodEnd = true` / `false`. Chỉ khi `ACTIVE` (khác → `409 SUBSCRIPTION_INACTIVE`); gọi lặp idempotent. |
+
+- **Chấp nhận có chủ ý:** nâng cấp không thu tiền ngay → user có thể nâng lên gói lớn vào cuối kỳ để mượn nhiều hơn mà chưa trả chênh lệch (giống Netflix; dự án học tập).
+- `SubscriptionsService.findActiveForUpdate(tx, userId) → { id, currentPeriodEnd, maxBooks } | null`: khóa (`FOR UPDATE`) dòng subscription `ACTIVE` của user, join `Plan` lấy `maxBooks` theo `planId`. Dùng bởi `loans` (4.3); kiểm tra `currentPeriodEnd > now` nằm ở `loans`.
+
+**Handler thanh toán cho subscription** (`PaymentOutcomeHandler`, đích `subscription`):
+- `onSucceeded`: subscription `PENDING_PAYMENT` → `ACTIVE`, `currentPeriodStart = now`, `currentPeriodEnd = now + 30 ngày`. Subscription `ACTIVE` (payment tự gia hạn) → kỳ mới: `currentPeriodStart = currentPeriodEnd cũ`, `currentPeriodEnd = start + 30 ngày`; có `nextPlanId` → `planId = nextPlanId`, xóa `nextPlanId`. Trạng thái khác → ném lỗi (không thể xảy ra: cron chỉ tạo payment cho `ACTIVE` và không đổi trạng thái khi còn payment `PENDING`).
+- `onFailed`: `PENDING_PAYMENT` → `CANCELLED`; `ACTIVE` (tự gia hạn bị từ chối) → `EXPIRED`.
+- Guard theo trạng thái (`updateMany … WHERE status = …`), như handler đơn.
+
+**Tự gia hạn** (job `renewSubscriptions`, 4.7) — với mỗi subscription `ACTIVE` có `currentPeriodEnd ≤ now`:
+1. Transaction: khóa dòng subscription (`FOR UPDATE`), kiểm tra lại (`ACTIVE`, `currentPeriodEnd ≤ now`, **không** có payment `PENDING` của subscription này — có thì bỏ qua). `cancelAtPeriodEnd` → `EXPIRED`, xong. Ngược lại tạo `Payment { subscriptionId, amount = giá của (nextPlanId ?? planId) }`.
+2. Sau commit: `gateway.charge(payment)` → `PaymentsService.settle(payment.id, kết quả)`.
+- Job chết giữa 1 và 2 → payment `PENDING` còn lại; sau 30 phút `failStalePayments` chuyển `FAILED` → `onFailed` → subscription `EXPIRED`, user đăng ký lại. Chấp nhận (mock).
+- `change-plan` và bước 1 cùng khóa dòng subscription nên xếp hàng: hạ cấp đến trước được áp ngay kỳ này, đến sau được áp ở kỳ sau — không có trạng thái lẫn lộn.
+
+**Mượn khi gói hết hạn:** trong khoảng từ `currentPeriodEnd` tới lúc job chạy (≤ 1 giờ), `loans` kiểm `currentPeriodEnd > now` nên chưa mượn được — chấp nhận. **Gói hết hạn khi còn sách:** user giữ sách đến khi trả, không phạt, không mượn thêm được; giao diện nhắc trả sách. Hạ cấp xuống gói có `maxBooks` nhỏ hơn số sách đang giữ: giữ sách, chỉ không mượn thêm (luật hạn mức 3.3 đếm theo user).
 
 ### 4.3 Mượn sách — `POST /loans { bookIds, addressId }`
 
-Trong một transaction:
-1. `SELECT … FOR UPDATE` dòng Subscription `ACTIVE` của user — xếp hàng mọi request mượn của cùng user. Không có, hoặc `currentPeriodEnd ≤ now` → `409 SUBSCRIPTION_INACTIVE`.
-2. Đếm loan đang mở theo user; nếu `đếm + bookIds.length > maxBooks` → `409 LOAN_LIMIT_EXCEEDED`.
-3. Với mỗi `bookId`: chọn một `BookCopy AVAILABLE` bằng `FOR UPDATE SKIP LOCKED LIMIT 1` (raw SQL), chuyển `RESERVED`. Không còn bản → `409 NO_COPY_AVAILABLE` (rollback toàn bộ).
-4. Tạo **một** `Shipment LOAN_DELIVERY` (phí 0 đ) và các `Loan REQUESTED` trỏ tới nó.
+Validate: `bookIds` 1–`LOANS_PER_BORROW_MAX` (5) phần tử, không trùng, **sort tăng dần** ngay đầu; `addressId` của chính user (khác → `404`); `bookId` không tồn tại → `400 VALIDATION_ERROR`.
 
-Khi shipment `DELIVERED` → loan `ACTIVE`, `deliveredAt = now`, bản sách `ON_LOAN`.
+Trong một transaction:
+1. `SubscriptionsService.findActiveForUpdate(tx, userId)` — xếp hàng mọi request mượn của cùng user. Không có, hoặc `currentPeriodEnd ≤ now` → `409 SUBSCRIPTION_INACTIVE`.
+2. Đếm loan đang mở theo user; nếu `đếm + bookIds.length > maxBooks` → `409 LOAN_LIMIT_EXCEEDED` (bằng đúng `maxBooks` vẫn được).
+3. Với mỗi `bookId`: `InventoryService.reserveCopy(tx, bookId)` — **một câu** `UPDATE "BookCopy" SET status = 'RESERVED' WHERE id = (SELECT id FROM "BookCopy" WHERE "bookId" = $1 AND status = 'AVAILABLE' LIMIT 1 FOR UPDATE SKIP LOCKED) RETURNING id`. Không còn bản → `409 NO_COPY_AVAILABLE` (rollback toàn bộ).
+4. Tạo **một** `Shipment LOAN_DELIVERY` (phí 0 đ, snapshot địa chỉ) qua `ShipmentsService.create` và các `Loan REQUESTED` trỏ tới nó.
+
+Trả `{ loanIds, shipmentId }`. Không chặn mượn một đầu sách user đang giữ.
 
 ### 4.4 Trả sách — `POST /loans/return { loanIds, addressId }`
 
-- Chỉ nhận loan `ACTIVE` của chính user; ngược lại → `409 LOAN_NOT_RETURNABLE`. Được trả cả khi gói đã hết hạn.
-- Loan → `RETURN_REQUESTED`; tạo **một** `Shipment LOAN_PICKUP` (phí 0 đ) gom các loan.
-- Khi shipment `DELIVERED` (sách về kho) → loan `RETURNED`, `returnedAt = now`, bản sách `AVAILABLE`.
+- Validate: `loanIds` 1–`LOANS_PER_RETURN_MAX` (10), không trùng; `addressId` của chính user (khác → `404`).
+- Trong transaction: khóa các loan theo `ORDER BY id` (3.3), `updateMany` `WHERE id IN … AND userId = … AND status = 'ACTIVE'` → `RETURN_REQUESTED`; `count ≠ loanIds.length` → `409 LOAN_NOT_RETURNABLE` (rollback). Tạo **một** `Shipment LOAN_PICKUP` (phí 0 đ) và đặt `returnShipmentId` cho các loan. Được trả cả khi gói đã hết hạn.
+- Trả `{ shipmentId }`.
+
+### 4.4a Handler giao hàng cho loan và đọc loan
+
+Handler `ShipmentStatusHandler` (module `loans`, đăng ký cho `LOAN_DELIVERY` và `LOAN_PICKUP`):
+- `LOAN_DELIVERY` → `DELIVERED`: loan `REQUESTED` có `deliveryShipmentId = shipment.id` → `ACTIVE`, `deliveredAt = now`; các bản sách `RESERVED → ON_LOAN`.
+- `LOAN_PICKUP` → `DELIVERED` (sách về kho): loan `RETURN_REQUESTED` có `returnShipmentId = shipment.id` → `RETURNED`, `returnedAt = now`; các bản sách `ON_LOAN → AVAILABLE`.
+- Trạng thái khác (kể cả `FAILED`) → không làm gì.
+- Bản sách đổi qua `InventoryService.moveCopies(tx, copyIds, from, to) → count`. `count` khác số loan vừa đổi → ném `Error` → `500`, rollback (fail-loud, không để bản sách kẹt trạng thái).
+
+Đọc:
+- `GET /loans?page=` → `{ items, total, page, pageSize }`, `LOAN_PAGE_SIZE = 20`, mới nhất trước, chỉ loan của user. Mỗi dòng: `id`, `status`, `requestedAt`, `deliveredAt?`, `returnedAt?`, `book { title, slug, coverUrl }`, `shipmentStatus` — của `deliveryShipmentId` khi `REQUESTED | ACTIVE | CANCELLED` (loan hủy thấy `FAILED`), của `returnShipmentId` khi `RETURN_REQUESTED | RETURNED`. Đọc trạng thái qua `ShipmentsService.statusesOf(ids)`.
+- `GET /admin/loans?status=&shipmentId=&page=` (`@Roles('ADMIN')`, query dễ dãi như `/admin/orders`, `pageSize = 20`, mới nhất trước) — `shipmentId` khớp `deliveryShipmentId` **hoặc** `returnShipmentId`. Mỗi dòng: `id`, `customerEmail`, `bookTitle`, `barcode`, `status`, `requestedAt`, `deliveryShipmentId`, `returnShipmentId?`.
 
 ### 4.5 Mua sách — `POST /orders { items: [{ bookId, quantity }], addressId }`
 
@@ -204,7 +242,7 @@ Sau đó:
   2. `canTransition` sai → `409 INVALID_SHIPMENT_TRANSITION`.
   3. CAS: `updateMany({ where: { id, status: current }, data: { status } })` — cùng idiom với `payments`, không dùng `FOR UPDATE`. `count = 0` (bị admin khác chen) → đọc lại: đã ở `status` → `200` no-op; khác → `409 INVALID_SHIPMENT_TRANSITION`.
   4. Chỉ bên thắng CAS: ghi `ShipmentEvent` và gọi `ShipmentStatusHandler` của `type`. Không có handler → ném lỗi → `500`, rollback (như `settle`).
-- `ShipmentsService` export `create(tx, { type, orderId?, fee, addressSnapshot })` (ghi kèm event `PENDING`) và `listForOrder(db, orderId)`.
+- `ShipmentsService` export `create(tx, { type, orderId?, fee, addressSnapshot })` (ghi kèm event `PENDING`), `listForOrder(db, orderId)`, `statusesOf(ids) → Map<id, status>` và `findForLoans(tx, id) → { type, status, retriedById } | null` (từ M4, cho `loans`).
 - Handler `ORDER_DELIVERY` (module `orders`): `PICKED_UP` → `updateMany` đơn `PAID → SHIPPING`; `DELIVERED` → đơn `SHIPPING → DELIVERED`; trạng thái khác không làm gì. Guard theo trạng thái nên shipment retry đi lại `PICKED_UP` khi đơn đã `SHIPPING` không đổi gì.
 - Đọc: `GET /admin/shipments?status=&type=&page=` (query dễ dãi như `/admin/orders`: `status`/`type` lạ → bỏ lọc, `page` lạ → 1; `pageSize = 20`, mới nhất trước, mỗi dòng kèm `orderId`, `retriedById?`); `GET /admin/shipments/:id` → shipment + `events` (cũ trước) + `retryOfId` + `retriedById`.
 
@@ -216,9 +254,18 @@ Sau đó:
 | `LOAN_DELIVERY` | **Retry**, hoặc **hủy** (`POST /admin/shipments/:id/cancel-loans`): loan → `CANCELLED`, bản sách → `AVAILABLE`. |
 | `LOAN_PICKUP` | Chỉ **retry**. |
 
-Retry `POST /admin/shipments/:id/retry`: chỉ khi shipment `FAILED` (khác → `409 INVALID_SHIPMENT_TRANSITION`). Tạo shipment mới cùng `type`, `fee`, `addressSnapshot`, `orderId`, `retryOfId = id` (kèm event `PENDING`); với loan (M4) trỏ lại `Loan.deliveryShipmentId` / `Loan.returnShipmentId` về shipment mới. Retry cùng một shipment lần hai (tuần tự hay song song) dính unique `retryOfId` → `P2002` → `409 SHIPMENT_ALREADY_RETRIED`; lỗi này làm hỏng transaction Postgres, nên bắt **bên ngoài** `$transaction` rồi mới đổi mã. Retry theo chuỗi (retry shipment retry đã `FAILED`) được phép. Trả shipment mới.
+Retry `POST /admin/shipments/:id/retry`: chỉ khi shipment `FAILED` (khác → `409 INVALID_SHIPMENT_TRANSITION`). Trong một transaction, theo thứ tự **`create` → `onRetried` → commit** (để `P2002` luôn xảy ra trước hook): tạo shipment mới cùng `type`, `fee`, `addressSnapshot`, `orderId`, `retryOfId = id` (kèm event `PENDING`); rồi gọi `onRetried(tx, failed, created)` nếu handler của `type` có cài. Retry cùng một shipment lần hai (tuần tự hay song song) dính unique `retryOfId` → `P2002` → `409 SHIPMENT_ALREADY_RETRIED`; lỗi này làm hỏng transaction Postgres, nên bắt **bên ngoài** `$transaction` rồi mới đổi mã. Retry theo chuỗi (retry shipment retry đã `FAILED`) được phép. Trả shipment mới.
 
-M3 chỉ làm `ORDER_DELIVERY`; `cancel-loans` và handler `LOAN_DELIVERY`/`LOAN_PICKUP` làm ở M4.
+`onRetried` của loan (M4): khóa loan theo `ORDER BY id` (3.3), rồi `LOAN_DELIVERY` chuyển các loan `REQUESTED` có `deliveryShipmentId = failed.id` sang `created.id`; `LOAN_PICKUP` chuyển các loan `RETURN_REQUESTED` có `returnShipmentId = failed.id` sang `created.id`. Không dòng nào (loan đã bị hủy) → `409 INVALID_SHIPMENT_TRANSITION`, rollback (không để lại shipment mới mồ côi).
+
+**Hủy loan** `POST /admin/shipments/:id/cancel-loans` (controller trong module `loans` — `shipments` không import `loans`; `loans` đọc shipment qua `ShipmentsService.findForLoans`). Trong một transaction:
+1. Không có shipment → `404`. `type ≠ LOAN_DELIVERY` hoặc `status ≠ FAILED` → `409 LOAN_NOT_CANCELLABLE`.
+2. Khóa loan theo `ORDER BY id`, `updateMany` loan `REQUESTED` có `deliveryShipmentId = id` → `CANCELLED`; các bản sách `RESERVED → AVAILABLE` qua `moveCopies` (fail-loud như 4.4a).
+3. `count = 0`: `retriedById ≠ null` → `409 LOAN_NOT_CANCELLABLE` (loan đã chuyển sang shipment retry); ngược lại → `200` (đã hủy trước đó — idempotent). Không kiểm "mọi loan đã `CANCELLED`" vì sau retry tập loan của shipment cũ là rỗng và điều kiện đó đúng vô nghĩa.
+
+Cancel và retry loại trừ nhau: cancel trước → `onRetried` khớp 0 dòng → retry `409`; retry trước → `retriedById` khác null → cancel `409`. Chạy song song: cả hai ghi cùng các dòng loan nên xếp hàng trên khóa dòng; bên sau khớp 0 dòng (Postgres đánh giá lại `WHERE` sau khi chờ khóa), và câu đọc `retriedById` chạy sau đó (READ COMMITTED) thấy retry đã commit.
+
+Trả: `200` kèm `AdminShipmentDetail` của shipment.
 
 ### 4.7 Cron (`@nestjs/schedule`)
 
@@ -226,11 +273,18 @@ Mỗi job nhận một `Clock` được inject để test gọi trực tiếp v�
 
 | Job | Tần suất | Việc làm |
 |---|---|---|
-| `expireSubscriptions` | hằng ngày 00:00 | `ACTIVE` có `currentPeriodEnd < now` → `EXPIRED` |
-| `failStalePayments` | `@Interval` 5 phút | **Chỉ** gọi `settle(…, FAILED)` cho mọi `Payment PENDING` quá 30 phút. Việc hủy đơn + hoàn kho, hủy subscription `PENDING_PAYMENT` do `onFailed` đảm nhận; payment gia hạn thất bại không đổi subscription. |
+| `renewSubscriptions` | mỗi giờ (`@Cron('0 * * * *')`) | Gọi `SubscriptionsService.renewDue(now)`: `ACTIVE` có `currentPeriodEnd ≤ now` → `cancelAtPeriodEnd` thì `EXPIRED`, ngược lại tạo payment gia hạn và trừ tiền (4.2). Thay cho `expireSubscriptions` hằng ngày cũ. |
+| `failStalePayments` | `@Interval` 5 phút | **Chỉ** gọi `settle(…, FAILED)` cho mọi `Payment PENDING` quá 30 phút. Việc hủy đơn + hoàn kho, hủy subscription `PENDING_PAYMENT`, expire subscription có payment gia hạn kẹt do `onFailed` đảm nhận. |
 | `cleanupRefreshTokens` | hằng ngày 03:00 | Gọi `purgeRefreshTokens(now)` do `auth` export: xóa `RefreshToken` có `expiresAt < now`, hoặc `revokedAt`/`rotatedAt` < `now − 1 ngày`. |
 
-Các job nằm ở module `scheduler`, chỉ gọi hàm do module sở hữu bảng export (`PaymentsService.settle`, `auth`) — không ghi thẳng bảng. Job theo lịch ngày dùng `@Cron(…, { timeZone: 'Asia/Ho_Chi_Minh' })`.
+Các job nằm ở module `scheduler`, chỉ gọi hàm do module sở hữu bảng export (`PaymentsService.settle`, `SubscriptionsService.renewDue`, `auth`) — không ghi thẳng bảng. Job theo lịch dùng `@Cron(…, { timeZone: 'Asia/Ho_Chi_Minh' })`.
+
+### 4.9 On-demand revalidation (M4)
+
+Trả nợ §6.2: trang công khai hết lệch tồn kho/số bản tối đa 60 giây sau ghi.
+- **Web:** route handler `POST /internal/revalidate` (ngoài `/api` vì `/api/*` đã rewrite sang Nest; `proxy.ts` không chặn đường này). Header `x-revalidate-secret` so với env `REVALIDATE_SECRET` bằng `timingSafeEqual`; sai/thiếu → `401`; đúng → `revalidateTag('books', …)` (tham số hết hạn ngay theo API của Next 16.3.6 — xác nhận trong docs của bản cài lúc viết plan). Các fetch `apiPublic` sách/thể loại gắn `next: { tags: ['books'], revalidate: 60 }` — TTL 60s vẫn là lưới an toàn.
+- **API:** `RevalidationService.booksChanged()` (global): fire-and-forget `fetch` tới `${WEB_INTERNAL_URL}/internal/revalidate`, timeout 2 giây; lỗi chỉ ghi log, không bao giờ làm fail request. Thiếu `WEB_INTERNAL_URL` hoặc `REVALIDATE_SECRET` → bỏ qua (test).
+- **Gọi sau commit** (sau khi service trả về) ở các chỗ đổi tồn kho bán hoặc số bản cho mượn: `POST /orders`, `POST /orders/:id/cancel`, mock-callback, `POST /loans`, `cancel-loans`, `PATCH /admin/shipments/:id` (mọi lần, cho đơn giản), CRUD sách + stock + copies + lost của admin, và job `failStalePayments` (khi có payment được settle).
 
 ### 4.8 Danh mục và kho
 
@@ -274,7 +328,7 @@ Schema Zod cho query/body nằm trong `packages/shared/src/catalog.ts`.
 |---|---|
 | Công khai | `/` (landing 3 dịch vụ) · `/books` (tìm kiếm, lọc thể loại, lọc "có bán"/"cho mượn") · `/books/[slug]` · `/plans` · `/login` · `/register` |
 | Khách hàng | `/cart` (hai danh sách "Mua" và "Mượn" trong localStorage, mỗi danh sách một nút tiếp tục) · `/checkout` · `/borrow/confirm` · `/checkout/mock/[paymentId]` |
-| Tài khoản | `/account` · `/account/orders` · `/account/orders/[id]` (timeline giao hàng) · `/account/loans` (chọn nhiều cuốn để trả) · `/account/subscription` (gói hiện tại, gia hạn) · `/account/addresses` |
+| Tài khoản | `/account` · `/account/orders` · `/account/orders/[id]` (timeline giao hàng) · `/account/loans` (chọn nhiều cuốn để trả) · `/account/subscription` (gói hiện tại, đổi gói, hủy/tiếp tục gia hạn) · `/account/addresses` |
 | Admin | `/admin` → chuyển hướng `/admin/orders` (trước M3: `/admin/books`) · `/admin/books` (danh sách) + `/admin/books/new` + `/admin/books/[id]` (sửa sách, nhập/xuất kho bán theo delta, thêm/đánh dấu mất bản cho mượn) · `/admin/orders` (lọc trạng thái) + `/admin/orders/[id]` (chỉ xem) · `/admin/shipments` (lọc trạng thái/loại) + `/admin/shipments/[id]` (timeline, đổi trạng thái, retry; hủy loan từ M4) · `/admin/loans` (chỉ xem). Chung một layout admin. |
 
 Mọi danh sách có trạng thái rỗng (giỏ trống, chưa mượn, chưa có đơn).
@@ -282,7 +336,7 @@ Mọi danh sách có trạng thái rỗng (giỏ trống, chưa mượn, chưa c
 ### 6.2 Server / Client Components
 
 - **Mặc định Server Component.** Đọc dữ liệu qua `apiServer()`: `fetch` tới URL nội bộ của NestJS, chuyển tiếp cookie.
-  - Danh mục công khai: đọc qua `apiPublic()` — **không** chuyển tiếp cookie (để cache dùng chung cho mọi người), `revalidate: 60` — chấp nhận chậm tối đa 60 giây sau khi admin sửa; không sai nghiệp vụ vì checkout/mượn luôn kiểm tra lại phía server. API trả 404 → trang gọi `notFound()`.
+  - Danh mục công khai: đọc qua `apiPublic()` — **không** chuyển tiếp cookie (để cache dùng chung cho mọi người), `revalidate: 60` — chấp nhận chậm tối đa 60 giây sau khi admin sửa; không sai nghiệp vụ vì checkout/mượn luôn kiểm tra lại phía server. Từ M4 fetch sách/thể loại gắn tag `books` và được làm mới ngay sau ghi (4.9); 60 giây còn lại là lưới an toàn. API trả 404 → trang gọi `notFound()`.
   - Dữ liệu riêng của user và **toàn bộ `/admin/*`**: `cache: 'no-store'`.
   - `apiServer()` merge `init` của caller với mặc định `cache: 'no-store'`; gặp 401 → `redirect('/login?next=…')` (path + query hiện tại).
 - **Client Component** chỉ cho đảo tương tác: nút thêm giỏ mua/mượn, trang `/cart`, form, điều khiển admin, `BookCover` (fallback ảnh).
@@ -304,7 +358,19 @@ Mọi danh sách có trạng thái rỗng (giỏ trống, chưa mượn, chưa c
 - **Timeline khách** (`/account/orders/[id]`, khối "Giao hàng"): mỗi lần giao một khối, lần mới nhất trên cùng; trong khối liệt kê event (nhãn `SHIPMENT_STATUS_LABEL`, thời gian, `note` nếu có). Lần `FAILED` hiện chữ ember. Đơn chưa có shipment → không hiện khối.
 - **Nav admin:** "Đơn hàng", "Giao hàng", "Sách"; `/admin` → `/admin/orders`.
 - **`/admin/orders`**: chip lọc trạng thái (link, giữ searchParams, đặt lại `page`), bảng (mã, email khách, trạng thái, tổng, số cuốn, ngày, trạng thái giao gần nhất), phân trang, trạng thái rỗng. **`/admin/orders/[id]`**: khách, items, địa chỉ snapshot, trạng thái thanh toán, danh sách lần giao kèm link `/admin/shipments/[id]`.
-- **`/admin/shipments`**: chip lọc trạng thái và loại, bảng (mã, loại, link đơn, trạng thái, ngày tạo, "Đã retry →" nếu có). **`/admin/shipments/[id]`**: timeline + Client Component: `select` chỉ các trạng thái kế tiếp hợp lệ, ô ghi chú (chú thích "Khách hàng sẽ thấy ghi chú này"), nút "Cập nhật"; nút "Tạo lần giao mới" chỉ khi `FAILED` và chưa retry → xong chuyển tới shipment mới. `409` → hiện lỗi rồi `router.refresh()`.
+- **`/admin/shipments`**: chip lọc trạng thái và loại, bảng (mã, loại, link đơn, trạng thái, ngày tạo, "Đã retry →" nếu có). **`/admin/shipments/[id]`**: timeline + Client Component: `select` chỉ các trạng thái kế tiếp hợp lệ, ô ghi chú (chú thích "Khách hàng sẽ thấy ghi chú này"), nút "Cập nhật"; nút "Tạo lần giao mới" chỉ khi `FAILED` và chưa retry → xong chuyển tới shipment mới. `409` → hiện lỗi rồi `router.refresh()` (từ M4: `router.replace('?error=<CODE>')`, xem 6.2c).
+
+### 6.2c Gói, mượn/trả và admin loan (M4)
+
+- **`/plans`** (công khai, `apiPublic`): card mỗi gói (tên, số cuốn, giá/tháng), nút "Đăng ký" → `POST /subscriptions` (chưa đăng nhập → `apiClient` chuyển `/login?next=/plans`) → chuyển `redirectUrl`. `409 SUBSCRIPTION_ALREADY_EXISTS` → hiện lỗi kèm link `/account/subscription`.
+- **`/account/subscription`**: gói, trạng thái, kỳ hiện tại. `PENDING_PAYMENT` → link "Thanh toán" (`pendingPaymentId`). Có `nextPlan` → "Từ DD/MM chuyển sang <gói>". `cancelAtPeriodEnd` → "Kết thúc ngày DD/MM" + nút "Tiếp tục gói"; ngược lại nút "Hủy gia hạn". Các gói khác kèm nhãn "Nâng cấp — hiệu lực ngay" / "Hạ cấp — từ DD/MM"; gói hiện tại khi đang có `nextPlan` → "Giữ gói hiện tại". Không có subscription → link `/plans`. `/account` có link tới trang này và `/account/loans`.
+- **Giỏ mượn:** localStorage `ob.cart.borrow`, mỗi dòng `{ bookId, slug, title, coverUrl }`, không có số lượng, trùng sách không thêm, trần `LOANS_PER_BORROW_MAX`; dữ liệu hỏng → rỗng; đồng bộ tab như giỏ mua. `/books/[slug]` có nút "Thêm vào giỏ mượn" khi `availableCopies > 0`. `/cart` thêm danh sách "Mượn" (xóa dòng) với nút "Tiếp tục" → `/borrow/confirm`; header đếm cả hai giỏ.
+- **`/borrow/confirm`**: danh sách sách, chọn địa chỉ (dùng lại phần chọn/tạo địa chỉ của `/checkout`), nút "Xác nhận mượn" (disable khi gửi) → `POST /loans` → xóa giỏ mượn → `/account/loans`. `SUBSCRIPTION_INACTIVE` → lỗi kèm link `/plans`; `LOAN_LIMIT_EXCEEDED`, `NO_COPY_AVAILABLE` → lỗi, cho sửa giỏ.
+- **`/account/loans`**: danh sách phân trang (bìa, tên, nhãn trạng thái loan, trạng thái giao), trạng thái rỗng. Loan `ACTIVE` có checkbox; chọn địa chỉ + "Trả sách" → `POST /loans/return`. Không có subscription `ACTIVE` mà còn loan `ACTIVE` → nhắc "Gói đã hết hạn — hãy trả sách".
+- **`/checkout/mock/[paymentId]`**: payment có `subscriptionId` → xong chuyển `/account/subscription` (đơn → `/account/orders/[id]` như cũ).
+- **Admin:** nav thêm "Mượn sách". **`/admin/loans`**: chip lọc trạng thái, bảng (mã, email, sách, barcode, trạng thái, ngày yêu cầu, link shipment giao/thu hồi), phân trang, trạng thái rỗng. **`/admin/shipments/[id]`** với shipment loan: danh sách loan (`GET /admin/loans?shipmentId=`); nút "Hủy yêu cầu mượn" chỉ khi `LOAN_DELIVERY`, `FAILED` và chưa retry. `/admin/shipments`: cột đơn hiện "—" với shipment loan.
+- **Cột "mã"** ở `/admin/orders`, `/admin/shipments`, `/admin/loans`: `shortCode(id)` trong `packages/shared` = 8 ký tự **cuối** của id, viết hoa (đầu cuid là timestamp, các dòng gần nhau trông như nhau); link vẫn dùng id đầy đủ.
+- **Thông báo 409 không mất:** các điều khiển admin trên `/admin/shipments/[id]` khi gặp `409` gọi `router.replace('?error=<CODE>')` thay cho `router.refresh()`; trang server đọc `searchParams.error` và hiện banner ngoài phần form (form có thể biến mất sau khi render lại).
 
 ### 6.3 Proxy (middleware)
 
@@ -335,7 +401,7 @@ Next.js 16 đặt tên file là `proxy.ts` (hàm `proxy`) thay cho `middleware.t
 | 401 | `UNAUTHENTICATED`, `INVALID_CREDENTIALS` |
 | 403 | `FORBIDDEN` |
 | 404 | `NOT_FOUND` |
-| 409 | `LOAN_LIMIT_EXCEEDED`, `OUT_OF_STOCK`, `NO_COPY_AVAILABLE`, `SUBSCRIPTION_INACTIVE`, `SUBSCRIPTION_ALREADY_EXISTS`, `ORDER_NOT_CANCELLABLE`, `INVALID_SHIPMENT_TRANSITION`, `SHIPMENT_ALREADY_RETRIED`, `LOAN_NOT_RETURNABLE`, `INVALID_COPY_STATE`, `DUPLICATE`, `IN_USE` |
+| 409 | `LOAN_LIMIT_EXCEEDED`, `OUT_OF_STOCK`, `NO_COPY_AVAILABLE`, `SUBSCRIPTION_INACTIVE`, `SUBSCRIPTION_ALREADY_EXISTS`, `ORDER_NOT_CANCELLABLE`, `INVALID_SHIPMENT_TRANSITION`, `SHIPMENT_ALREADY_RETRIED`, `LOAN_NOT_RETURNABLE`, `LOAN_NOT_CANCELLABLE`, `INVALID_COPY_STATE`, `DUPLICATE`, `IN_USE` |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` |
 | 429 | `TOO_MANY_REQUESTS` |
 | 500 | `INTERNAL_ERROR` |
@@ -350,7 +416,7 @@ Nguyên tắc: **409 cho mọi xung đột với trạng thái hiện tại.**
 
 Tập trung vào luật nghiệp vụ và race condition; không test UI vụn vặt.
 
-- **Unit:** Jest cho `apps/api`; Vitest cho `packages/shared` và `apps/web` (hợp với ESM của `jose`/Next). Nội dung: máy trạng thái shipment (Vitest ở shared, đủ ma trận 5×5); tính phí ship; tính kỳ hạn gói (đăng ký, gia hạn khi còn hạn/đã hết hạn — nhánh "đã hết hạn" chỉ xảy ra khi cron expire trong lúc payment gia hạn đang chờ, tức phép `max(now, currentPeriodEnd)`; không có API gia hạn gói `EXPIRED`); kiểm tra hạn mức mượn; điều kiện hợp lệ của refresh token (grace period, logout).
+- **Unit:** Jest cho `apps/api`; Vitest cho `packages/shared` và `apps/web` (hợp với ESM của `jose`/Next). Nội dung: máy trạng thái shipment (Vitest ở shared, đủ ma trận 5×5); tính phí ship; tính kỳ hạn gói (kích hoạt: `now + 30`; tự gia hạn: nối tiếp từ `currentPeriodEnd` cũ); phân loại `change-plan` (đắt hơn / rẻ hơn / cùng gói); kiểm tra hạn mức mượn (kể cả bằng đúng `maxBooks`); `shortCode`; điều kiện hợp lệ của refresh token (grace period, logout).
 - **Integration (Jest + Supertest) trên Postgres thật** (`bookstore_test`). `globalSetup` chạy `prisma migrate deploy` bằng cùng bộ migration (gồm migration SQL viết tay); truncate dữ liệu giữa các test.
   - **Race:**
     - Gói `maxBooks = 2`, 5 request mượn song song (mỗi request 1 cuốn) → đúng 2 thành công, 3 nhận `LOAN_LIMIT_EXCEEDED`.
@@ -362,7 +428,11 @@ Tập trung vào luật nghiệp vụ và race condition; không test UI vụn v
     - Callback thanh toán thành công và `failStalePayments` chạy đồng thời trên cùng payment → đúng một bên thắng, handler chạy đúng một lần.
   - **Danh mục (M1):** tìm không dấu; lọc thể loại / `sale` / `loan` đúng định nghĩa 4.8; phân trang và `total`; slug không tồn tại → 404; tạo sách có dòng `SaleStock` = 0; ISBN trùng → `DUPLICATE`; sửa `title` không đổi `slug`; xóa sách xóa theo stock và bản; delta làm âm → `OUT_OF_STOCK`; đánh dấu mất bản không `AVAILABLE` → `INVALID_COPY_STATE`; customer gọi `/admin/books*` → 403; vượt rate limit đăng nhập → 429.
   - **Mua sách (M2):** tạo đơn trừ kho đúng; `OUT_OF_STOCK` rollback toàn bộ; sách không bán → 400; phí ship `INNER`/`OUTER`; quote không ghi DB; địa chỉ CRUD, không đụng được địa chỉ người khác (404), invariant một mặc định, `city` ngoài danh sách → 400; hủy đơn → hoàn kho; callback thành công rồi hủy → 409; hủy hai lần → 200; xóa sách đã có đơn → `409 IN_USE`; thiếu handler cho đích → 500; `purgeRefreshTokens` xóa đúng tập (gọi với `Clock` giả).
-  - **Luồng:** thanh toán thành công/thất bại cho đơn và gói; callback gọi lặp (idempotent); retry và hủy loan khi shipment `FAILED`; chuyển trạng thái shipment sai; shipment (M3): thanh toán thành công tạo đúng một `ORDER_DELIVERY` kèm event `PENDING` (callback lặp không tạo thêm), đi hết luồng thì đơn `PAID → SHIPPING → DELIVERED`, PATCH cùng trạng thái → `200` không thêm event, hai PATCH song song cùng đích → đúng một event và một lần gọi handler, retry khi đơn đang `SHIPPING` giữ nguyên đơn, retry lặp (tuần tự/song song) → `SHIPMENT_ALREADY_RETRIED`, retry theo chuỗi được phép, thiếu handler → `500` rollback, CHECK `shipment_order_delivery_has_order`, `GET /orders/:id` trả `shipments` cũ trước và mỗi cái kèm `events` cũ trước (có `note`); cron `failStalePayments` (đơn bị hủy và hoàn kho **đúng một lần**; subscription `PENDING_PAYMENT` bị hủy; payment gia hạn quá hạn → `FAILED` mà subscription `ACTIVE` giữ nguyên); khách hủy đơn rồi callback thành công đến sau → không đổi gì; gia hạn thành công → `currentPeriodEnd` kéo dài đúng (còn hạn: cộng từ `currentPeriodEnd`); gia hạn khi không có subscription `ACTIVE` → `SUBSCRIPTION_INACTIVE`; cron đã expire subscription trong lúc payment gia hạn chờ → thanh toán thành công đưa về `ACTIVE`, còn nếu user đã có subscription mở khác → payment `FAILED`, không vi phạm index; cron `expireSubscriptions` (gọi trực tiếp với `Clock` giả, kiểm tra user hết hạn không mượn được nhưng vẫn trả được); RBAC (customer gọi API admin → 403); endpoint ghi nhận body không phải JSON → 415.
+  - **Luồng:** thanh toán thành công/thất bại cho đơn và gói; callback gọi lặp (idempotent); retry và hủy loan khi shipment `FAILED`; chuyển trạng thái shipment sai; shipment (M3): thanh toán thành công tạo đúng một `ORDER_DELIVERY` kèm event `PENDING` (callback lặp không tạo thêm), đi hết luồng thì đơn `PAID → SHIPPING → DELIVERED`, PATCH cùng trạng thái → `200` không thêm event, hai PATCH song song cùng đích → đúng một event và một lần gọi handler, retry khi đơn đang `SHIPPING` giữ nguyên đơn, retry lặp (tuần tự/song song) → `SHIPMENT_ALREADY_RETRIED`, retry theo chuỗi được phép, thiếu handler → `500` rollback, CHECK `shipment_order_delivery_has_order`, `GET /orders/:id` trả `shipments` cũ trước và mỗi cái kèm `events` cũ trước (có `note`); cron `failStalePayments` (đơn bị hủy và hoàn kho **đúng một lần**; subscription `PENDING_PAYMENT` bị hủy; payment tự gia hạn kẹt → `FAILED` và subscription `EXPIRED`); khách hủy đơn rồi callback thành công đến sau → không đổi gì; RBAC (customer gọi API admin → 403); endpoint ghi nhận body không phải JSON → 415.
+  - **Gói (M4):** đăng ký → thanh toán thành công `ACTIVE` 30 ngày / thất bại `CANCELLED`; `GET /subscriptions/current` kèm `pendingPaymentId`; `change-plan` nâng cấp đổi `planId` ngay, hạ cấp đặt `nextPlanId`, chọn lại gói hiện tại xóa `nextPlanId`, không `ACTIVE` → `SUBSCRIPTION_INACTIVE`; `cancel`/`resume` idempotent; `renewSubscriptions` (gọi trực tiếp với `Clock` giả): gia hạn nối kỳ đúng và áp `nextPlanId`, `cancelAtPeriodEnd` → `EXPIRED` không tạo payment, gateway giả trả `FAILED` → `EXPIRED`, chạy hai lần liên tiếp chỉ tạo một payment, subscription chưa tới hạn không bị đụng; hết hạn thì không mượn được nhưng vẫn trả được; `change-plan` song song với `renewSubscriptions` → kết quả nhất quán (hạ cấp hoặc áp kỳ này, hoặc còn nằm ở `nextPlanId`).
+  - **Mượn/trả (M4):** luồng đủ mượn → giao → trả → thu hồi, kiểm `BookCopy.status` từng bước; `LOAN_DELIVERY` `FAILED` → `cancel-loans` (loan `CANCELLED`, bản `AVAILABLE`), gọi lại → `200`; `FAILED` → retry (loan trỏ shipment mới) → `cancel-loans` shipment cũ → `409 LOAN_NOT_CANCELLABLE`; `cancel-loans` rồi retry → `409`, không có shipment mới; `cancel-loans` trên `ORDER_DELIVERY`/`LOAN_PICKUP` hoặc shipment chưa `FAILED` → `409 LOAN_NOT_CANCELLABLE`; retry `LOAN_PICKUP` trỏ `returnShipmentId` sang shipment mới; trả loan không `ACTIVE`/của người khác → `LOAN_NOT_RETURNABLE`; hai request trả chồng nhau (`{a,b}` và `{b,c}`) → một thành công, một `409`, không deadlock, `c` vẫn `ACTIVE`; `GET /loans` trả `shipmentStatus` đúng cả loan `CANCELLED` (`FAILED`); xóa sách từng được mượn → `409 IN_USE`; retry song song với `cancel-loans` → đúng một bên thắng.
+  - **Thiếu handler → 500 + rollback:** khi M4 đăng ký đủ handler cho mọi đích/loại, kiểm bằng integration test khởi tạo trực tiếp `new PaymentsService(…)` / `new ShipmentsService(…)` với registry rỗng trên DB test (không thêm API gỡ đăng ký vào code production); các test "thiếu handler" dùng đích/loại chưa đăng ký trong e2e cũ bị bỏ, handler `LOAN_DELIVERY` giả trong `shipments.e2e-spec.ts` được thay bằng luồng loan thật.
+  - **Revalidation (M4):** route `/internal/revalidate` sai secret → 401, đúng → gọi `revalidateTag` (Vitest); `RevalidationService` không ném khi `fetch` lỗi và bỏ qua khi thiếu env (Jest).
 - **E2E (Playwright):**
   1. Đăng ký gói → mượn → admin giao → trả → admin thu hồi.
   2. Mua → thanh toán mock → admin giao.
@@ -375,7 +445,7 @@ Tập trung vào luật nghiệp vụ và race condition; không test UI vụn v
   - `pnpm db:setup` → migrate + seed DB dev
   - `pnpm test` → unit + integration
   - `pnpm test:e2e` → Playwright
-- **`.env.example`:** `DATABASE_URL`, `DATABASE_URL_TEST`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `API_INTERNAL_URL`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_CUSTOMER_EMAIL`, `SEED_CUSTOMER_PASSWORD`.
+- **`.env.example`:** `DATABASE_URL`, `DATABASE_URL_TEST`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `API_INTERNAL_URL`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_CUSTOMER_EMAIL`, `SEED_CUSTOMER_PASSWORD`; từ M4: `WEB_INTERNAL_URL`, `REVALIDATE_SECRET` (dùng chung cho api và web, 4.9).
 - **Seed:** 1 admin, 1 customer (thông tin từ biến môi trường); ~30 sách thuộc 6 thể loại (M1); 3 gói — **Basic** 2 cuốn / 79.000 đ, **Standard** 3 cuốn / 119.000 đ, **Premium** 5 cuốn / 179.000 đ (thêm ở M4, khi có model `Plan`).
   - Sách phối trộn để mọi bộ lọc và nhãn đều có dữ liệu: đa số vừa bán vừa cho mượn; vài cuốn chỉ cho mượn (`salePrice` null); vài cuốn chỉ bán (0 bản); 1–2 cuốn hết hàng.
   - **Idempotent:** upsert theo `isbn`; tồn kho và bản cho mượn chỉ tạo khi sách vừa được tạo, nên chạy lại `pnpm db:setup` không nhân đôi.
@@ -394,9 +464,10 @@ Mỗi mốc có implementation plan riêng và chạy được độc lập khi 
 | **M1** | Danh mục sách, tồn kho bán, bản cho mượn (4.8); trang `/books`, `/books/[slug]`; `/admin/books`; seed sách. Kèm nợ từ review M0: rate limit auth, hằng số tên cookie, sửa `apiServer` (merge `init`, `next` khi 401), proxy fail fast khi thiếu `JWT_ACCESS_SECRET`, log lỗi không phải parse trong `body-parse-error.handler.ts`, `apiClient` giữ `search` khi chuyển `/login` |
 | **M2** | Địa chỉ (4.5a), giỏ hàng, đơn mua (4.5), thanh toán mock (4.1), cron `failStalePayments` + `cleanupRefreshTokens`, `PaymentOutcomeHandler` cho đơn (`onSucceeded` chỉ chuyển `PAID`, `onFailed` hủy + hoàn kho); `/cart`, `/checkout`, `/checkout/mock/[paymentId]`, `/account/orders`, `/account/orders/[id]`, `/account/addresses`; seed 2 địa chỉ cho customer (một Hà Nội, một tỉnh khác) |
 | **M3** | Shipments (máy trạng thái trong shared, event, CAS, retry với `retryOfId` unique), handler `ORDER_DELIVERY` (kể cả `onSucceeded` tạo `Shipment ORDER_DELIVERY`); API admin đọc đơn và shipment; `GET /orders/:id` kèm shipments; `/admin/orders`, `/admin/orders/[id]`, `/admin/shipments`, `/admin/shipments/[id]`, timeline giao hàng ở `/account/orders/[id]`. Chưa làm: `cancel-loans`, handler `LOAN_*` (M4), on-demand revalidation (dời M4) |
-| **M4** | Gói đăng ký (model `Plan` + seed 3 gói), FK `Payment.subscriptionId`, gia hạn, cron `expireSubscriptions`, `PaymentOutcomeHandler` cho subscription; mượn/trả sách, handler cho loan, hủy loan (`cancel-loans`), on-demand revalidation (xem Nợ đã biết); `/plans`, `/borrow/confirm`, `/account/loans`, `/account/subscription`, `/admin/loans` |
+| **M4** | Một nhánh, plan chia hai nửa, mỗi nửa xong đều chạy được. **Nửa A:** gói đăng ký kiểu Netflix (4.2: model `Plan` + seed 3 gói, `Subscription` có `nextPlanId`/`cancelAtPeriodEnd`, FK `Payment.subscriptionId`, `PaymentOutcomeHandler` cho subscription, `change-plan`/`cancel`/`resume`, `PaymentGateway.charge`, cron `renewSubscriptions` thay `expireSubscriptions`), on-demand revalidation (4.9); `/plans`, `/account/subscription`, trang mock checkout cho subscription. **Nửa B:** mượn/trả (4.3, 4.4), handler `LOAN_*` + `onRetried` (4.4a, 4.6), `cancel-loans`, `GET /loans`, `GET /admin/loans`; giỏ mượn, `/borrow/confirm`, `/account/loans`, `/admin/loans`, danh sách loan + nút hủy ở `/admin/shipments/[id]`. Kèm nợ M3: cột "mã" (`shortCode`), thông báo 409 không mất (6.2c), thay handler `LOAN_DELIVERY` giả trong test |
 | **M5** | Playwright E2E, GitHub Actions CI |
 
 ### Nợ đã biết
 
-- **Nợ từ M2:** tồn kho/nhãn availability trên trang công khai có thể lệch tối đa 60 giây sau ghi (chấp nhận theo §6.2; các luồng nghiệp vụ luôn kiểm tra lại server-side). On-demand revalidation **dời sang M4** (M3 không ghi `SaleStock`/`BookCopy` mới nên không làm lệch thêm; M4 mượn/trả đổi `availableCopies`): khi đó cần tag `books` trên các fetch `apiPublic`, một endpoint web nội bộ gọi `revalidateTag` bảo vệ bằng `REVALIDATE_SECRET`, và lời gọi sau commit, fail-tolerant (lỗi revalidate không được làm fail request; TTL 60s là lưới an toàn).
+- **Nợ từ M2 (trả ở M4, 4.9):** tồn kho/nhãn availability trên trang công khai lệch tối đa 60 giây sau ghi. M4 thêm on-demand revalidation; sau M4 chỉ còn lệch khi lời gọi revalidate thất bại (fail-tolerant, TTL 60s là lưới an toàn).
+- **Chấp nhận có chủ ý (M4):** nâng cấp gói không thu tiền ngay (4.2); job gia hạn chết giữa chừng làm subscription `EXPIRED` sau 30 phút (4.2); khoảng ≤ 1 giờ sau `currentPeriodEnd` chưa mượn được cho tới khi job gia hạn chạy; nhánh tự trừ tiền thất bại không demo được trên giao diện.
