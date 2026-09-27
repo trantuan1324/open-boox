@@ -45,4 +45,10 @@ export class OrdersController {
   detail(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<OrderDetail> {
     return this.orders.detail(user.id, id);
   }
+
+  @Post(':id/cancel')
+  @HttpCode(200)
+  cancel(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<OrderDetail> {
+    return this.orders.cancel(user.id, id);
+  }
 }

@@ -66,6 +66,20 @@ export class OrdersService {
     });
   }
 
+  // spec §4.5: cancelling is settle(FAILED); the payment's resulting status decides the answer. FAILED — whoever
+  // set it — means onFailed already cancelled the order and returned the stock, so a repeat cancel is a 200 too.
+  async cancel(userId: string, orderId: string): Promise<OrderDetail> {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, userId },
+      select: { payments: { select: { id: true } } },
+    });
+    if (!order) throw new DomainError('NOT_FOUND');
+    const [payment] = order.payments; // exactly one payment per order (spec §3.5)
+    const settled = await this.payments.settle(payment!.id, 'FAILED');
+    if (settled.status === 'SUCCEEDED') throw new DomainError('ORDER_NOT_CANCELLABLE');
+    return this.detail(userId, orderId);
+  }
+
   async list(userId: string, page: number): Promise<Paged<OrderSummary>> {
     const where = { userId };
     const [rows, total] = await Promise.all([

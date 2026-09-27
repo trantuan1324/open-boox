@@ -35,6 +35,12 @@ export class InventoryService {
     }
   }
 
+  async returnStock(tx: Prisma.TransactionClient, items: StockLine[]): Promise<void> {
+    for (const { bookId, quantity } of inLockOrder(items)) {
+      await tx.saleStock.update({ where: { bookId }, data: { quantity: { increment: quantity } } });
+    }
+  }
+
   // One conditional UPDATE: concurrent adjustments serialize on the row and re-check the condition,
   // so stock never goes below zero (the CHECK constraint is the backstop).
   async adjustStock(bookId: string, delta: number): Promise<StockDto> {
