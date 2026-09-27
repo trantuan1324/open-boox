@@ -2,6 +2,7 @@ import type { OrderDetail } from '@open-boox/shared';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AddressLines } from '@/components/addresses/address-lines';
+import { DeliveryAttempts } from '@/components/shipments/delivery-attempts';
 import { PageTitle } from '@/components/ui/page-title';
 import { nullOn404 } from '@/lib/api/error';
 import { apiServer } from '@/lib/api/server';
@@ -68,6 +69,13 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <dd className="font-medium">{formatVnd(order.total)}</dd>
         </dl>
       </section>
+
+      {order.shipments.length > 0 && (
+        <section className={box}>
+          <h2 className="text-[18px] font-medium uppercase">Giao hàng</h2>
+          <DeliveryAttempts shipments={order.shipments} />
+        </section>
+      )}
 
       <section className={box}>
         <h2 className="text-[18px] font-medium uppercase">Giao tới</h2>
