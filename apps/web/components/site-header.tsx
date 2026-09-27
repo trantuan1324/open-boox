@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/api/server';
+import { CartLink } from './cart/cart-link';
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
@@ -10,6 +11,7 @@ export async function SiteHeader() {
       </Link>
       <nav className="flex gap-6 text-[12px] font-medium uppercase">
         <Link href="/books">Sách</Link>
+        <CartLink />
         {user ? (
           <>
             {user.role === 'ADMIN' && <Link href="/admin">Quản trị</Link>}
