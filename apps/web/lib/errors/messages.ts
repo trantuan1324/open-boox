@@ -13,6 +13,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   SUBSCRIPTION_ALREADY_EXISTS: 'Bạn đã có gói đang hoạt động hoặc đang chờ thanh toán.',
   ORDER_NOT_CANCELLABLE: 'Đơn hàng không thể hủy ở trạng thái hiện tại.',
   INVALID_SHIPMENT_TRANSITION: 'Không thể chuyển sang trạng thái giao hàng này.',
+  SHIPMENT_ALREADY_RETRIED: 'Lần giao này đã được tạo lại trước đó.',
   LOAN_NOT_RETURNABLE: 'Sách này không ở trạng thái có thể trả.',
   INVALID_COPY_STATE: 'Bản sách không ở trạng thái cho phép thao tác này.',
   DUPLICATE: 'Dữ liệu đã tồn tại.',

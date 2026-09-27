@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { orderInputSchema, orderListQuerySchema } from './orders';
+import { adminOrderListQuerySchema, orderInputSchema, orderListQuerySchema } from './orders';
 
 const item = (bookId: string, quantity = 1) => ({ bookId, quantity });
 
@@ -34,5 +34,15 @@ describe('orderListQuerySchema', () => {
     [{ page: ['2', '5'] }, 2],
   ])('parses %j to page %i', (query, page) => {
     expect(orderListQuerySchema.parse(query)).toEqual({ page });
+  });
+});
+
+describe('adminOrderListQuerySchema', () => {
+  it('keeps a valid status and page', () => {
+    expect(adminOrderListQuerySchema.parse({ status: 'PAID', page: '3' })).toEqual({ status: 'PAID', page: 3 });
+  });
+
+  it('drops an unknown status and resets a bad page', () => {
+    expect(adminOrderListQuerySchema.parse({ status: 'paid', page: 'abc' })).toEqual({ status: undefined, page: 1 });
   });
 });

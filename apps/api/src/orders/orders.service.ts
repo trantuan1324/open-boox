@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import {
+  ADMIN_ORDER_PAGE_SIZE,
+  type AdminOrderDetail,
+  type AdminOrderListQuery,
+  type AdminOrderRow,
   type AddressSnapshot,
   ORDER_PAGE_SIZE,
   type OrderDetail,
@@ -15,10 +19,19 @@ import { DomainError } from '../common/errors/domain-error';
 import { InventoryService } from '../inventory/inventory.service';
 import { PaymentsService } from '../payments/payments.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ShipmentsService } from '../shipments/shipments.service';
 import { AddressesService } from '../users/addresses.service';
 import { priceOrder, type SellableBook } from './pricing';
 
 type StockedBook = SellableBook & { stock: number };
+
+const DETAIL_INCLUDE = {
+  items: { orderBy: { id: 'asc' }, include: { book: { select: { title: true, slug: true } } } },
+  payments: { select: { id: true, status: true } },
+  user: { select: { email: true, fullName: true } },
+} satisfies Prisma.OrderInclude;
+
+type OrderWithDetail = Prisma.OrderGetPayload<{ include: typeof DETAIL_INCLUDE }>;
 
 @Injectable()
 export class OrdersService {
@@ -27,6 +40,7 @@ export class OrdersService {
     private readonly inventory: InventoryService,
     private readonly payments: PaymentsService,
     private readonly addresses: AddressesService,
+    private readonly shipments: ShipmentsService,
   ) {}
 
   // Read-only: same pricing as place(), plus a stock check that names the short lines by index.
@@ -100,15 +114,59 @@ export class OrdersService {
     return { items, total, page, pageSize: ORDER_PAGE_SIZE };
   }
 
+  async adminList({ status, page }: AdminOrderListQuery): Promise<Paged<AdminOrderRow>> {
+    const where: Prisma.OrderWhereInput = { status };
+    const [rows, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip: (page - 1) * ADMIN_ORDER_PAGE_SIZE,
+        take: ADMIN_ORDER_PAGE_SIZE,
+        select: {
+          id: true,
+          status: true,
+          total: true,
+          createdAt: true,
+          user: { select: { email: true } },
+          items: { select: { quantity: true } },
+        },
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+    // Shipments are read through their owner (spec §2.1), one query for the whole page.
+    const latest = await this.shipments.latestStatuses(rows.map((row) => row.id));
+    const items = rows.map(({ id, status: orderStatus, total: orderTotal, createdAt, user, items: lines }) => ({
+      id,
+      customerEmail: user.email,
+      status: orderStatus,
+      total: orderTotal,
+      itemCount: lines.reduce((sum, line) => sum + line.quantity, 0),
+      createdAt: createdAt.toISOString(),
+      latestShipmentStatus: latest.get(id) ?? null,
+    }));
+    return { items, total, page, pageSize: ADMIN_ORDER_PAGE_SIZE };
+  }
+
   async detail(userId: string, orderId: string): Promise<OrderDetail> {
-    const order = await this.prisma.order.findFirst({
-      where: { id: orderId, userId },
-      include: {
-        items: { orderBy: { id: 'asc' }, include: { book: { select: { title: true, slug: true } } } },
-        payments: { select: { id: true, status: true } },
-      },
-    });
+    return this.toDetail(await this.findDetail({ id: orderId, userId }));
+  }
+
+  async adminDetail(orderId: string): Promise<AdminOrderDetail> {
+    const order = await this.findDetail({ id: orderId });
+    return {
+      ...(await this.toDetail(order)),
+      customer: order.user,
+      paymentStatus: order.payments[0]?.status ?? null, // exactly one payment per order (spec §3.5)
+    };
+  }
+
+  private async findDetail(where: Prisma.OrderWhereInput): Promise<OrderWithDetail> {
+    const order = await this.prisma.order.findFirst({ where, include: DETAIL_INCLUDE });
     if (!order) throw new DomainError('NOT_FOUND');
+    return order;
+  }
+
+  private async toDetail(order: OrderWithDetail): Promise<OrderDetail> {
     return {
       id: order.id,
       status: order.status,
@@ -126,6 +184,7 @@ export class OrdersService {
       shippingFee: order.shippingFee,
       total: order.total,
       pendingPaymentId: order.payments.find((p) => p.status === 'PENDING')?.id ?? null,
+      shipments: await this.shipments.listForOrder(this.prisma, order.id),
     };
   }
 

@@ -1,8 +1,8 @@
 import { type BookListQuery, bookListQuerySchema, type BookSummary, type CategoryDto, type Paged } from '@open-boox/shared';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 import { BookCard } from '@/components/books/book-card';
 import { Button } from '@/components/ui/button';
+import { Chip } from '@/components/ui/chip';
 import { PageTitle } from '@/components/ui/page-title';
 import { TextField } from '@/components/ui/text-field';
 import { apiPublic } from '@/lib/api/server';
@@ -12,18 +12,6 @@ const AVAILABILITY = [
   { value: 'sale', label: 'Có bán' },
   { value: 'loan', label: 'Cho mượn' },
 ] as const;
-
-function Chip({ href, active, children }: { href: string; active: boolean; children: ReactNode }) {
-  return (
-    <Link
-      href={href}
-      aria-current={active ? 'true' : undefined}
-      className={`rounded-[36px] border border-dashed border-cork-border px-[14px] py-[8px] text-[12px] font-medium uppercase ${active ? 'bg-bark-brown' : ''}`}
-    >
-      {children}
-    </Link>
-  );
-}
 
 export default async function BooksPage({
   searchParams,

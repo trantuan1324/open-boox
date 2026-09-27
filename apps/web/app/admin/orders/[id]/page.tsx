@@ -1,4 +1,4 @@
-import type { OrderDetail } from '@open-boox/shared';
+import type { AdminOrderDetail } from '@open-boox/shared';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AddressLines } from '@/components/addresses/address-lines';
@@ -7,20 +7,19 @@ import { PageTitle } from '@/components/ui/page-title';
 import { nullOn404 } from '@/lib/api/error';
 import { apiServer } from '@/lib/api/server';
 import { formatDateTime, formatVnd } from '@/lib/format';
-import { ORDER_STATUS_LABEL } from '@/lib/orders/labels';
-import { CancelOrderButton } from './cancel-order-button';
+import { ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL } from '@/lib/orders/labels';
 
 const box = 'flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]';
 
-export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AdminOrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const order = await apiServer<OrderDetail>(`/orders/${encodeURIComponent(id)}`).catch(nullOn404);
+  const order = await apiServer<AdminOrderDetail>(`/admin/orders/${encodeURIComponent(id)}`).catch(nullOn404);
   if (!order) notFound();
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-[31px] px-[24px] py-[41px]">
+    <div className="flex flex-col gap-[31px]">
       <div className="flex flex-col gap-[12px]">
-        <Link href="/account/orders" className="self-start text-[12px] font-medium uppercase underline">
+        <Link href="/admin/orders" className="self-start text-[12px] font-medium uppercase underline">
           Đơn hàng
         </Link>
         <PageTitle>Chi tiết đơn</PageTitle>
@@ -28,32 +27,20 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           {formatDateTime(order.createdAt)} ·{' '}
           <span className={`font-medium uppercase ${order.status === 'CANCELLED' ? 'text-ember-accent' : ''}`}>
             {ORDER_STATUS_LABEL[order.status]}
-          </span>
+          </span>{' '}
+          · Thanh toán: {order.paymentStatus ? PAYMENT_STATUS_LABEL[order.paymentStatus] : '—'}
+        </p>
+        <p className="text-[16px]">
+          {order.customer.fullName} · {order.customer.email}
         </p>
       </div>
-
-      {order.status === 'PENDING_PAYMENT' && (
-        <div className="flex flex-wrap items-start gap-[12px]">
-          {order.pendingPaymentId && (
-            <Link
-              href={`/checkout/mock/${order.pendingPaymentId}`}
-              className="rounded-[36px] bg-bark-brown px-6 py-3.5 text-[14px] font-medium uppercase leading-none"
-            >
-              Thanh toán
-            </Link>
-          )}
-          <CancelOrderButton orderId={order.id} />
-        </div>
-      )}
 
       <section className={box}>
         <h2 className="text-[18px] font-medium uppercase">Sách</h2>
         <ul className="flex flex-col gap-[12px]">
           {order.items.map((item) => (
             <li key={item.bookId} className="flex flex-wrap justify-between gap-[12px] text-[16px]">
-              <Link href={`/books/${item.slug}`} className="underline">
-                {item.title}
-              </Link>
+              <span>{item.title}</span>
               <span>
                 {item.quantity} × {formatVnd(item.unitPrice)} = {formatVnd(item.lineTotal)}
               </span>
@@ -70,12 +57,14 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         </dl>
       </section>
 
-      {order.shipments.length > 0 && (
-        <section className={box}>
-          <h2 className="text-[18px] font-medium uppercase">Giao hàng</h2>
-          <DeliveryAttempts shipments={order.shipments} />
-        </section>
-      )}
+      <section className={box}>
+        <h2 className="text-[18px] font-medium uppercase">Giao hàng</h2>
+        {order.shipments.length === 0 ? (
+          <p className="text-[16px]">Chưa có lần giao nào.</p>
+        ) : (
+          <DeliveryAttempts shipments={order.shipments} linkToAdmin />
+        )}
+      </section>
 
       <section className={box}>
         <h2 className="text-[18px] font-medium uppercase">Giao tới</h2>
