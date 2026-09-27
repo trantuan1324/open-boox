@@ -103,6 +103,20 @@ enum PaymentStatus {
   FAILED
 }
 
+enum ShipmentType {
+  ORDER_DELIVERY
+  LOAN_DELIVERY
+  LOAN_PICKUP
+}
+
+enum ShipmentStatus {
+  PENDING
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+}
+
 // One default per user: partial unique index address_one_default_per_user (hand-written SQL, orders migration).
 // No zone column: zoneOf(city) derives it (spec §3.1).
 model Address {
@@ -132,6 +146,7 @@ model Order {
   createdAt       DateTime    @default(now()) @db.Timestamptz(3)
   items           OrderItem[]
   payments        Payment[]
+  shipments       Shipment[]
 
   @@index([userId, createdAt])
 }
@@ -165,4 +180,36 @@ model Payment {
 
   @@index([orderId])
   @@index([status, createdAt])
+}
+
+// ORDER_DELIVERY must have an orderId: CHECK shipment_order_delivery_has_order (hand-written SQL, shipments
+// migration). retryOfId is unique so a FAILED shipment can be retried only once (spec §3.6, §4.6).
+model Shipment {
+  id              String          @id @default(cuid())
+  type            ShipmentType
+  orderId         String?
+  order           Order?          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  status          ShipmentStatus  @default(PENDING)
+  fee             Int
+  addressSnapshot Json
+  retryOfId       String?         @unique
+  retryOf         Shipment?       @relation("ShipmentRetry", fields: [retryOfId], references: [id], onDelete: Restrict)
+  retriedBy       Shipment?       @relation("ShipmentRetry")
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+  events          ShipmentEvent[]
+
+  @@index([orderId])
+  @@index([status, createdAt])
+}
+
+model ShipmentEvent {
+  id         String         @id @default(cuid())
+  shipmentId String
+  shipment   Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status     ShipmentStatus
+  note       String?
+  createdAt  DateTime       @default(now()) @db.Timestamptz(3)
+
+  @@index([shipmentId])
 }

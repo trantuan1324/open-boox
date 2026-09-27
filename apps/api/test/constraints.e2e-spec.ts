@@ -53,4 +53,29 @@ describe('orders migration constraints', () => {
     await ctx.prisma.orderItem.create({ data: { orderId: order.id, bookId: book.id, quantity: 1, unitPrice: 1000 } });
     await expect(ctx.prisma.book.delete({ where: { id: book.id } })).rejects.toMatchObject({ code: 'P2003' });
   });
+
+  const shipment = (data: { type: 'ORDER_DELIVERY' | 'LOAN_DELIVERY'; orderId?: string; retryOfId?: string }) =>
+    ctx.prisma.shipment.create({ data: { fee: 0, addressSnapshot: {}, ...data } });
+
+  it('rejects an ORDER_DELIVERY shipment without an order', async () => {
+    await expect(shipment({ type: 'ORDER_DELIVERY' })).rejects.toThrow(/shipment_order_delivery_has_order/);
+    const order = await createOrder();
+    await expect(shipment({ type: 'ORDER_DELIVERY', orderId: order.id })).resolves.toBeDefined();
+  });
+
+  it('accepts a loan shipment without an order', async () => {
+    await expect(shipment({ type: 'LOAN_DELIVERY' })).resolves.toBeDefined();
+  });
+
+  it('lets a shipment be retried only once (unique retryOfId)', async () => {
+    const failed = await shipment({ type: 'LOAN_DELIVERY' });
+    await shipment({ type: 'LOAN_DELIVERY', retryOfId: failed.id });
+    await expect(shipment({ type: 'LOAN_DELIVERY', retryOfId: failed.id })).rejects.toMatchObject({ code: 'P2002' });
+  });
+
+  it('refuses to delete an order that has a shipment (P2003)', async () => {
+    const order = await createOrder();
+    await shipment({ type: 'ORDER_DELIVERY', orderId: order.id });
+    await expect(ctx.prisma.order.delete({ where: { id: order.id } })).rejects.toMatchObject({ code: 'P2003' });
+  });
 });
