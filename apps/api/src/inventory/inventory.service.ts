@@ -5,6 +5,17 @@ import { DomainError } from '../common/errors/domain-error';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatBarcode } from './barcode';
 
+export interface StockLine {
+  bookId: string;
+  quantity: number;
+}
+
+// Every multi-row SaleStock write locks rows in bookId order, whatever order the caller passes, so two
+// transactions touching the same books never wait on each other crosswise (deadlock) — spec §4.5.
+function inLockOrder(items: StockLine[]): StockLine[] {
+  return [...items].sort((a, b) => (a.bookId < b.bookId ? -1 : a.bookId > b.bookId ? 1 : 0));
+}
+
 // The only writer of SaleStock and BookCopy (spec §4.8). Methods taking `tx` join the caller's transaction.
 @Injectable()
 export class InventoryService {
@@ -12,6 +23,16 @@ export class InventoryService {
 
   async initStock(tx: Prisma.TransactionClient, bookId: string): Promise<void> {
     await tx.saleStock.create({ data: { bookId, quantity: 0 } });
+  }
+
+  async takeStock(tx: Prisma.TransactionClient, items: StockLine[]): Promise<void> {
+    for (const { bookId, quantity } of inLockOrder(items)) {
+      const { count } = await tx.saleStock.updateMany({
+        where: { bookId, quantity: { gte: quantity } },
+        data: { quantity: { decrement: quantity } },
+      });
+      if (count === 0) throw new DomainError('OUT_OF_STOCK', `Not enough stock for book ${bookId}`);
+    }
   }
 
   // One conditional UPDATE: concurrent adjustments serialize on the row and re-check the condition,

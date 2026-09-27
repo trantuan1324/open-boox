@@ -28,6 +28,14 @@ export class PaymentsService {
     this.handlers.set(target, handler);
   }
 
+  async createForOrder(
+    tx: Prisma.TransactionClient,
+    data: { userId: string; orderId: string; amount: number },
+  ): Promise<{ redirectUrl: string }> {
+    const payment = await tx.payment.create({ data, select: { id: true } });
+    return this.gateway.createCheckout(payment);
+  }
+
   // The single owner of every Payment transition out of PENDING (spec §4.1). Returns the payment as it now
   // stands; callers decide from its status. A domain error from onSucceeded (a business conflict) rolls that
   // attempt back and the payment is failed instead, as a real gateway would decline it.
