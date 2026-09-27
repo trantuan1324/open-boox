@@ -11,6 +11,7 @@ import { apiClient } from '@/lib/api/client';
 import { useCart } from '@/lib/cart/use-cart';
 import { formatVnd } from '@/lib/format';
 import { describeQuoteError, type QuoteProblem } from '@/lib/orders/quote-errors';
+import { quoteMatches } from '@/lib/orders/quote-match';
 
 const box = 'flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]';
 
@@ -21,11 +22,12 @@ export function CheckoutView({ addresses }: { addresses: AddressDto[] }) {
     () => (addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? null,
   );
   const [addingAddress, setAddingAddress] = useState(addresses.length === 0);
-  const [quote, setQuote] = useState<OrderQuote | null>(null);
+  const [fetchedQuote, setQuote] = useState<OrderQuote | null>(null);
   const [problem, setProblem] = useState<QuoteProblem | null>(null);
   const [placing, setPlacing] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const items = useMemo(() => lines.map(({ bookId, quantity }) => ({ bookId, quantity })), [lines]);
+  const quote = fetchedQuote && quoteMatches(fetchedQuote, items) ? fetchedQuote : null;
 
   useEffect(() => {
     setQuote(null);
