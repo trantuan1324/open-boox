@@ -139,7 +139,7 @@ Mô hình kiểu Netflix: mỗi user tối đa **một** subscription mở; gói
 | Endpoint | Luật |
 |---|---|
 | `GET /plans` (công khai) | Gói `active`, sắp theo `monthlyPrice` tăng dần. |
-| `GET /subscriptions/current` | Subscription mở (`PENDING_PAYMENT`/`ACTIVE`) của user kèm `plan`, `nextPlan?`, `pendingPaymentId?` (payment `PENDING` nếu có); không có → `null`. |
+| `GET /subscriptions/current` | `{ subscription }`: subscription mở (`PENDING_PAYMENT`/`ACTIVE`) của user kèm `plan`, `nextPlan?`, `pendingPaymentId?` (payment `PENDING` nếu có); không có → `{ subscription: null }` (bọc trong object vì Nest trả body rỗng khi handler trả `null`). |
 | `POST /subscriptions { planCode }` | Tạo `Subscription PENDING_PAYMENT` + `Payment` (giá `monthlyPrice`), trả `{ subscriptionId, redirectUrl }`. Đã có subscription mở → `409 SUBSCRIPTION_ALREADY_EXISTS` (index ở 3.3 đảm bảo cả khi request song song). Gói `EXPIRED`/`CANCELLED` → user đăng ký mới (chọn lại gói nào cũng được). `planCode` không tồn tại/không `active` → `400 VALIDATION_ERROR`. |
 | `POST /subscriptions/change-plan { planCode }` | Chỉ khi có subscription `ACTIVE` (khác → `409 SUBSCRIPTION_INACTIVE`). Trong transaction, khóa dòng subscription (`FOR UPDATE`): gói **đắt hơn** `planId` hiện tại → đổi `planId` ngay, xóa `nextPlanId` (không thu tiền ngay; giá mới áp từ lần tự gia hạn kế tiếp, ngày gia hạn giữ nguyên); gói **rẻ hơn** → đặt `nextPlanId`; **đúng** gói hiện tại → xóa `nextPlanId` (bỏ lệnh hạ cấp). Không tạo payment; không đổi `cancelAtPeriodEnd`. Trả subscription hiện tại. |
 | `POST /subscriptions/cancel` · `POST /subscriptions/resume` | Đặt `cancelAtPeriodEnd = true` / `false`. Chỉ khi `ACTIVE` (khác → `409 SUBSCRIPTION_INACTIVE`); gọi lặp idempotent. |
@@ -148,15 +148,15 @@ Mô hình kiểu Netflix: mỗi user tối đa **một** subscription mở; gói
 - `SubscriptionsService.findActiveForUpdate(tx, userId) → { id, currentPeriodEnd, maxBooks } | null`: khóa (`FOR UPDATE`) dòng subscription `ACTIVE` của user, join `Plan` lấy `maxBooks` theo `planId`. Dùng bởi `loans` (4.3); kiểm tra `currentPeriodEnd > now` nằm ở `loans`.
 
 **Handler thanh toán cho subscription** (`PaymentOutcomeHandler`, đích `subscription`):
-- `onSucceeded`: subscription `PENDING_PAYMENT` → `ACTIVE`, `currentPeriodStart = now`, `currentPeriodEnd = now + 30 ngày`. Subscription `ACTIVE` (payment tự gia hạn) → kỳ mới: `currentPeriodStart = currentPeriodEnd cũ`, `currentPeriodEnd = start + 30 ngày`; có `nextPlanId` → `planId = nextPlanId`, xóa `nextPlanId`. Trạng thái khác → ném lỗi (không thể xảy ra: cron chỉ tạo payment cho `ACTIVE` và không đổi trạng thái khi còn payment `PENDING`).
+- `onSucceeded`: subscription `PENDING_PAYMENT` → `ACTIVE`, `currentPeriodStart = now`, `currentPeriodEnd = now + 30 ngày`. Subscription `ACTIVE` (payment tự gia hạn) → kỳ mới: `currentPeriodStart = currentPeriodEnd cũ`, `currentPeriodEnd = start + 30 ngày` (gói đã được chốt ở bước 1 của tự gia hạn). Trạng thái khác → ném lỗi (không thể xảy ra: cron chỉ tạo payment cho `ACTIVE` và không đổi trạng thái khi còn payment `PENDING`).
 - `onFailed`: `PENDING_PAYMENT` → `CANCELLED`; `ACTIVE` (tự gia hạn bị từ chối) → `EXPIRED`.
 - Guard theo trạng thái (`updateMany … WHERE status = …`), như handler đơn.
 
 **Tự gia hạn** (job `renewSubscriptions`, 4.7) — với mỗi subscription `ACTIVE` có `currentPeriodEnd ≤ now`:
-1. Transaction: khóa dòng subscription (`FOR UPDATE`), kiểm tra lại (`ACTIVE`, `currentPeriodEnd ≤ now`, **không** có payment `PENDING` của subscription này — có thì bỏ qua). `cancelAtPeriodEnd` → `EXPIRED`, xong. Ngược lại tạo `Payment { subscriptionId, amount = giá của (nextPlanId ?? planId) }`.
+1. Transaction: khóa dòng subscription (`FOR UPDATE`), kiểm tra lại (`ACTIVE`, `currentPeriodEnd ≤ now`, **không** có payment `PENDING` của subscription này — có thì bỏ qua). `cancelAtPeriodEnd` → `EXPIRED`, xong. Ngược lại chốt gói kỳ tới — `planId = nextPlanId ?? planId`, xóa `nextPlanId` — rồi tạo `Payment { subscriptionId, amount = giá gói đó }`. Chốt gói cùng lúc tạo payment để gói được tính tiền luôn là gói được áp; trừ tiền thất bại thì subscription `EXPIRED` nên việc đã đổi `planId` không còn ý nghĩa.
 2. Sau commit: `gateway.charge(payment)` → `PaymentsService.settle(payment.id, kết quả)`.
 - Job chết giữa 1 và 2 → payment `PENDING` còn lại; sau 30 phút `failStalePayments` chuyển `FAILED` → `onFailed` → subscription `EXPIRED`, user đăng ký lại. Chấp nhận (mock).
-- `change-plan` và bước 1 cùng khóa dòng subscription nên xếp hàng: hạ cấp đến trước được áp ngay kỳ này, đến sau được áp ở kỳ sau — không có trạng thái lẫn lộn.
+- `change-plan` và bước 1 cùng khóa dòng subscription nên xếp hàng: hạ cấp đến trước được chốt ở lần gia hạn này, đến sau nằm ở `nextPlanId` cho kỳ sau — không có trạng thái lẫn lộn. `change-plan` trong lúc payment gia hạn đang chờ settle (subscription vẫn `ACTIVE`) được phép và theo đúng luật trên.
 
 **Mượn khi gói hết hạn:** trong khoảng từ `currentPeriodEnd` tới lúc job chạy (≤ 1 giờ), `loans` kiểm `currentPeriodEnd > now` nên chưa mượn được — chấp nhận. **Gói hết hạn khi còn sách:** user giữ sách đến khi trả, không phạt, không mượn thêm được; giao diện nhắc trả sách. Hạ cấp xuống gói có `maxBooks` nhỏ hơn số sách đang giữ: giữ sách, chỉ không mượn thêm (luật hạn mức 3.3 đếm theo user).
 
