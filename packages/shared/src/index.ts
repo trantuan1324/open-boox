@@ -5,3 +5,4 @@ export * from './cookies';
 export * from './catalog';
 export * from './address';
 export * from './orders';
+export * from './shipments';

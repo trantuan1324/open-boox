@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import type { AddressSnapshot } from './address';
+import type { ShipmentStatus } from './shipments';
 
 export const MAX_ORDER_QUANTITY = 10;
 export const MAX_ORDER_LINES = 20;
 export const ORDER_PAGE_SIZE = 10;
+export const ADMIN_ORDER_PAGE_SIZE = 20;
 
 export const ORDER_STATUSES = ['PENDING_PAYMENT', 'PAID', 'SHIPPING', 'DELIVERED', 'CANCELLED'] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
@@ -39,6 +41,15 @@ export const orderListQuerySchema = z.object({
   ),
 });
 export type OrderListQuery = z.output<typeof orderListQuerySchema>;
+
+// Lenient too: an unknown ?status shows every order instead of an error page.
+export const adminOrderListQuerySchema = orderListQuerySchema.extend({
+  status: z.preprocess(
+    (value) => (Array.isArray(value) ? value[0] : value),
+    z.enum(ORDER_STATUSES).optional().catch(undefined),
+  ),
+});
+export type AdminOrderListQuery = z.output<typeof adminOrderListQuerySchema>;
 
 export const mockCallbackSchema = z.object({ success: z.boolean() });
 export type MockCallbackInput = z.output<typeof mockCallbackSchema>;
@@ -85,4 +96,19 @@ export interface PaymentDto {
   amount: number;
   status: PaymentStatus;
   orderId: string | null;
+}
+
+export interface AdminOrderRow {
+  id: string;
+  customerEmail: string;
+  status: OrderStatus;
+  total: number;
+  itemCount: number;
+  createdAt: string;
+  latestShipmentStatus: ShipmentStatus | null;
+}
+
+export interface AdminOrderDetail extends OrderDetail {
+  customer: { email: string; fullName: string };
+  paymentStatus: PaymentStatus | null;
 }
