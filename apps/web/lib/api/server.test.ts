@@ -9,6 +9,10 @@ vi.mock('next/navigation', () => ({
   redirect: vi.fn(() => {
     throw new Error('NEXT_REDIRECT');
   }),
+  // Stand-in for Next's internal check: rethrows framework control-flow errors such as dynamic-usage bailouts.
+  unstable_rethrow: (error: unknown) => {
+    if ((error as { digest?: string })?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  },
 }));
 
 const { apiServer, apiPublic, getCurrentUser } = await import('./server');
@@ -30,6 +34,12 @@ describe('getCurrentUser', () => {
   it('returns the user on 200', async () => {
     fetchMock.mockResolvedValueOnce(Response.json({ id: 'u1', email: 'a@b.vn' }));
     await expect(getCurrentUser()).resolves.toMatchObject({ id: 'u1' });
+  });
+
+  it('rethrows Next dynamic-usage bailouts so build-time prerendering stops instead of fetching', async () => {
+    const bailout = Object.assign(new Error('Dynamic server usage'), { digest: 'DYNAMIC_SERVER_USAGE' });
+    fetchMock.mockRejectedValueOnce(bailout);
+    await expect(getCurrentUser()).rejects.toBe(bailout);
   });
 
   it('returns null on 401', async () => {

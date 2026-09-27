@@ -1,7 +1,7 @@
 import 'server-only';
 import type { PublicUser } from '@open-boox/shared';
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { redirect, unstable_rethrow } from 'next/navigation';
 import { REQUEST_PATH_HEADER } from '../request-path';
 import { ApiError } from './error';
 
@@ -42,6 +42,8 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
     if (!res.ok) throw await ApiError.fromResponse(res);
     return (await res.json()) as PublicUser;
   } catch (error) {
+    // cookies() signals "this route is dynamic" by throwing; swallowing it made `next build` prerender pages and hit the API.
+    unstable_rethrow(error);
     console.error('getCurrentUser failed', error);
     return null;
   }

@@ -66,6 +66,7 @@ describe('bookInputSchema', () => {
     ['isbn', { isbn: '12345' }],
     ['coverUrl', { coverUrl: 'javascript:alert(1)' }],
     ['coverUrl', { coverUrl: 'not a url' }],
+    ['coverUrl', { coverUrl: 'http://covers.openlibrary.org/b/isbn/1-L.jpg' }],
     ['salePrice', { salePrice: '-5' }],
     ['salePrice', { salePrice: '12.5' }],
     ['salePrice', { salePrice: 'abc' }],

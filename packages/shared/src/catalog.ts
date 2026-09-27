@@ -36,7 +36,7 @@ export const bookInputSchema = z.object({
   description: z.string().trim().max(5000, 'Mô tả tối đa 5000 ký tự'),
   coverUrl: z.preprocess(
     emptyToNull,
-    z.url({ protocol: /^https?$/, error: 'Đường dẫn ảnh phải bắt đầu bằng http:// hoặc https://' }).nullable(),
+    z.url({ protocol: /^https$/, error: 'Đường dẫn ảnh phải bắt đầu bằng https://' }).nullable(),
   ),
   categoryId: z.string().min(1, 'Vui lòng chọn thể loại'),
   salePrice: z.preprocess(
