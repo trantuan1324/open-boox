@@ -1,4 +1,3 @@
-import type { Server } from 'node:http';
 import type { Type } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
@@ -9,7 +8,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 export interface TestContext {
   app: NestExpressApplication;
   prisma: PrismaService;
-  http: Server;
+  http: string;
 }
 
 export async function createTestApp(opts: { controllers?: Type<unknown>[] } = {}): Promise<TestContext> {
@@ -19,8 +18,11 @@ export async function createTestApp(opts: { controllers?: Type<unknown>[] } = {}
   }).compile();
   const app = moduleRef.createNestApplication<NestExpressApplication>({ bodyParser: false });
   configureApp(app);
-  await app.init();
-  return { app, prisma: app.get(PrismaService), http: app.getHttpServer() };
+  // Listen ourselves instead of handing supertest the bare server: supertest would listen(0) on the
+  // dual-stack wildcard '::' and then dial 127.0.0.1. macOS lets '::' take a port another process
+  // holds on 127.0.0.1 (e.g. an IDE), and the kernel routes 127.0.0.1 traffic to that process.
+  await app.listen(0, '127.0.0.1');
+  return { app, prisma: app.get(PrismaService), http: await app.getUrl() };
 }
 
 export async function resetDb(prisma: PrismaService): Promise<void> {
