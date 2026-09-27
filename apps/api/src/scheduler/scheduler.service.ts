@@ -1,0 +1,52 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, Interval } from '@nestjs/schedule';
+import { TokensService } from '../auth/tokens.service';
+import { PaymentsService, STALE_PAYMENT_MS } from '../payments/payments.service';
+import { Clock } from './clock';
+
+const FIVE_MINUTES = 5 * 60_000;
+
+// Jobs only call functions exported by the module that owns the table (spec §4.7).
+@Injectable()
+export class SchedulerService {
+  private readonly logger = new Logger(SchedulerService.name);
+
+  constructor(
+    private readonly payments: PaymentsService,
+    private readonly tokens: TokensService,
+    private readonly clock: Clock,
+  ) {}
+
+  // Timer entry points: no arguments, and never reject — an unhandled rejection from a timer would
+  // crash the process.
+  @Interval(FIVE_MINUTES)
+  async runFailStalePayments(): Promise<void> {
+    await this.failStalePayments(this.clock.now()).catch((error: unknown) => this.logFailure('failStalePayments', error));
+  }
+
+  @Cron('0 3 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  async runCleanupRefreshTokens(): Promise<void> {
+    await this.cleanupRefreshTokens(this.clock.now()).catch((error: unknown) =>
+      this.logFailure('cleanupRefreshTokens', error),
+    );
+  }
+
+  // Only settles; cancelling orders and returning stock is onFailed's job. One failing payment does not
+  // hold back the others.
+  async failStalePayments(now: Date): Promise<void> {
+    const ids = await this.payments.findStalePendingIds(new Date(now.getTime() - STALE_PAYMENT_MS));
+    for (const id of ids) {
+      await this.payments.settle(id, 'FAILED').catch((error: unknown) => this.logFailure(`failStalePayments ${id}`, error));
+    }
+  }
+
+  async cleanupRefreshTokens(now: Date): Promise<number> {
+    const count = await this.tokens.purgeRefreshTokens(now);
+    this.logger.log(`cleanupRefreshTokens removed ${count} tokens`);
+    return count;
+  }
+
+  private logFailure(job: string, error: unknown): void {
+    this.logger.error(`${job} failed`, error instanceof Error ? error.stack : String(error));
+  }
+}

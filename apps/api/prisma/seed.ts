@@ -119,6 +119,22 @@ async function seedCatalog(): Promise<void> {
   }
 }
 
+// Two addresses for the sample customer so checkout can be tried with both shipping fees; first run only.
+async function seedAddresses(customerEmail: string): Promise<void> {
+  const customer = await prisma.user.findUniqueOrThrow({
+    where: { email: customerEmail.trim().toLowerCase() },
+    select: { id: true },
+  });
+  if ((await prisma.address.count({ where: { userId: customer.id } })) > 0) return;
+  const base = { userId: customer.id, recipientName: 'Khách hàng mẫu', phone: '0900000000' };
+  await prisma.address.createMany({
+    data: [
+      { ...base, line: '12 Tràng Tiền', ward: 'Phường Hoàn Kiếm', city: 'Hà Nội', isDefault: true },
+      { ...base, line: '45 Bạch Đằng', ward: 'Phường Hải Châu', city: 'Đà Nẵng', isDefault: false },
+    ],
+  });
+}
+
 async function main(): Promise<void> {
   await upsertUser(requireEnv('SEED_ADMIN_EMAIL'), requireEnv('SEED_ADMIN_PASSWORD'), 'Quản trị viên', Role.ADMIN);
   await upsertUser(
@@ -128,6 +144,7 @@ async function main(): Promise<void> {
     Role.CUSTOMER,
   );
   await seedCatalog();
+  await seedAddresses(requireEnv('SEED_CUSTOMER_EMAIL'));
 }
 
 main()

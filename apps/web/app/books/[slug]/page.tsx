@@ -1,6 +1,7 @@
 import type { BookDetail } from '@open-boox/shared';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { AddToCartButton } from '@/components/cart/add-to-cart-button';
 import { BookCover } from '@/components/books/book-cover';
 import { PageTitle } from '@/components/ui/page-title';
 import { nullOn404 } from '@/lib/api/error';
@@ -42,6 +43,11 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
           <dt className="text-[12px] font-medium uppercase">ISBN</dt>
           <dd>{book.isbn}</dd>
         </dl>
+        {book.salePrice !== null && book.saleStock > 0 && (
+          <AddToCartButton
+            book={{ bookId: book.id, slug: book.slug, title: book.title, coverUrl: book.coverUrl, salePrice: book.salePrice }}
+          />
+        )}
         {book.description && <p className="whitespace-pre-line text-[16px] leading-[1.5]">{book.description}</p>}
       </div>
     </div>

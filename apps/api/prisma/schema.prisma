@@ -21,6 +21,9 @@ model User {
   role          Role           @default(CUSTOMER)
   createdAt     DateTime       @default(now()) @db.Timestamptz(3)
   refreshTokens RefreshToken[]
+  addresses     Address[]
+  orders        Order[]
+  payments      Payment[]
 }
 
 model RefreshToken {
@@ -64,6 +67,7 @@ model Book {
   createdAt   DateTime   @default(now()) @db.Timestamptz(3)
   saleStock   SaleStock?
   copies      BookCopy[]
+  orderItems  OrderItem[]
 
   @@index([categoryId])
 }
@@ -83,4 +87,82 @@ model BookCopy {
   createdAt DateTime   @default(now()) @db.Timestamptz(3)
 
   @@index([bookId, status])
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  SHIPPING
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+// One default per user: partial unique index address_one_default_per_user (hand-written SQL, orders migration).
+// No zone column: zoneOf(city) derives it (spec §3.1).
+model Address {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipientName String
+  phone         String
+  line          String
+  ward          String
+  city          String
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([userId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  status          OrderStatus @default(PENDING_PAYMENT)
+  subtotal        Int
+  shippingFee     Int
+  total           Int
+  addressSnapshot Json
+  createdAt       DateTime    @default(now()) @db.Timestamptz(3)
+  items           OrderItem[]
+  payments        Payment[]
+
+  @@index([userId, createdAt])
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  bookId    String
+  book      Book   @relation(fields: [bookId], references: [id], onDelete: Restrict)
+  quantity  Int
+  unitPrice Int
+
+  @@index([orderId])
+  @@index([bookId])
+}
+
+// Exactly one of orderId / subscriptionId: CHECK payment_exactly_one_target (hand-written SQL).
+// subscriptionId gets its foreign key in M4, together with the Subscription table.
+model Payment {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  orderId        String?
+  order          Order?        @relation(fields: [orderId], references: [id])
+  subscriptionId String?
+  amount         Int
+  status         PaymentStatus @default(PENDING)
+  providerRef    String?
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@index([orderId])
+  @@index([status, createdAt])
 }

@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { getEnv } from '../config/env';
 import { PrismaService } from '../prisma/prisma.service';
 import type { AccessClaims, AuthUser } from './auth-user';
-import { ACCESS_TTL_SECONDS, isRefreshTokenUsable, REFRESH_TTL_MS } from './refresh-token.policy';
+import { ACCESS_TTL_SECONDS, isRefreshTokenUsable, REFRESH_PURGE_AFTER_MS, REFRESH_TTL_MS } from './refresh-token.policy';
 
 @Injectable()
 export class TokensService {
@@ -70,5 +70,14 @@ export class TokensService {
       where: { tokenHash: this.hashRefreshToken(raw), revokedAt: null },
       data: { revokedAt: new Date() },
     });
+  }
+
+  // Deletes tokens that can never be used again: expired, or revoked/rotated more than a day ago.
+  async purgeRefreshTokens(now: Date): Promise<number> {
+    const cutoff = new Date(now.getTime() - REFRESH_PURGE_AFTER_MS);
+    const { count } = await this.prisma.refreshToken.deleteMany({
+      where: { OR: [{ expiresAt: { lt: now } }, { revokedAt: { lt: cutoff } }, { rotatedAt: { lt: cutoff } }] },
+    });
+    return count;
   }
 }

@@ -2,6 +2,9 @@ export const REFRESH_GRACE_MS = 30_000;
 export const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const ACCESS_TTL_SECONDS = 15 * 60;
 
+// Revoked/rotated tokens are kept this long before purging — far beyond REFRESH_GRACE_MS.
+export const REFRESH_PURGE_AFTER_MS = 24 * 60 * 60 * 1000;
+
 export interface RefreshTokenState {
   expiresAt: Date;
   rotatedAt: Date | null;
