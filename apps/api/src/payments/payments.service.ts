@@ -6,6 +6,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaymentGateway } from './payment-gateway';
 import { type PaymentOutcomeHandler, type PaymentTarget, targetOf } from './payment-outcome';
 
+export const STALE_PAYMENT_MS = 30 * 60_000;
+
 type Outcome = 'SUCCEEDED' | 'FAILED';
 
 const DTO_SELECT = { id: true, amount: true, status: true, orderId: true } as const;
@@ -59,6 +61,15 @@ export class PaymentsService {
   async mockCallback(userId: string, paymentId: string, success: boolean): Promise<PaymentDto> {
     await this.getForUser(userId, paymentId);
     return toDto(await this.settle(paymentId, success ? 'SUCCEEDED' : 'FAILED'));
+  }
+
+  async findStalePendingIds(createdBefore: Date): Promise<string[]> {
+    const rows = await this.prisma.payment.findMany({
+      where: { status: 'PENDING', createdAt: { lt: createdBefore } },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
   }
 
   private async transition(tx: Prisma.TransactionClient, paymentId: string, status: Outcome): Promise<Payment> {
