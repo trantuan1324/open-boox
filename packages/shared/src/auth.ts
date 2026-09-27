@@ -3,6 +3,11 @@ import type { Role } from './roles';
 
 const email = z.string().trim().toLowerCase().pipe(z.email('Email không hợp lệ'));
 
+export const phoneSchema = z
+  .string()
+  .trim()
+  .regex(/^0\d{9}$/, 'Số điện thoại gồm 10 chữ số, bắt đầu bằng 0');
+
 export const registerSchema = z.object({
   email,
   password: z
@@ -14,10 +19,7 @@ export const registerSchema = z.object({
     .trim()
     .min(1, 'Vui lòng nhập họ tên')
     .max(100, 'Họ tên tối đa 100 ký tự'),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^0\d{9}$/, 'Số điện thoại gồm 10 chữ số, bắt đầu bằng 0'),
+  phone: phoneSchema,
 });
 
 export const loginSchema = z.object({
