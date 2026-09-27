@@ -6,7 +6,7 @@ Tiền lưu dạng **số nguyên VND**. Mọi id là `cuid`. Các enum viết h
 
 - `User`: email (unique), passwordHash (argon2), fullName, phone, role `CUSTOMER | ADMIN`
 - `RefreshToken`: userId, tokenHash, expiresAt, revokedAt. Dùng để xoay vòng và thu hồi refresh token.
-- `Address`: userId, tên người nhận, sđt, địa chỉ, quận, thành phố, zone `INNER | OUTER`, isDefault. Zone quyết định phí ship.
+- `Address`: userId, tên người nhận, sđt, địa chỉ, phường/xã, tỉnh/thành (34 đơn vị sau 7/2025), isDefault. Zone `INNER | OUTER` **không lưu** mà suy từ tỉnh/thành (`zoneOf`, Hà Nội = INNER); zone quyết định phí ship. (Xem spec §3.1.)
 
 **Danh mục &amp; kho**
 
