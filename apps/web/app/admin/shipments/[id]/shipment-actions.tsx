@@ -18,6 +18,9 @@ export function ShipmentActions({ shipment }: { shipment: AdminShipmentDetail })
   const router = useRouter();
   const next = NEXT_SHIPMENT_STATUSES[shipment.status];
   const [status, setStatus] = useState<ShipmentStatus | ''>(next[0] ?? '');
+  // router.refresh() keeps this component mounted, so a choice made for the previous status may no longer be
+  // offered; fall back to the first valid option instead of resending a stale (no-op) status.
+  const selected = status && next.includes(status) ? status : (next[0] ?? '');
   const [note, setNote] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,11 +33,11 @@ export function ShipmentActions({ shipment }: { shipment: AdminShipmentDetail })
 
   async function update(event: FormEvent) {
     event.preventDefault();
-    if (!status) return;
+    if (!selected) return;
     setPending(true);
     setError(null);
     try {
-      await apiClient(`/admin/shipments/${shipment.id}`, { method: 'PATCH', body: { status, note } });
+      await apiClient(`/admin/shipments/${shipment.id}`, { method: 'PATCH', body: { status: selected, note } });
       setNote('');
       router.refresh();
     } catch (e) {
@@ -66,7 +69,7 @@ export function ShipmentActions({ shipment }: { shipment: AdminShipmentDetail })
             </label>
             <select
               id="status"
-              value={status}
+              value={selected}
               onChange={(e) => setStatus(e.target.value as ShipmentStatus)}
               className="rounded-none border-0 border-b border-warm-cream bg-transparent px-0.5 py-1 text-[16px] outline-none focus:border-ember-accent"
             >
