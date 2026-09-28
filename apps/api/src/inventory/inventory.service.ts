@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import type { CopyStatus, Prisma } from '@prisma/client';
 import type { BookCopyDto, StockDto } from '@open-boox/shared';
 import { DomainError } from '../common/errors/domain-error';
 import { PrismaService } from '../prisma/prisma.service';
@@ -68,7 +68,7 @@ export class InventoryService {
     });
   }
 
-  // Only AVAILABLE → LOST here; RESERVED/ON_LOAN copies belong to the loan flow (M4).
+  // Only AVAILABLE → LOST here; RESERVED/ON_LOAN copies belong to the loan flow.
   async markCopyLost(copyId: string): Promise<BookCopyDto> {
     const { count } = await this.prisma.bookCopy.updateMany({
       where: { id: copyId, status: 'AVAILABLE' },
@@ -81,5 +81,28 @@ export class InventoryService {
     if (!copy) throw new DomainError('NOT_FOUND');
     if (count === 0) throw new DomainError('INVALID_COPY_STATE', `Copy is ${copy.status}`);
     return copy;
+  }
+
+  // spec §4.3 step 3: one statement. SKIP LOCKED lets concurrent borrows of the same book take different
+  // copies instead of queueing on one; null means no copy is left.
+  async reserveCopy(tx: Prisma.TransactionClient, bookId: string): Promise<string | null> {
+    const rows = await tx.$queryRaw<{ id: string }[]>`
+      UPDATE "BookCopy" SET status = 'RESERVED'
+      WHERE id = (
+        SELECT id FROM "BookCopy"
+        WHERE "bookId" = ${bookId} AND status = 'AVAILABLE'
+        ORDER BY barcode
+        LIMIT 1
+        FOR UPDATE SKIP LOCKED
+      )
+      RETURNING id`;
+    return rows[0]?.id ?? null;
+  }
+
+  // Loan-driven moves (RESERVED → ON_LOAN, ON_LOAN → AVAILABLE, RESERVED → AVAILABLE). Conditional on the
+  // source status; the caller compares the count with what it expected (spec §4.4a, fail loud).
+  async moveCopies(tx: Prisma.TransactionClient, copyIds: string[], from: CopyStatus, to: CopyStatus): Promise<number> {
+    const { count } = await tx.bookCopy.updateMany({ where: { id: { in: copyIds }, status: from }, data: { status: to } });
+    return count;
   }
 }
