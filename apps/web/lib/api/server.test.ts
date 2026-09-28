@@ -97,10 +97,12 @@ describe('apiPublic', () => {
     fetchMock.mockReset();
   });
 
-  it('fetches without cookies and revalidates every 60 seconds', async () => {
+  it('fetches without cookies, revalidates every 60 seconds and tags the catalog', async () => {
     fetchMock.mockResolvedValueOnce(Response.json([{ id: 'c1' }]));
     await expect(apiPublic('/categories')).resolves.toEqual([{ id: 'c1' }]);
-    expect(fetchMock).toHaveBeenCalledWith(expect.stringMatching(/\/api\/categories$/), { next: { revalidate: 60 } });
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringMatching(/\/api\/categories$/), {
+      next: { revalidate: 60, tags: ['catalog'] },
+    });
   });
 
   it('throws ApiError with the status on failure', async () => {
