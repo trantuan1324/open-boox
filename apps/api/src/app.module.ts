@@ -3,6 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { HealthController } from './health/health.controller';
+import { LoansModule } from './loans/loans.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -18,7 +19,7 @@ import { UsersModule } from './users/users.module';
 const timers = process.env.NODE_ENV === 'test' ? [] : [ScheduleModule.forRoot()];
 
 @Module({
-  imports: [PrismaModule, RevalidationModule, AuthModule, CatalogModule, UsersModule, PaymentsModule, SubscriptionsModule, ShipmentsModule, OrdersModule, SchedulerModule, ...timers],
+  imports: [PrismaModule, RevalidationModule, AuthModule, CatalogModule, UsersModule, PaymentsModule, SubscriptionsModule, ShipmentsModule, OrdersModule, LoansModule, SchedulerModule, ...timers],
   controllers: [HealthController],
 })
 export class AppModule {}
