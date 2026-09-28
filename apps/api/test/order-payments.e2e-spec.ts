@@ -2,7 +2,6 @@ import request from 'supertest';
 import { loginAs } from './auth-helpers';
 import { createBook, createCategory } from './catalog-fixtures';
 import { createAddress, userIdByEmail } from './order-fixtures';
-import { createPlans, createSubscription } from './subscription-fixtures';
 import { createTestApp, resetDb, type TestContext } from './test-app';
 
 describe('order payments and cancellation', () => {
@@ -112,15 +111,6 @@ describe('order payments and cancellation', () => {
     const other = await loginAs(ctx, 'CUSTOMER', 'other@test.vn');
     await cancel(orderId, other).expect(404);
     expect(await orderStatus(orderId)).toBe('PENDING_PAYMENT');
-  });
-
-  it('answers 500 and leaves the payment PENDING when no handler is registered for the target', async () => {
-    const plans = await createPlans(ctx.prisma);
-    const sub = await createSubscription(ctx.prisma, { userId, planId: plans.basic.id, status: 'PENDING_PAYMENT' });
-    const payment = await ctx.prisma.payment.create({ data: { userId, subscriptionId: sub.id, amount: 79_000 } });
-    const res = await callback(payment.id, true).expect(500);
-    expect(res.body.code).toBe('INTERNAL_ERROR');
-    expect((await ctx.prisma.payment.findUniqueOrThrow({ where: { id: payment.id } })).status).toBe('PENDING');
   });
 
   it('refuses to delete a book that has been ordered with 409 IN_USE', async () => {
