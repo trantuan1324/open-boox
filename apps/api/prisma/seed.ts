@@ -135,6 +135,19 @@ async function seedAddresses(customerEmail: string): Promise<void> {
   });
 }
 
+// spec §9: three plans; upserted by code so re-running the seed only refreshes them.
+const PLANS = [
+  { code: 'basic', name: 'Basic', maxBooks: 2, monthlyPrice: 79_000 },
+  { code: 'standard', name: 'Standard', maxBooks: 3, monthlyPrice: 119_000 },
+  { code: 'premium', name: 'Premium', maxBooks: 5, monthlyPrice: 179_000 },
+];
+
+async function seedPlans(): Promise<void> {
+  for (const plan of PLANS) {
+    await prisma.plan.upsert({ where: { code: plan.code }, update: plan, create: plan });
+  }
+}
+
 async function main(): Promise<void> {
   await upsertUser(requireEnv('SEED_ADMIN_EMAIL'), requireEnv('SEED_ADMIN_PASSWORD'), 'Quản trị viên', Role.ADMIN);
   await upsertUser(
@@ -144,6 +157,7 @@ async function main(): Promise<void> {
     Role.CUSTOMER,
   );
   await seedCatalog();
+  await seedPlans();
   await seedAddresses(requireEnv('SEED_CUSTOMER_EMAIL'));
 }
 

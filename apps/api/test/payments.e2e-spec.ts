@@ -5,6 +5,7 @@ import type { PaymentOutcomeHandler } from '../src/payments/payment-outcome';
 import { PaymentsService } from '../src/payments/payments.service';
 import { loginAs } from './auth-helpers';
 import { userIdByEmail } from './order-fixtures';
+import { createPlans, createSubscription } from './subscription-fixtures';
 import { createTestApp, resetDb, type TestContext } from './test-app';
 
 describe('payments', () => {
@@ -39,8 +40,11 @@ describe('payments', () => {
     await ctx.app.close();
   });
 
-  const pendingPayment = () =>
-    ctx.prisma.payment.create({ data: { userId, subscriptionId: 'sub-test', amount: 79_000 } });
+  const pendingPayment = async () => {
+    const plans = await createPlans(ctx.prisma);
+    const sub = await createSubscription(ctx.prisma, { userId, planId: plans.basic.id, status: 'PENDING_PAYMENT' });
+    return ctx.prisma.payment.create({ data: { userId, subscriptionId: sub.id, amount: 79_000 } });
+  };
   const callback = (id: string, success: unknown, cookie = customer) =>
     request(ctx.http).post(`/api/payments/${id}/mock-callback`).set('Cookie', cookie).send({ success });
   const statusOf = async (id: string) => (await ctx.prisma.payment.findUniqueOrThrow({ where: { id } })).status;

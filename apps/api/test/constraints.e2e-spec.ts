@@ -1,5 +1,6 @@
 import { createBook, createCategory } from './catalog-fixtures';
 import { createAddress, createUser } from './order-fixtures';
+import { createPlans, createSubscription } from './subscription-fixtures';
 import { createTestApp, resetDb, type TestContext } from './test-app';
 
 describe('orders migration constraints', () => {
@@ -28,13 +29,31 @@ describe('orders migration constraints', () => {
 
   it('rejects a payment with both an order and a subscription', async () => {
     const order = await createOrder();
+    const plans = await createPlans(ctx.prisma);
+    const sub = await createSubscription(ctx.prisma, { userId, planId: plans.basic.id, status: 'PENDING_PAYMENT' });
     await expect(
-      ctx.prisma.payment.create({ data: { userId, amount: 1000, orderId: order.id, subscriptionId: 'sub-1' } }),
+      ctx.prisma.payment.create({ data: { userId, amount: 1000, orderId: order.id, subscriptionId: sub.id } }),
     ).rejects.toThrow(/payment_exactly_one_target/);
   });
 
-  it('accepts a payment for a subscription id without a foreign key (M4 adds it)', async () => {
-    await expect(ctx.prisma.payment.create({ data: { userId, amount: 1000, subscriptionId: 'sub-1' } })).resolves.toBeDefined();
+  it('rejects a payment for a subscription that does not exist (P2003)', async () => {
+    await expect(
+      ctx.prisma.payment.create({ data: { userId, amount: 1000, subscriptionId: 'khong-co' } }),
+    ).rejects.toMatchObject({ code: 'P2003' });
+  });
+
+  it('allows one open subscription per user, any number of closed ones', async () => {
+    const plans = await createPlans(ctx.prisma);
+    const sub = (status: 'PENDING_PAYMENT' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED', owner = userId) =>
+      createSubscription(ctx.prisma, { userId: owner, planId: plans.basic.id, status });
+    await sub('EXPIRED');
+    await sub('CANCELLED');
+    await sub('CANCELLED');
+    await sub('PENDING_PAYMENT');
+    await expect(sub('ACTIVE')).rejects.toMatchObject({ code: 'P2002' });
+    await expect(sub('PENDING_PAYMENT')).rejects.toMatchObject({ code: 'P2002' });
+    const other = await createUser(ctx.prisma, 'other@test.vn');
+    await expect(sub('ACTIVE', other.id)).resolves.toBeDefined();
   });
 
   it('allows only one default address per user, but any number of non-default ones', async () => {

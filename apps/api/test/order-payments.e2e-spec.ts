@@ -2,6 +2,7 @@ import request from 'supertest';
 import { loginAs } from './auth-helpers';
 import { createBook, createCategory } from './catalog-fixtures';
 import { createAddress, userIdByEmail } from './order-fixtures';
+import { createPlans, createSubscription } from './subscription-fixtures';
 import { createTestApp, resetDb, type TestContext } from './test-app';
 
 describe('order payments and cancellation', () => {
@@ -114,7 +115,9 @@ describe('order payments and cancellation', () => {
   });
 
   it('answers 500 and leaves the payment PENDING when no handler is registered for the target', async () => {
-    const payment = await ctx.prisma.payment.create({ data: { userId, subscriptionId: 'sub-x', amount: 79_000 } });
+    const plans = await createPlans(ctx.prisma);
+    const sub = await createSubscription(ctx.prisma, { userId, planId: plans.basic.id, status: 'PENDING_PAYMENT' });
+    const payment = await ctx.prisma.payment.create({ data: { userId, subscriptionId: sub.id, amount: 79_000 } });
     const res = await callback(payment.id, true).expect(500);
     expect(res.body.code).toBe('INTERNAL_ERROR');
     expect((await ctx.prisma.payment.findUniqueOrThrow({ where: { id: payment.id } })).status).toBe('PENDING');

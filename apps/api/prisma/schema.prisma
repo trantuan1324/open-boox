@@ -24,6 +24,7 @@ model User {
   addresses     Address[]
   orders        Order[]
   payments      Payment[]
+  subscriptions Subscription[]
 }
 
 model RefreshToken {
@@ -103,6 +104,13 @@ enum PaymentStatus {
   FAILED
 }
 
+enum SubscriptionStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
 enum ShipmentType {
   ORDER_DELIVERY
   LOAN_DELIVERY
@@ -165,7 +173,6 @@ model OrderItem {
 }
 
 // Exactly one of orderId / subscriptionId: CHECK payment_exactly_one_target (hand-written SQL).
-// subscriptionId gets its foreign key in M4, together with the Subscription table.
 model Payment {
   id             String        @id @default(cuid())
   userId         String
@@ -173,13 +180,47 @@ model Payment {
   orderId        String?
   order          Order?        @relation(fields: [orderId], references: [id])
   subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
   amount         Int
   status         PaymentStatus @default(PENDING)
   providerRef    String?
   createdAt      DateTime      @default(now()) @db.Timestamptz(3)
 
   @@index([orderId])
+  @@index([subscriptionId])
   @@index([status, createdAt])
+}
+
+model Plan {
+  id                String         @id @default(cuid())
+  code              String         @unique
+  name              String
+  maxBooks          Int
+  monthlyPrice      Int
+  active            Boolean        @default(true)
+  subscriptions     Subscription[] @relation("SubscriptionPlan")
+  nextSubscriptions Subscription[] @relation("SubscriptionNextPlan")
+}
+
+// At most one open (PENDING_PAYMENT | ACTIVE) subscription per user: partial unique index
+// subscription_one_open_per_user (hand-written SQL, subscriptions migration). spec §3.3, §4.2.
+model Subscription {
+  id                 String             @id @default(cuid())
+  userId             String
+  user               User               @relation(fields: [userId], references: [id])
+  planId             String
+  plan               Plan               @relation("SubscriptionPlan", fields: [planId], references: [id])
+  nextPlanId         String?
+  nextPlan           Plan?              @relation("SubscriptionNextPlan", fields: [nextPlanId], references: [id])
+  status             SubscriptionStatus @default(PENDING_PAYMENT)
+  currentPeriodStart DateTime?          @db.Timestamptz(3)
+  currentPeriodEnd   DateTime?          @db.Timestamptz(3)
+  cancelAtPeriodEnd  Boolean            @default(false)
+  createdAt          DateTime           @default(now()) @db.Timestamptz(3)
+  payments           Payment[]
+
+  @@index([userId])
+  @@index([status, currentPeriodEnd])
 }
 
 // ORDER_DELIVERY must have an orderId: CHECK shipment_order_delivery_has_order (hand-written SQL, shipments
