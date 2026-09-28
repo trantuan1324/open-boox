@@ -13,6 +13,9 @@ export default async function AccountPage() {
         <Link href="/account/orders" className="underline">
           Đơn hàng
         </Link>
+        <Link href="/account/loans" className="underline">
+          Sách mượn
+        </Link>
         <Link href="/account/addresses" className="underline">
           Địa chỉ
         </Link>
