@@ -5,6 +5,7 @@
     "dev": "docker compose up -d --wait db && turbo dev",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
+    "lint": "turbo lint",
     "test": "docker compose up -d --wait db && turbo test",
     "db:setup": "docker compose up -d --wait db && pnpm --filter api db:migrate && pnpm --filter api db:seed"
   },
