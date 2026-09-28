@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { type LoanStatus, Prisma } from '@prisma/client';
 import {
+  ADMIN_LOAN_PAGE_SIZE,
+  type AdminLoanListQuery,
+  type AdminLoanRow,
+  type AdminShipmentDetail,
   type BorrowInput,
   type BorrowResult,
   LOAN_PAGE_SIZE,
@@ -16,7 +20,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ShipmentsService } from '../shipments/shipments.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { AddressesService } from '../users/addresses.service';
-import { lockLoans } from './lock-loans';
+import { lockLoans, moveLockedCopies } from './lock-loans';
 
 // Which shipment tells a loan's progress (spec §4.4a): the delivery until the book is on its way back.
 function trackedShipmentId(loan: { status: LoanStatus; deliveryShipmentId: string; returnShipmentId: string | null }): string {
@@ -109,5 +113,58 @@ export class LoansService {
       shipmentStatus: statuses.get(trackedShipmentId(loan))!,
     }));
     return { items, total, page, pageSize: LOAN_PAGE_SIZE };
+  }
+
+  // spec §4.6 cancel-loans. Cancel and retry exclude each other through the loan row locks; with nothing left
+  // to cancel the answer depends on why: a retry took the loans (409) or they were cancelled before (200).
+  // "Every loan is CANCELLED" is not the test — after a retry the old shipment has no loans, so it would be
+  // vacuously true.
+  async cancelLoans(shipmentId: string): Promise<AdminShipmentDetail> {
+    await this.prisma.$transaction(async (tx) => {
+      const shipment = await this.shipments.findForLoans(tx, shipmentId);
+      if (!shipment) throw new DomainError('NOT_FOUND');
+      if (shipment.type !== 'LOAN_DELIVERY' || shipment.status !== 'FAILED') throw new DomainError('LOAN_NOT_CANCELLABLE');
+      const locked = await lockLoans(tx, Prisma.sql`"deliveryShipmentId" = ${shipmentId} AND status = 'REQUESTED'`);
+      if (locked.length === 0) {
+        // Re-read after the lock wait: a retry that committed meanwhile is visible to this new statement.
+        const now = await this.shipments.findForLoans(tx, shipmentId);
+        if (now!.retriedById) throw new DomainError('LOAN_NOT_CANCELLABLE');
+        return;
+      }
+      await tx.loan.updateMany({ where: { id: { in: locked.map((l) => l.id) } }, data: { status: 'CANCELLED' } });
+      await moveLockedCopies(this.inventory, tx, locked, 'RESERVED', 'AVAILABLE');
+    });
+    return this.shipments.adminGet(shipmentId);
+  }
+
+  async adminList({ status, shipmentId, page }: AdminLoanListQuery): Promise<Paged<AdminLoanRow>> {
+    const where: Prisma.LoanWhereInput = {
+      status,
+      ...(shipmentId && { OR: [{ deliveryShipmentId: shipmentId }, { returnShipmentId: shipmentId }] }),
+    };
+    const [rows, total] = await Promise.all([
+      this.prisma.loan.findMany({
+        where,
+        orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }],
+        skip: (page - 1) * ADMIN_LOAN_PAGE_SIZE,
+        take: ADMIN_LOAN_PAGE_SIZE,
+        include: {
+          user: { select: { email: true } },
+          bookCopy: { select: { barcode: true, book: { select: { title: true } } } },
+        },
+      }),
+      this.prisma.loan.count({ where }),
+    ]);
+    const items = rows.map((loan) => ({
+      id: loan.id,
+      customerEmail: loan.user.email,
+      bookTitle: loan.bookCopy.book.title,
+      barcode: loan.bookCopy.barcode,
+      status: loan.status,
+      requestedAt: loan.requestedAt.toISOString(),
+      deliveryShipmentId: loan.deliveryShipmentId,
+      returnShipmentId: loan.returnShipmentId,
+    }));
+    return { items, total, page, pageSize: ADMIN_LOAN_PAGE_SIZE };
   }
 }
