@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: openboox
+          POSTGRES_PASSWORD: openboox
+          POSTGRES_DB: bookstore_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U openboox -d bookstore_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
+      - run: pnpm lint
+      - run: pnpm typecheck
+      # Not `pnpm test`: that script starts Postgres with docker compose; here it is a service container.
+      - run: pnpm turbo test

@@ -1,0 +1,17 @@
+{
+  "name": "e2e",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test": "tsx --test db-guard.test.ts",
+    "test:e2e": "tsx prepare.ts && playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^22.20.4",
+    "dotenv": "^16.6.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}

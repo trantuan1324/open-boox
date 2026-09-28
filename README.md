@@ -26,3 +26,5 @@ pnpm dev
 | `pnpm db:setup` | Migrate + seed DB dev (chạy lại an toàn) |
 | `pnpm test` | Unit + integration (API dùng DB `bookstore_test`) |
 | `pnpm typecheck` | Kiểm tra kiểu toàn repo |
+| `pnpm lint` | ESLint cho web, api, shared |
+| `pnpm test:e2e` | Playwright trên DB riêng `bookstore_e2e` (reset mỗi lần), build production, API 4100 / web 3100 |

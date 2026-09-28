@@ -26,6 +26,8 @@ export function CheckoutView({ addresses }: { addresses: AddressDto[] }) {
   const quote = fetchedQuote && quoteMatches(fetchedQuote, items) ? fetchedQuote : null;
 
   useEffect(() => {
+    // Dropping the stale quote as soon as the address or cart changes is intended: "Đặt hàng" must not use it.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuote(null);
     setProblem(null);
     if (!addressId || items.length === 0) return;
