@@ -433,10 +433,15 @@ Tập trung vào luật nghiệp vụ và race condition; không test UI vụn v
   - **Mượn/trả (M4):** luồng đủ mượn → giao → trả → thu hồi, kiểm `BookCopy.status` từng bước; `LOAN_DELIVERY` `FAILED` → `cancel-loans` (loan `CANCELLED`, bản `AVAILABLE`), gọi lại → `200`; `FAILED` → retry (loan trỏ shipment mới) → `cancel-loans` shipment cũ → `409 LOAN_NOT_CANCELLABLE`; `cancel-loans` rồi retry → `409`, không có shipment mới; `cancel-loans` trên `ORDER_DELIVERY`/`LOAN_PICKUP` hoặc shipment chưa `FAILED` → `409 LOAN_NOT_CANCELLABLE`; retry `LOAN_PICKUP` trỏ `returnShipmentId` sang shipment mới; trả loan không `ACTIVE`/của người khác → `LOAN_NOT_RETURNABLE`; hai request trả chồng nhau (`{a,b}` và `{b,c}`) → một thành công, một `409`, không deadlock, `c` vẫn `ACTIVE`; `GET /loans` trả `shipmentStatus` đúng cả loan `CANCELLED` (`FAILED`); xóa sách từng được mượn → `409 IN_USE`; retry song song với `cancel-loans` → đúng một bên thắng.
   - **Thiếu handler → 500 + rollback:** khi M4 đăng ký đủ handler cho mọi đích/loại, kiểm bằng integration test khởi tạo trực tiếp `new PaymentsService(…)` / `new ShipmentsService(…)` với registry rỗng trên DB test (không thêm API gỡ đăng ký vào code production); các test "thiếu handler" dùng đích/loại chưa đăng ký trong e2e cũ bị bỏ, handler `LOAN_DELIVERY` giả trong `shipments.e2e-spec.ts` được thay bằng luồng loan thật.
   - **Revalidation (M4):** route `/internal/revalidate` sai secret → 401, đúng → gọi `revalidateTag` (Vitest); `RevalidationService` không ném khi `fetch` lỗi và bỏ qua khi thiếu env (Jest).
-- **E2E (Playwright):**
-  1. Đăng ký gói → mượn → admin giao → trả → admin thu hồi.
-  2. Mua → thanh toán mock → admin giao.
-  3. Customer vào `/admin` bị chuyển hướng.
+- **E2E (Playwright, M5):** package workspace `e2e/` ở gốc (`@playwright/test`), chỉ Chromium, `workers: 1`, `retries: 0`, trace/screenshot giữ khi fail. Script tên `test:e2e` (không phải `test`) để `turbo test` không chạy nó.
+  - **DB riêng `bookstore_e2e`** (`DATABASE_URL_E2E`), reset mỗi lần chạy nên chạy lại cho cùng kết quả và không đụng DB dev. `globalSetup`: `prisma migrate reset --force` (tự tạo DB nếu chưa có) → seed → build. **Bắt buộc:** Prisma và seed đọc `DATABASE_URL`, nên mọi lệnh con phải chạy với `DATABASE_URL=$DATABASE_URL_E2E` đặt trong env process cha (`dotenv-cli` không ghi đè biến đã có). Quên điểm này là `reset --force` xóa DB dev — Lớp chặn thứ hai: trước khi reset, `globalSetup` đọc `DATABASE_URL` **trực tiếp từ file `.env`** (parse bằng `dotenv`, không dùng `process.env` vì đã bị override) và dừng nếu trùng URL đích; không có file `.env` thì bỏ qua kiểm tra.
+  - **Production build, port riêng:** API `node dist/main.js` ở `API_PORT=4100`, web `next start --port 3100` (không đụng server dev 4000/3000); `reuseExistingServer: false`. Build shared → api → web gọi thẳng `pnpm --filter`, **không qua turbo** (strict env mode lọc biến override, cache có thể phát lại bản build trỏ sai port). `E2E_SKIP_BUILD=1` bỏ qua bước build khi đã build sẵn.
+  - **Env override khai báo một chỗ** trong `playwright.config.ts`, truyền cho `globalSetup` và `webServer.env`: `DATABASE_URL`, `API_PORT=4100`, `API_INTERNAL_URL=http://localhost:4100`, `WEB_INTERNAL_URL=http://localhost:3100`; phần còn lại (JWT secrets, `REVALIDATE_SECRET`, seed accounts) lấy từ `.env`. `API_INTERNAL_URL` cần **cả lúc build** (rewrites trong `next.config.ts` được đóng vào bản build) **lẫn runtime** (`proxy.ts` gọi `/api/auth/refresh`; thiếu `JWT_ACCESS_SECRET` thì proxy ném lỗi → mọi trang 500). Hệ quả chấp nhận: sau `pnpm test:e2e`, `apps/web/.next` là bản build trỏ API 4100 (`next dev` dùng `.next/dev` riêng nên không ảnh hưởng).
+  - **Kịch bản** (dùng admin và customer seed; customer seed chưa có gói, có 2 địa chỉ):
+    1. Customer `/plans` đăng ký Basic → trang mock bấm thành công → thêm một sách cho mượn vào giỏ mượn → `/borrow/confirm` → `/account/loans` thấy loan chờ giao. Admin chuyển `LOAN_DELIVERY` qua `PICKED_UP → IN_TRANSIT → DELIVERED`. Customer thấy loan đang mượn → trả. Admin chuyển `LOAN_PICKUP` qua `PICKED_UP → IN_TRANSIT → DELIVERED`. Customer thấy loan đã trả.
+    2. Customer thêm sách bán vào giỏ → `/checkout` → mock thanh toán thành công. Admin chuyển `ORDER_DELIVERY` qua `PICKED_UP → IN_TRANSIT → DELIVERED`. Customer thấy đơn đã giao ở `/account/orders/[id]`.
+    3. Customer đăng nhập vào `/admin` → chuyển hướng về `/`.
+  - Selector ưu tiên `getByRole`/`getByLabel`; chỉ thêm `data-testid` nơi không có tên accessible.
 
 ## 9. Môi trường dev và CI
 
@@ -444,15 +449,18 @@ Tập trung vào luật nghiệp vụ và race condition; không test UI vụn v
   - `pnpm dev` → `docker compose up -d db && turbo dev`
   - `pnpm db:setup` → migrate + seed DB dev
   - `pnpm test` → unit + integration
-  - `pnpm test:e2e` → Playwright
-- **`.env.example`:** `DATABASE_URL`, `DATABASE_URL_TEST`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `API_INTERNAL_URL`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_CUSTOMER_EMAIL`, `SEED_CUSTOMER_PASSWORD`; từ M4: `WEB_INTERNAL_URL`, `REVALIDATE_SECRET` (dùng chung cho api và web, 4.9).
+  - `pnpm test:e2e` → `docker compose up -d --wait db` + Playwright (8, M5)
+  - `pnpm lint` → ESLint mọi package qua turbo (M5)
+- **`.env.example`:** `DATABASE_URL`, `DATABASE_URL_TEST`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `API_INTERNAL_URL`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_CUSTOMER_EMAIL`, `SEED_CUSTOMER_PASSWORD`; từ M4: `WEB_INTERNAL_URL`, `REVALIDATE_SECRET` (dùng chung cho api và web, 4.9); từ M5: `DATABASE_URL_E2E`.
+- **Lint (M5):** ESLint flat config từng package — `apps/web` dùng `eslint-config-next` (core-web-vitals + typescript), `apps/api` và `packages/shared` dùng `typescript-eslint` recommended (không type-checked). Script `lint` mỗi package, task `lint` trong turbo. Không dùng Prettier. Package `e2e/` chưa lint.
 - **Seed:** 1 admin, 1 customer (thông tin từ biến môi trường); ~30 sách thuộc 6 thể loại (M1); 3 gói — **Basic** 2 cuốn / 79.000 đ, **Standard** 3 cuốn / 119.000 đ, **Premium** 5 cuốn / 179.000 đ (thêm ở M4, khi có model `Plan`).
   - Sách phối trộn để mọi bộ lọc và nhãn đều có dữ liệu: đa số vừa bán vừa cho mượn; vài cuốn chỉ cho mượn (`salePrice` null); vài cuốn chỉ bán (0 bản); 1–2 cuốn hết hàng.
   - **Idempotent:** upsert theo `isbn`; tồn kho và bản cho mượn chỉ tạo khi sách vừa được tạo, nên chạy lại `pnpm db:setup` không nhân đôi.
   - `coverUrl = https://covers.openlibrary.org/b/isbn/<isbn>-L.jpg?default=false` (seed không cần mạng; `default=false` làm Open Library trả 404 thay vì ảnh trắng khi không có bìa). `next.config` khai báo `remotePatterns` cho `covers.openlibrary.org`; `BookCover` hiển thị placeholder khi `coverUrl` null hoặc ảnh lỗi.
 - **CI (GitHub Actions):**
-  - Mỗi push/PR: lint, typecheck, unit, integration (Postgres service container).
-  - Nightly + `workflow_dispatch`: Playwright.
+  - `ci.yml` — `push` lên `master` và mọi `pull_request` (`concurrency` hủy lần chạy cũ): service `postgres:17` (`POSTGRES_USER`/`POSTGRES_PASSWORD` = `openboox`, `POSTGRES_DB=bookstore_test`, cổng `5433:5432`); `pnpm/action-setup` + `setup-node` (`.nvmrc`, cache pnpm); `pnpm install --frozen-lockfile` → `cp .env.example .env` → `pnpm lint` → `pnpm typecheck` → `pnpm turbo test` (không gọi `pnpm test` vì nó chạy `docker compose`).
+  - `e2e.yml` — `schedule` `cron: '0 19 * * *'` (UTC = 02:00 giờ Việt Nam) + `workflow_dispatch`: cùng service Postgres; `pnpm/action-setup` + `setup-node` như `ci.yml`; `pnpm install --frozen-lockfile`; `cp .env.example .env`; `pnpm exec playwright install --with-deps chromium`; chạy package e2e trực tiếp (override port nằm trong `playwright.config.ts`); upload `playwright-report` khi fail. `schedule` chỉ chạy trên default branch — repo GitHub đặt `master` làm default.
+  - M5 chỉ xong khi cả hai workflow chạy xanh trên GitHub thật.
 
 ## 10. Mốc triển khai
 
@@ -465,7 +473,7 @@ Mỗi mốc có implementation plan riêng và chạy được độc lập khi 
 | **M2** | Địa chỉ (4.5a), giỏ hàng, đơn mua (4.5), thanh toán mock (4.1), cron `failStalePayments` + `cleanupRefreshTokens`, `PaymentOutcomeHandler` cho đơn (`onSucceeded` chỉ chuyển `PAID`, `onFailed` hủy + hoàn kho); `/cart`, `/checkout`, `/checkout/mock/[paymentId]`, `/account/orders`, `/account/orders/[id]`, `/account/addresses`; seed 2 địa chỉ cho customer (một Hà Nội, một tỉnh khác) |
 | **M3** | Shipments (máy trạng thái trong shared, event, CAS, retry với `retryOfId` unique), handler `ORDER_DELIVERY` (kể cả `onSucceeded` tạo `Shipment ORDER_DELIVERY`); API admin đọc đơn và shipment; `GET /orders/:id` kèm shipments; `/admin/orders`, `/admin/orders/[id]`, `/admin/shipments`, `/admin/shipments/[id]`, timeline giao hàng ở `/account/orders/[id]`. Chưa làm: `cancel-loans`, handler `LOAN_*` (M4), on-demand revalidation (dời M4) |
 | **M4** | Một nhánh, plan chia hai nửa, mỗi nửa xong đều chạy được. **Nửa A:** gói đăng ký kiểu Netflix (4.2: model `Plan` + seed 3 gói, `Subscription` có `nextPlanId`/`cancelAtPeriodEnd`, FK `Payment.subscriptionId`, `PaymentOutcomeHandler` cho subscription, `change-plan`/`cancel`/`resume`, `PaymentGateway.charge`, cron `renewSubscriptions` thay `expireSubscriptions`), on-demand revalidation (4.9); `/plans`, `/account/subscription`, trang mock checkout cho subscription. **Nửa B:** mượn/trả (4.3, 4.4), handler `LOAN_*` + `onRetried` (4.4a, 4.6), `cancel-loans`, `GET /loans`, `GET /admin/loans`; giỏ mượn, `/borrow/confirm`, `/account/loans`, `/admin/loans`, danh sách loan + nút hủy ở `/admin/shipments/[id]`. Kèm nợ M3: cột "mã" (`shortCode`), thông báo 409 không mất (6.2c), thay handler `LOAN_DELIVERY` giả trong test |
-| **M5** | Playwright E2E, GitHub Actions CI |
+| **M5** | Nhánh `m5-e2e-ci`. ESLint cho web/api/shared + `pnpm lint` (9); Playwright E2E 3 kịch bản trên DB `bookstore_e2e` và production build port 4100/3100 (8); GitHub Actions `ci.yml` + `e2e.yml` (9). Xong khi `pnpm lint`/`typecheck`/`test` xanh, `pnpm test:e2e` xanh hai lần liên tiếp ở local, cả hai workflow xanh trên GitHub |
 
 ### Nợ đã biết
 
