@@ -38,9 +38,10 @@ Nhánh `m5-e2e-ci` (worktree `.worktrees/m5-e2e-ci`), cắt từ `master` @ `adb
 
 Clone mới ở nhánh `m5-e2e-ci`: `pnpm install --frozen-lockfile` → `cp .env.example .env` → `pnpm lint` → `pnpm typecheck` → `pnpm turbo test` → `playwright install chromium` → `pnpm --filter e2e test:e2e` — đủ 8 bước OK, `3 passed`.
 
-## Trạng thái CI trên GitHub
+## Trạng thái CI trên GitHub: XANH CẢ HAI WORKFLOW — M5 XONG
 
-- Repo: https://github.com/trantuan1324/open-boox (default branch `master` @ `adb6de0`, xác nhận bằng `git ls-remote --symref`).
-- PR #1 `m5-e2e-ci → master`: https://github.com/trantuan1324/open-boox/pull/1
+- Repo: https://github.com/trantuan1324/open-boox (default branch `master`, xác nhận bằng `git ls-remote --symref`).
+- PR #1 `m5-e2e-ci → master`: https://github.com/trantuan1324/open-boox/pull/1 — **merged** thành merge commit `2278010`.
 - Workflow `CI` (ci.yml) trên head `b6bdd0a`: **success** — https://github.com/trantuan1324/open-boox/actions/runs/36446396131 (job `check`: lint + typecheck + turbo test với Postgres service container).
-- Workflow `E2E` (e2e.yml): **chưa kích được** — `workflow_dispatch` chỉ chạy khi file workflow nằm trên default branch, nên đợi merge PR #1 vào `master`. Sau merge: `gh workflow run e2e.yml --ref master` (hoặc chờ lịch 02:00 ICT).
+- Workflow `E2E` (e2e.yml) kích bằng `workflow_dispatch` trên `master` sau merge: **success** — https://github.com/trantuan1324/open-boox/actions/runs/36447983537 (job `e2e`: build production 4100/3100 + 3 kịch bản Playwright trên `bookstore_e2e`).
+- Lịch chạy: `e2e.yml` sẽ tự chạy 02:00 giờ Việt Nam hằng đêm (cron `0 19 * * *` UTC).
