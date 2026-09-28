@@ -9,9 +9,9 @@ import {
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { withError } from '@/lib/admin/error-param';
 import { apiClient } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/error';
-import { messageFor } from '@/lib/errors/messages';
 import { SHIPMENT_STATUS_LABEL } from '@/lib/shipments/labels';
 
 export function ShipmentActions({ shipment }: { shipment: AdminShipmentDetail }) {
@@ -23,11 +23,12 @@ export function ShipmentActions({ shipment }: { shipment: AdminShipmentDetail })
   const selected = status && next.includes(status) ? status : (next[0] ?? '');
   const [note, setNote] = useState('');
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const base = `/admin/shipments/${shipment.id}`;
 
-  // A 409 means another admin changed it first: show why, then reload the real state.
+  // A 409 means another admin changed it first. Replace (not just refresh) so the code survives the re-render,
+  // which may remove this form; the page shows it (spec §6.2c).
   function fail(e: unknown) {
-    setError(messageFor(e instanceof ApiError ? e.code : 'INTERNAL_ERROR'));
+    router.replace(withError(base, e instanceof ApiError ? e.code : 'INTERNAL_ERROR'));
     router.refresh();
   }
 
@@ -35,10 +36,10 @@ export function ShipmentActions({ shipment }: { shipment: AdminShipmentDetail })
     event.preventDefault();
     if (!selected) return;
     setPending(true);
-    setError(null);
     try {
       await apiClient(`/admin/shipments/${shipment.id}`, { method: 'PATCH', body: { status: selected, note } });
       setNote('');
+      router.replace(base); // also clears an old ?error=
       router.refresh();
     } catch (e) {
       fail(e);
@@ -49,7 +50,6 @@ export function ShipmentActions({ shipment }: { shipment: AdminShipmentDetail })
 
   async function retry() {
     setPending(true);
-    setError(null);
     try {
       const created = await apiClient<AdminShipmentDetail>(`/admin/shipments/${shipment.id}/retry`, { method: 'POST' });
       router.push(`/admin/shipments/${created.id}`);
@@ -103,11 +103,6 @@ export function ShipmentActions({ shipment }: { shipment: AdminShipmentDetail })
         <Button variant="ghost" disabled={pending} onClick={retry} className="self-start">
           Tạo lần giao mới
         </Button>
-      )}
-      {error && (
-        <p role="alert" className="text-[14px] text-ember-accent">
-          {error}
-        </p>
       )}
     </div>
   );

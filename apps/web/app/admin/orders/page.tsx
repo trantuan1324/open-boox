@@ -1,4 +1,4 @@
-import { type AdminOrderRow, adminOrderListQuerySchema, ORDER_STATUSES, type Paged } from '@open-boox/shared';
+import { type AdminOrderRow, adminOrderListQuerySchema, ORDER_STATUSES, type Paged, shortCode } from '@open-boox/shared';
 import Link from 'next/link';
 import { Chip } from '@/components/ui/chip';
 import { PageTitle } from '@/components/ui/page-title';
@@ -41,6 +41,7 @@ export default async function AdminOrdersPage({
           <table className="w-full border-collapse">
             <thead className="border-b border-dashed border-cork-border">
               <tr>
+                <th className={TH}>Mã</th>
                 <th className={TH}>Ngày đặt</th>
                 <th className={TH}>Khách</th>
                 <th className={TH}>Trạng thái</th>
@@ -52,6 +53,7 @@ export default async function AdminOrdersPage({
             <tbody>
               {result.items.map((order) => (
                 <tr key={order.id} className="border-b border-dashed border-cork-border">
+                  <td className={TD}>{shortCode(order.id)}</td>
                   <td className={TD}>
                     <Link href={`/admin/orders/${order.id}`} className="underline">
                       {formatDateTime(order.createdAt)}

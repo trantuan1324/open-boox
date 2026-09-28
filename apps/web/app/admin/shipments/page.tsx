@@ -4,6 +4,7 @@ import {
   type Paged,
   SHIPMENT_STATUSES,
   SHIPMENT_TYPES,
+  shortCode,
 } from '@open-boox/shared';
 import Link from 'next/link';
 import { Chip } from '@/components/ui/chip';
@@ -59,6 +60,7 @@ export default async function AdminShipmentsPage({
           <table className="w-full border-collapse">
             <thead className="border-b border-dashed border-cork-border">
               <tr>
+                <th className={TH}>Mã</th>
                 <th className={TH}>Ngày tạo</th>
                 <th className={TH}>Loại</th>
                 <th className={TH}>Đơn</th>
@@ -69,6 +71,7 @@ export default async function AdminShipmentsPage({
             <tbody>
               {result.items.map((s) => (
                 <tr key={s.id} className="border-b border-dashed border-cork-border">
+                  <td className={TD}>{shortCode(s.id)}</td>
                   <td className={TD}>
                     <Link href={`/admin/shipments/${s.id}`} className="underline">
                       {formatDateTime(s.createdAt)}

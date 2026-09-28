@@ -1,21 +1,45 @@
-import type { AdminShipmentDetail } from '@open-boox/shared';
+import { type AdminLoanRow, type AdminShipmentDetail, type Paged, shortCode } from '@open-boox/shared';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AddressLines } from '@/components/addresses/address-lines';
 import { ShipmentEvents } from '@/components/shipments/shipment-events';
 import { PageTitle } from '@/components/ui/page-title';
+import { errorFromParam } from '@/lib/admin/error-param';
 import { nullOn404 } from '@/lib/api/error';
 import { apiServer } from '@/lib/api/server';
+import { messageFor } from '@/lib/errors/messages';
 import { formatDateTime, formatVnd } from '@/lib/format';
+import { LOAN_STATUS_LABEL } from '@/lib/loans/labels';
 import { SHIPMENT_STATUS_LABEL, SHIPMENT_TYPE_LABEL } from '@/lib/shipments/labels';
+import { CancelLoansButton } from './cancel-loans-button';
 import { ShipmentActions } from './shipment-actions';
 
 const box = 'flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]';
 
-export default async function AdminShipmentPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AdminShipmentPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { id } = await params;
+  const error = errorFromParam((await searchParams).error);
   const shipment = await apiServer<AdminShipmentDetail>(`/admin/shipments/${encodeURIComponent(id)}`).catch(nullOn404);
   if (!shipment) notFound();
+  const loans =
+    shipment.type === 'ORDER_DELIVERY'
+      ? null
+      : await apiServer<Paged<AdminLoanRow>>(`/admin/loans?shipmentId=${encodeURIComponent(shipment.id)}`);
+  const loansCancelled = loans !== null && loans.items.length > 0 && loans.items.every((l) => l.status === 'CANCELLED');
+  const finished =
+    shipment.status === 'DELIVERED' || (shipment.status === 'FAILED' && (shipment.retriedById !== null || loansCancelled));
+  const canCancelLoans =
+    shipment.type === 'LOAN_DELIVERY' &&
+    shipment.status === 'FAILED' &&
+    !shipment.retriedById &&
+    loans !== null &&
+    loans.items.some((l) => l.status === 'REQUESTED');
 
   return (
     <div className="flex flex-col gap-[31px]">
@@ -23,7 +47,9 @@ export default async function AdminShipmentPage({ params }: { params: Promise<{ 
         <Link href="/admin/shipments" className="self-start text-[12px] font-medium uppercase underline">
           Giao hàng
         </Link>
-        <PageTitle>{SHIPMENT_TYPE_LABEL[shipment.type]}</PageTitle>
+        <PageTitle>
+          {SHIPMENT_TYPE_LABEL[shipment.type]} · {shortCode(shipment.id)}
+        </PageTitle>
         <p className="text-[16px]">
           {formatDateTime(shipment.createdAt)} ·{' '}
           <span className={`font-medium uppercase ${shipment.status === 'FAILED' ? 'text-ember-accent' : ''}`}>
@@ -50,14 +76,41 @@ export default async function AdminShipmentPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
+      {error && (
+        <p role="alert" className="rounded-[12px] border border-dashed border-cork-border p-[18px] text-[16px] text-ember-accent">
+          {messageFor(error)}
+        </p>
+      )}
+
       <section className={box}>
         <h2 className="text-[18px] font-medium uppercase">Cập nhật</h2>
-        {shipment.status === 'DELIVERED' || (shipment.status === 'FAILED' && shipment.retriedById) ? (
-          <p className="text-[16px]">Lần giao này đã kết thúc.</p>
-        ) : (
-          <ShipmentActions shipment={shipment} />
-        )}
+        {finished ? <p className="text-[16px]">Lần giao này đã kết thúc.</p> : <ShipmentActions shipment={shipment} />}
+        {canCancelLoans && <CancelLoansButton shipmentId={shipment.id} />}
       </section>
+
+      {loans && (
+        <section className={box}>
+          <h2 className="text-[18px] font-medium uppercase">Sách mượn</h2>
+          {loans.items.length === 0 ? (
+            <p className="text-[16px]">
+              {shipment.retriedById ? 'Các yêu cầu mượn đã chuyển sang lần giao mới.' : 'Không có yêu cầu mượn nào.'}
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-[8px] text-[14px]">
+              {loans.items.map((loan) => (
+                <li key={loan.id} className="flex flex-wrap justify-between gap-[12px]">
+                  <span>
+                    {shortCode(loan.id)} · {loan.bookTitle} · {loan.barcode} · {loan.customerEmail}
+                  </span>
+                  <span className={`font-medium uppercase ${loan.status === 'CANCELLED' ? 'text-ember-accent' : ''}`}>
+                    {LOAN_STATUS_LABEL[loan.status]}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       <section className={box}>
         <h2 className="text-[18px] font-medium uppercase">Lịch sử</h2>
