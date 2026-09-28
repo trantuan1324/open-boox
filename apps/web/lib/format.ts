@@ -16,3 +16,14 @@ const DATE_TIME = new Intl.DateTimeFormat('vi-VN', {
 export function formatDateTime(iso: string): string {
   return DATE_TIME.format(new Date(iso));
 }
+
+const DATE = new Intl.DateTimeFormat('vi-VN', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  timeZone: 'Asia/Ho_Chi_Minh',
+});
+
+export function formatDate(iso: string): string {
+  return DATE.format(new Date(iso));
+}

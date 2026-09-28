@@ -11,6 +11,7 @@ export async function SiteHeader() {
       </Link>
       <nav className="flex gap-6 text-[12px] font-medium uppercase">
         <Link href="/books">Sách</Link>
+        <Link href="/plans">Gói</Link>
         <CartLink />
         {user ? (
           <>

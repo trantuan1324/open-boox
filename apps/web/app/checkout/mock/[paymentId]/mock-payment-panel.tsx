@@ -14,7 +14,11 @@ export function MockPaymentPanel({ payment }: { payment: PaymentDto }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const done = payment.orderId ? `/account/orders/${payment.orderId}` : '/account';
+  const done = payment.orderId
+    ? `/account/orders/${payment.orderId}`
+    : payment.subscriptionId
+      ? '/account/subscription'
+      : '/account';
 
   async function settle(success: boolean) {
     setPending(true);
@@ -34,7 +38,7 @@ export function MockPaymentPanel({ payment }: { payment: PaymentDto }) {
       <div className="flex flex-col gap-[12px]">
         <p className="text-[16px]">Trạng thái thanh toán: {PAYMENT_STATUS_LABEL[payment.status]}</p>
         <Link href={done} className="self-start text-[12px] font-medium uppercase underline">
-          Xem đơn hàng
+          {payment.subscriptionId ? 'Xem gói' : 'Xem đơn hàng'}
         </Link>
       </div>
     );
