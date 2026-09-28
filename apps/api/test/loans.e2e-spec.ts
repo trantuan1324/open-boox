@@ -103,10 +103,12 @@ describe('loans', () => {
       await borrow([await book()]).expect(201);
     });
 
-    it('rolls everything back with NO_COPY_AVAILABLE when one book has no copy left', async () => {
+    it('rolls everything back with NO_COPY_AVAILABLE, naming the book that has no copy left', async () => {
       await subscribe('premium');
       const [a, b] = [await book(), await book(['LOST'])];
-      expect((await borrow([a, b]).expect(409)).body.code).toBe('NO_COPY_AVAILABLE');
+      const { title } = await ctx.prisma.book.findUniqueOrThrow({ where: { id: b }, select: { title: true } });
+      const res = await borrow([a, b]).expect(409);
+      expect(res.body).toMatchObject({ code: 'NO_COPY_AVAILABLE', fields: { bookIds: `"${title}" đã hết bản cho mượn` } });
       expect(await copyStatuses(a)).toEqual(['AVAILABLE']);
       expect(await ctx.prisma.loan.count()).toBe(0);
       expect(await ctx.prisma.shipment.count()).toBe(0);

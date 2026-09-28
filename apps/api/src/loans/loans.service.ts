@@ -54,7 +54,13 @@ export class LoansService {
       const copyIds: string[] = [];
       for (const bookId of bookIds) {
         const copyId = await this.inventory.reserveCopy(tx, bookId);
-        if (!copyId) throw new DomainError('NO_COPY_AVAILABLE', `No copy left for book ${bookId}`);
+        if (!copyId) {
+          // Name the book, so the customer knows which one to drop from a multi-book cart.
+          const { title } = await tx.book.findUniqueOrThrow({ where: { id: bookId }, select: { title: true } });
+          throw new DomainError('NO_COPY_AVAILABLE', `No copy left for book ${bookId}`, {
+            bookIds: `"${title}" đã hết bản cho mượn`,
+          });
+        }
         copyIds.push(copyId);
       }
       const shipment = await this.shipments.create(tx, { type: 'LOAN_DELIVERY', fee: 0, addressSnapshot: address });
