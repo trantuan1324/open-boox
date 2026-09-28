@@ -14,10 +14,14 @@ import type { AuthUser } from '../auth/auth-user';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { OrdersService } from './orders.service';
+import { RevalidationService } from '../revalidation/revalidation.service';
 
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly orders: OrdersService) {}
+  constructor(
+    private readonly orders: OrdersService,
+    private readonly revalidation: RevalidationService,
+  ) {}
 
   @Post('quote')
   @HttpCode(200)
@@ -26,11 +30,13 @@ export class OrdersController {
   }
 
   @Post()
-  place(
+  async place(
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(orderInputSchema)) body: OrderInput,
   ): Promise<PlaceOrderResult> {
-    return this.orders.place(user.id, body);
+    const result = await this.orders.place(user.id, body);
+    void this.revalidation.catalogChanged(); // stock was taken (spec §4.9)
+    return result;
   }
 
   @Get()
@@ -48,7 +54,9 @@ export class OrdersController {
 
   @Post(':id/cancel')
   @HttpCode(200)
-  cancel(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<OrderDetail> {
-    return this.orders.cancel(user.id, id);
+  async cancel(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<OrderDetail> {
+    const order = await this.orders.cancel(user.id, id);
+    void this.revalidation.catalogChanged();
+    return order;
   }
 }

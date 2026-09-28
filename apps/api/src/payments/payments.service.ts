@@ -3,17 +3,15 @@ import type { Payment, Prisma } from '@prisma/client';
 import type { PaymentDto } from '@open-boox/shared';
 import { DomainError } from '../common/errors/domain-error';
 import { PrismaService } from '../prisma/prisma.service';
-import { PaymentGateway } from './payment-gateway';
+import { type ChargeOutcome, PaymentGateway } from './payment-gateway';
 import { type PaymentOutcomeHandler, type PaymentTarget, targetOf } from './payment-outcome';
 
 export const STALE_PAYMENT_MS = 30 * 60_000;
 
-type Outcome = 'SUCCEEDED' | 'FAILED';
+const DTO_SELECT = { id: true, amount: true, status: true, orderId: true, subscriptionId: true } as const;
 
-const DTO_SELECT = { id: true, amount: true, status: true, orderId: true } as const;
-
-function toDto({ id, amount, status, orderId }: Payment): PaymentDto {
-  return { id, amount, status, orderId };
+function toDto({ id, amount, status, orderId, subscriptionId }: Payment): PaymentDto {
+  return { id, amount, status, orderId, subscriptionId };
 }
 
 @Injectable()
@@ -38,10 +36,25 @@ export class PaymentsService {
     return this.gateway.createCheckout(payment);
   }
 
+  async createForSubscription(
+    tx: Prisma.TransactionClient,
+    data: { userId: string; subscriptionId: string; amount: number },
+  ): Promise<{ paymentId: string; redirectUrl: string }> {
+    const payment = await tx.payment.create({ data, select: { id: true } });
+    return { paymentId: payment.id, ...this.gateway.createCheckout(payment) };
+  }
+
+  // Auto-renewal (spec §4.2): the gateway charges without the customer, then settle applies its answer.
+  async charge(paymentId: string): Promise<Payment> {
+    const payment = await this.prisma.payment.findUnique({ where: { id: paymentId }, select: { id: true, amount: true } });
+    if (!payment) throw new DomainError('NOT_FOUND');
+    return this.settle(paymentId, await this.gateway.charge(payment));
+  }
+
   // The single owner of every Payment transition out of PENDING (spec §4.1). Returns the payment as it now
   // stands; callers decide from its status. A domain error from onSucceeded (a business conflict) rolls that
   // attempt back and the payment is failed instead, as a real gateway would decline it.
-  async settle(paymentId: string, outcome: Outcome): Promise<Payment> {
+  async settle(paymentId: string, outcome: ChargeOutcome): Promise<Payment> {
     if (outcome === 'SUCCEEDED') {
       try {
         return await this.prisma.$transaction((tx) => this.transition(tx, paymentId, 'SUCCEEDED'));
@@ -72,7 +85,7 @@ export class PaymentsService {
     return rows.map((row) => row.id);
   }
 
-  private async transition(tx: Prisma.TransactionClient, paymentId: string, status: Outcome): Promise<Payment> {
+  private async transition(tx: Prisma.TransactionClient, paymentId: string, status: ChargeOutcome): Promise<Payment> {
     // Conditional update: concurrent settles serialize on the row lock; the loser matches 0 rows and
     // returns the winner's result without calling any handler (idempotent).
     const { count } = await tx.payment.updateMany({ where: { id: paymentId, status: 'PENDING' }, data: { status } });

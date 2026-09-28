@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateTime, formatVnd } from './format';
+import { formatDate, formatDateTime, formatVnd } from './format';
 
 describe('formatVnd', () => {
   it('groups thousands with dots and appends đ', () => {
@@ -11,5 +11,11 @@ describe('formatVnd', () => {
 describe('formatDateTime', () => {
   it('shows Vietnam time regardless of the server time zone', () => {
     expect(formatDateTime('2026-09-27T03:05:00.000Z')).toBe('10:05 27/09/2026');
+  });
+});
+
+describe('formatDate', () => {
+  it('shows the Vietnam calendar date', () => {
+    expect(formatDate('2026-09-27T20:00:00.000Z')).toBe('28/09/2026');
   });
 });

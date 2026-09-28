@@ -97,6 +97,7 @@ export interface PaymentDto {
   amount: number;
   status: PaymentStatus;
   orderId: string | null;
+  subscriptionId: string | null;
 }
 
 export interface AdminOrderRow {

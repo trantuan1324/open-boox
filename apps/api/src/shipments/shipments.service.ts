@@ -81,8 +81,9 @@ export class ShipmentsService {
     return this.adminGet(id);
   }
 
-  // spec §4.6: only a FAILED shipment; the unique retryOfId lets one retry win. P2002 aborts the Postgres
-  // transaction, so it is mapped here, outside $transaction.
+  // spec §4.6: only a FAILED shipment; the unique retryOfId lets one retry win. Order: create (a second retry
+  // fails here with P2002) → onRetried → commit. P2002 aborts the Postgres transaction, so it is mapped here,
+  // outside $transaction.
   async retry(id: string): Promise<AdminShipmentDetail> {
     let created: Shipment;
     try {
@@ -90,13 +91,18 @@ export class ShipmentsService {
         const failed = await tx.shipment.findUnique({ where: { id } });
         if (!failed) throw new DomainError('NOT_FOUND');
         if (failed.status !== 'FAILED') throw new DomainError('INVALID_SHIPMENT_TRANSITION');
-        return this.create(tx, {
+        const handler = this.handlers.get(failed.type);
+        // Same rule as transition: without its owner a retry would strand what the shipment carries.
+        if (!handler) throw new Error(`No shipment status handler registered for "${failed.type}"`);
+        const next = await this.create(tx, {
           type: failed.type,
           orderId: failed.orderId ?? undefined,
           fee: failed.fee,
           addressSnapshot: failed.addressSnapshot as Prisma.InputJsonValue,
           retryOfId: failed.id,
         });
+        await handler.onRetried?.(tx, failed, next);
+        return next;
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
@@ -126,6 +132,23 @@ export class ShipmentsService {
     const latest = new Map<string, ShipmentStatus>();
     for (const row of rows) if (row.orderId && !latest.has(row.orderId)) latest.set(row.orderId, row.status);
     return latest;
+  }
+
+  async statusesOf(ids: string[]): Promise<Map<string, ShipmentStatus>> {
+    const rows = await this.prisma.shipment.findMany({ where: { id: { in: ids } }, select: { id: true, status: true } });
+    return new Map(rows.map((row) => [row.id, row.status]));
+  }
+
+  // For loans' cancel-loans (spec §4.6): the shipment facts it decides on, read inside its transaction.
+  async findForLoans(
+    tx: Prisma.TransactionClient,
+    id: string,
+  ): Promise<{ type: ShipmentType; status: ShipmentStatus; retriedById: string | null } | null> {
+    const shipment = await tx.shipment.findUnique({
+      where: { id },
+      select: { type: true, status: true, retriedBy: { select: { id: true } } },
+    });
+    return shipment && { type: shipment.type, status: shipment.status, retriedById: shipment.retriedBy?.id ?? null };
   }
 
   async adminList({ status, type, page }: AdminShipmentListQuery): Promise<Paged<AdminShipmentRow>> {

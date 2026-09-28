@@ -3,6 +3,7 @@ import type { PublicUser } from '@open-boox/shared';
 import { cookies, headers } from 'next/headers';
 import { redirect, unstable_rethrow } from 'next/navigation';
 import { REQUEST_PATH_HEADER } from '../request-path';
+import { CATALOG_TAG } from './catalog-tag';
 import { ApiError } from './error';
 
 const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
@@ -25,9 +26,13 @@ export async function apiServer<T>(path: string, init: RequestInit = {}): Promis
   return (await res.json()) as T;
 }
 
-// Public catalog data: no cookies, so the response is shared by every visitor and cached for 60s (spec §6.2).
+// Public catalog data: no cookies, so the response is shared by every visitor. Tagged so the API can expire it
+// right after a write (spec §4.9); the 60s TTL stays as the safety net when that call fails.
 // Callers needing no-store: the Data Cache never stores a 404 revalidation, so a cached 200 is never replaced — a deleted book would stay visible forever.
-export async function apiPublic<T>(path: string, init: RequestInit = { next: { revalidate: 60 } }): Promise<T> {
+export async function apiPublic<T>(
+  path: string,
+  init: RequestInit = { next: { revalidate: 60, tags: [CATALOG_TAG] } },
+): Promise<T> {
   const res = await fetch(`${API_URL}/api${path}`, init);
   if (!res.ok) throw await ApiError.fromResponse(res);
   return (await res.json()) as T;

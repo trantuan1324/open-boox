@@ -13,8 +13,14 @@ export default async function AccountPage() {
         <Link href="/account/orders" className="underline">
           Đơn hàng
         </Link>
+        <Link href="/account/loans" className="underline">
+          Sách mượn
+        </Link>
         <Link href="/account/addresses" className="underline">
           Địa chỉ
+        </Link>
+        <Link href="/account/subscription" className="underline">
+          Gói đăng ký
         </Link>
       </nav>
       <dl className="grid grid-cols-[max-content_1fr] gap-x-8 gap-y-4 rounded-[12px] border border-dashed border-cork-border p-6 text-[16px]">

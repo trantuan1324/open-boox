@@ -4,8 +4,7 @@ import type { AddressDto, OrderQuote, PlaceOrderResult } from '@open-boox/shared
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { AddressForm } from '@/components/addresses/address-form';
-import { AddressLines } from '@/components/addresses/address-lines';
+import { AddressPicker, defaultAddressId } from '@/components/addresses/address-picker';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api/client';
 import { useCart } from '@/lib/cart/use-cart';
@@ -18,10 +17,7 @@ const box = 'flex flex-col gap-[18px] rounded-[12px] border border-dashed border
 export function CheckoutView({ addresses }: { addresses: AddressDto[] }) {
   const router = useRouter();
   const { lines, ready, clear } = useCart();
-  const [addressId, setAddressId] = useState<string | null>(
-    () => (addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? null,
-  );
-  const [addingAddress, setAddingAddress] = useState(addresses.length === 0);
+  const [addressId, setAddressId] = useState<string | null>(() => defaultAddressId(addresses));
   const [fetchedQuote, setQuote] = useState<OrderQuote | null>(null);
   const [problem, setProblem] = useState<QuoteProblem | null>(null);
   const [placing, setPlacing] = useState(false);
@@ -74,37 +70,7 @@ export function CheckoutView({ addresses }: { addresses: AddressDto[] }) {
     <div className="flex flex-col gap-[31px]">
       <section className={box}>
         <h2 className="text-[18px] font-medium uppercase">Giao tới</h2>
-        {addresses.length > 0 && (
-          <fieldset className="flex flex-col gap-[12px]">
-            <legend className="sr-only">Chọn địa chỉ</legend>
-            {addresses.map((address) => (
-              <label key={address.id} className="flex items-start gap-[12px]">
-                <input
-                  type="radio"
-                  name="address"
-                  className="mt-[6px]"
-                  checked={address.id === addressId}
-                  onChange={() => setAddressId(address.id)}
-                />
-                <AddressLines address={address} />
-              </label>
-            ))}
-          </fieldset>
-        )}
-        {addingAddress ? (
-          <AddressForm
-            onSaved={(saved) => {
-              setAddressId(saved.id);
-              setAddingAddress(false);
-              router.refresh();
-            }}
-            onCancel={addresses.length > 0 ? () => setAddingAddress(false) : undefined}
-          />
-        ) : (
-          <Button variant="ghost" className="self-start" onClick={() => setAddingAddress(true)}>
-            Thêm địa chỉ khác
-          </Button>
-        )}
+        <AddressPicker addresses={addresses} value={addressId} onChange={setAddressId} />
       </section>
 
       <section className={box}>
