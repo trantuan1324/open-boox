@@ -6,6 +6,7 @@ import { HealthController } from './health/health.controller';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RevalidationModule } from './revalidation/revalidation.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { ShipmentsModule } from './shipments/shipments.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
@@ -17,7 +18,7 @@ import { UsersModule } from './users/users.module';
 const timers = process.env.NODE_ENV === 'test' ? [] : [ScheduleModule.forRoot()];
 
 @Module({
-  imports: [PrismaModule, AuthModule, CatalogModule, UsersModule, PaymentsModule, SubscriptionsModule, ShipmentsModule, OrdersModule, SchedulerModule, ...timers],
+  imports: [PrismaModule, RevalidationModule, AuthModule, CatalogModule, UsersModule, PaymentsModule, SubscriptionsModule, ShipmentsModule, OrdersModule, SchedulerModule, ...timers],
   controllers: [HealthController],
 })
 export class AppModule {}

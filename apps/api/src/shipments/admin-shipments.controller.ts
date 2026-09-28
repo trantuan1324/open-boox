@@ -11,11 +11,15 @@ import {
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import { ShipmentsService } from './shipments.service';
+import { RevalidationService } from '../revalidation/revalidation.service';
 
 @Roles('ADMIN')
 @Controller('admin/shipments')
 export class AdminShipmentsController {
-  constructor(private readonly shipments: ShipmentsService) {}
+  constructor(
+    private readonly shipments: ShipmentsService,
+    private readonly revalidation: RevalidationService,
+  ) {}
 
   @Get()
   list(
@@ -30,11 +34,13 @@ export class AdminShipmentsController {
   }
 
   @Patch(':id')
-  transition(
+  async transition(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(shipmentTransitionSchema)) body: ShipmentTransitionInput,
   ): Promise<AdminShipmentDetail> {
-    return this.shipments.transition(id, body.status, body.note);
+    const shipment = await this.shipments.transition(id, body.status, body.note);
+    void this.revalidation.catalogChanged();
+    return shipment;
   }
 
   @Post(':id/retry')
