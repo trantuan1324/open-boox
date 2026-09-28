@@ -25,6 +25,7 @@ model User {
   orders        Order[]
   payments      Payment[]
   subscriptions Subscription[]
+  loans         Loan[]
 }
 
 model RefreshToken {
@@ -86,6 +87,7 @@ model BookCopy {
   barcode   String     @unique
   status    CopyStatus @default(AVAILABLE)
   createdAt DateTime   @default(now()) @db.Timestamptz(3)
+  loans     Loan[]
 
   @@index([bookId, status])
 }
@@ -108,6 +110,14 @@ enum SubscriptionStatus {
   PENDING_PAYMENT
   ACTIVE
   EXPIRED
+  CANCELLED
+}
+
+enum LoanStatus {
+  REQUESTED
+  ACTIVE
+  RETURN_REQUESTED
+  RETURNED
   CANCELLED
 }
 
@@ -218,6 +228,7 @@ model Subscription {
   cancelAtPeriodEnd  Boolean            @default(false)
   createdAt          DateTime           @default(now()) @db.Timestamptz(3)
   payments           Payment[]
+  loans              Loan[]
 
   @@index([userId])
   @@index([status, currentPeriodEnd])
@@ -239,6 +250,8 @@ model Shipment {
   createdAt       DateTime        @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
   events          ShipmentEvent[]
+  deliveryLoans   Loan[]          @relation("LoanDelivery")
+  returnLoans     Loan[]          @relation("LoanReturn")
 
   @@index([orderId])
   @@index([status, createdAt])
@@ -254,3 +267,29 @@ model ShipmentEvent {
 
   @@index([shipmentId])
 }
+
+// Delivery progress lives on Shipment; after a retry the shipment ids point at the new shipment (spec §3.3, §4.6).
+// Every multi-row write locks rows in id order first (lockLoans). bookCopyId Restrict: deleting a book whose
+// copy was ever lent fails with P2003 → 409 IN_USE.
+model Loan {
+  id                 String       @id @default(cuid())
+  userId             String
+  user               User         @relation(fields: [userId], references: [id])
+  subscriptionId     String
+  subscription       Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  bookCopyId         String
+  bookCopy           BookCopy     @relation(fields: [bookCopyId], references: [id], onDelete: Restrict)
+  status             LoanStatus   @default(REQUESTED)
+  deliveryShipmentId String
+  deliveryShipment   Shipment     @relation("LoanDelivery", fields: [deliveryShipmentId], references: [id], onDelete: Restrict)
+  returnShipmentId   String?
+  returnShipment     Shipment?    @relation("LoanReturn", fields: [returnShipmentId], references: [id], onDelete: Restrict)
+  requestedAt        DateTime     @default(now()) @db.Timestamptz(3)
+  deliveredAt        DateTime?    @db.Timestamptz(3)
+  returnedAt         DateTime?    @db.Timestamptz(3)
+
+  @@index([userId, status])
+  @@index([deliveryShipmentId])
+  @@index([returnShipmentId])
+}
+

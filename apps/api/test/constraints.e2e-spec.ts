@@ -1,5 +1,5 @@
 import { createBook, createCategory } from './catalog-fixtures';
-import { createAddress, createUser } from './order-fixtures';
+import { ADDRESS_INPUT, createAddress, createUser } from './order-fixtures';
 import { createPlans, createSubscription } from './subscription-fixtures';
 import { createTestApp, resetDb, type TestContext } from './test-app';
 
@@ -96,5 +96,18 @@ describe('orders migration constraints', () => {
     const order = await createOrder();
     await shipment({ type: 'ORDER_DELIVERY', orderId: order.id });
     await expect(ctx.prisma.order.delete({ where: { id: order.id } })).rejects.toMatchObject({ code: 'P2003' });
+  });
+
+  it('refuses to delete a book whose copy has been lent (P2003)', async () => {
+    const category = await createCategory(ctx.prisma, 'Văn học', 'van-hoc');
+    const book = await createBook(ctx.prisma, category.id, { title: 'A', copies: ['ON_LOAN'] });
+    const copy = await ctx.prisma.bookCopy.findFirstOrThrow({ where: { bookId: book.id } });
+    const plans = await createPlans(ctx.prisma);
+    const sub = await createSubscription(ctx.prisma, { userId, planId: plans.basic.id });
+    const delivery = await ctx.prisma.shipment.create({ data: { type: 'LOAN_DELIVERY', fee: 0, addressSnapshot: ADDRESS_INPUT } });
+    await ctx.prisma.loan.create({
+      data: { userId, subscriptionId: sub.id, bookCopyId: copy.id, deliveryShipmentId: delivery.id, status: 'ACTIVE' },
+    });
+    await expect(ctx.prisma.book.delete({ where: { id: book.id } })).rejects.toMatchObject({ code: 'P2003' });
   });
 });
