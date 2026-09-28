@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { type Plan, Prisma } from '@prisma/client';
 import {
   classifyPlanChange,
@@ -44,6 +44,8 @@ function toDto(s: SubscriptionWithPlans): SubscriptionDto {
 
 @Injectable()
 export class SubscriptionsService {
+  private readonly logger = new Logger(SubscriptionsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly payments: PaymentsService,
@@ -112,6 +114,25 @@ export class SubscriptionsService {
     return this.setCancelAtPeriodEnd(userId, false);
   }
 
+  // spec §4.2 auto-renewal: each due subscription gets its own transaction (lock, re-check, lock in the plan,
+  // create the payment), then the charge runs after commit. One failure is logged and does not hold back the
+  // others.
+  async renewDue(now: Date): Promise<void> {
+    const due = await this.prisma.subscription.findMany({
+      where: { status: 'ACTIVE', currentPeriodEnd: { lte: now } },
+      orderBy: [{ currentPeriodEnd: 'asc' }, { id: 'asc' }],
+      select: { id: true },
+    });
+    for (const { id } of due) {
+      try {
+        const paymentId = await this.prisma.$transaction((tx) => this.startRenewal(tx, id, now));
+        if (paymentId) await this.payments.charge(paymentId);
+      } catch (error) {
+        this.logger.error(`renewal of ${id} failed`, error instanceof Error ? error.stack : String(error));
+      }
+    }
+  }
+
   // For loans (spec §4.3 step 1): locks the user's ACTIVE subscription row so every borrow of one user queues
   // here. The period check stays with the caller.
   async findActiveForUpdate(tx: Prisma.TransactionClient, userId: string): Promise<ActiveSubscription | null> {
@@ -132,6 +153,28 @@ export class SubscriptionsService {
     });
     if (count === 0) throw new DomainError('SUBSCRIPTION_INACTIVE'); // expired in between
     return this.dto(subscription.id);
+  }
+
+  // Returns the renewal payment to charge, or null when there is nothing to charge. Locking in the plan here
+  // (not in onSucceeded) keeps the charged price and the applied plan the same even if change-plan runs
+  // before the charge settles.
+  private async startRenewal(tx: Prisma.TransactionClient, id: string, now: Date): Promise<string | null> {
+    await tx.$queryRaw`SELECT id FROM "Subscription" WHERE id = ${id} FOR UPDATE`;
+    const subscription = await tx.subscription.findUniqueOrThrow({ where: { id }, include: { plan: true, nextPlan: true } });
+    if (subscription.status !== 'ACTIVE' || !subscription.currentPeriodEnd || subscription.currentPeriodEnd > now) return null;
+    if ((await tx.payment.count({ where: { subscriptionId: id, status: 'PENDING' } })) > 0) return null;
+    if (subscription.cancelAtPeriodEnd) {
+      await tx.subscription.update({ where: { id }, data: { status: 'EXPIRED' } });
+      return null;
+    }
+    const plan = subscription.nextPlan ?? subscription.plan;
+    await tx.subscription.update({ where: { id }, data: { planId: plan.id, nextPlanId: null } });
+    const { paymentId } = await this.payments.createForSubscription(tx, {
+      userId: subscription.userId,
+      subscriptionId: id,
+      amount: plan.monthlyPrice,
+    });
+    return paymentId;
   }
 
   private async lockActiveId(tx: Prisma.TransactionClient, userId: string): Promise<string> {
