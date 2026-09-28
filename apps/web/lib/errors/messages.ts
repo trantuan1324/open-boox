@@ -15,6 +15,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   INVALID_SHIPMENT_TRANSITION: 'Không thể chuyển sang trạng thái giao hàng này.',
   SHIPMENT_ALREADY_RETRIED: 'Lần giao này đã được tạo lại trước đó.',
   LOAN_NOT_RETURNABLE: 'Sách này không ở trạng thái có thể trả.',
+  LOAN_NOT_CANCELLABLE: 'Không thể hủy yêu cầu mượn của lần giao này.',
   INVALID_COPY_STATE: 'Bản sách không ở trạng thái cho phép thao tác này.',
   DUPLICATE: 'Dữ liệu đã tồn tại.',
   IN_USE: 'Dữ liệu đã phát sinh giao dịch, không thể xóa.',

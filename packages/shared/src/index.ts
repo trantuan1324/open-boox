@@ -7,3 +7,5 @@ export * from './address';
 export * from './orders';
 export * from './shipments';
 export * from './subscriptions';
+export * from './loans';
+export * from './short-code';
