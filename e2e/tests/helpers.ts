@@ -1,4 +1,4 @@
-import type { Browser, Page } from '@playwright/test';
+import { type Browser, expect, type Page } from '@playwright/test';
 import { WEB_URL } from '../env';
 
 const ACCOUNTS = {
@@ -17,4 +17,23 @@ export async function loginAs(browser: Browser, role: keyof typeof ACCOUNTS): Pr
   await page.getByRole('button', { name: 'Đăng nhập' }).click();
   await page.waitForURL((url) => url.pathname === account.home);
   return page;
+}
+
+export async function openOnlyShipment(
+  admin: Page,
+  type: 'ORDER_DELIVERY' | 'LOAN_DELIVERY' | 'LOAN_PICKUP',
+): Promise<void> {
+  await admin.goto(`/admin/shipments?type=${type}`);
+  // The first link of the row is the "Ngày tạo" cell, which opens the shipment.
+  await admin.locator('tbody tr').first().getByRole('link').first().click();
+  await admin.waitForURL(/\/admin\/shipments\/[^/?]+$/);
+}
+
+export async function deliverShipment(admin: Page): Promise<void> {
+  for (const status of ['PICKED_UP', 'IN_TRANSIT', 'DELIVERED']) {
+    // selectOption waits until the option exists, i.e. until router.refresh() has shown the previous update.
+    await admin.getByLabel('Trạng thái mới').selectOption(status);
+    await admin.getByRole('button', { name: 'Cập nhật' }).click();
+  }
+  await expect(admin.getByText('Lần giao này đã kết thúc.')).toBeVisible();
 }
