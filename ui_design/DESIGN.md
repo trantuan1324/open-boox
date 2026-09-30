@@ -1,231 +1,258 @@
-# ORYZO AI — Style Reference
-> Darkroom product editorial. A lone object floating in warm darkness, cream typography the only decoration.
+# Slush — Style Reference
 
-**Theme:** dark
+> inflatable sticker universe on pastel paper
+
+**Theme:** light
 
 Source measurements are normalized; roles and recommendations are interpreted. Font summary lists are independent, not paired by position. HTML examples are reconstructions, not source components.
 
-The ORYZO visual system treats a single product object like a museum artifact: full-bleed warm-dark canvas, cream typography floating in generous negative space, and zero UI chrome competing with the form. Every text element is uppercase at weight 500, with the sole exception of body copy at 29px/400 which is the system's only conversational voice. A single vivid orange appears only for credit lines and the studio link — never for buttons or CTAs — earning its rarity. The layout alternates between two modes: photographic hero (the product in context with tools and materials) and void-mode reveal (the product isolated on warm dark), connected by hairline dashed dividers and pill-shaped controls.
+Slush runs on a sticker-book logic: pastel paper canvas, huge inflated 3D ribbons in electric blue, and a full rainbow of vivid sticker accents scattered like confetti. Display type is enormous and crushed (Lateral 800 at 200–640px, line-height 0.75–0.80) so the words become sculptural objects, not sentences. The six saturated brand colors function as a shared sticker palette — every color appears as a filled sticker, a card surface, or a decorative wash, never as a restrained accent. Components are rounded to the point of softness (20–40px on cards, pill-shaped on nav) and outlined in black for a hand-cut feel. The result reads less like a fintech landing page and more like a physical collage pinned to a pale wall.
 
 ## Tokens — Colors
 
-| Name | Value | Token | Role |
-|------|-------|-------|------|
-| Warm Cream | `#ffedd7` | `--color-warm-cream` | Light text on dark surfaces, inverse labels, and high-contrast captions. |
-| Walnut Shadow | `#100904` | `--color-walnut-shadow` | Page canvas and deepest background — warm near-black, not pure black. The void behind every product reveal |
-| Bark Brown | `#382416` | `--color-bark-brown` | Elevated surface and filled button background — the one chromatic step above the canvas, used for the single solid CTA |
-| Cork Border | `#40372e` | `--color-cork-border` | Hairline dividers, dashed section separators, subtle container borders — warmer than the canvas by one step |
-| Driftwood | `#6c5f51` | `--color-driftwood` | Mid-tone warm gray for secondary dividers and muted structural elements — the bridge between Bark and Cream |
-| Ember Accent | `#dc5000` | `--color-ember-accent` | Orange text accent for links, tags, and emphasized short phrases. |
-| Pure Black | `#000000` | `--color-pure-black` | SVG icon fills and decorative vector elements only — never used as a background or text color |
+| Name           | Value     | Token                    | Role                                                                                                                               |
+| -------------- | --------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Carbon         | `#000000` | `--color-carbon`         | Primary text, card borders, filled CTA background, logo mark — creates the hand-cut sticker outline effect against pastel surfaces |
+| Paper White    | `#ffffff` | `--color-paper-white`    | Page canvas, card surfaces, outlined button fills, text on dark fills                                                              |
+| Sky Wash       | `#dceeff` | `--color-sky-wash`       | Hero section background, light blue pastel ground                                                                                  |
+| Concrete Gray  | `#cccccc` | `--color-concrete-gray`  | Secondary section background, neutral interlude surface                                                                            |
+| Soft Mist      | `#e9e9e9` | `--color-soft-mist`      | Subtle button and surface tints, disabled states                                                                                   |
+| Electric Blue  | `#4da2ff` | `--color-electric-blue`  | Dominant brand color — 3D ribbon sculptures, body backgrounds, card washes, the visual signature that anchors every screen         |
+| Mint Pop       | `#55db9c` | `--color-mint-pop`       | Green wash for highlight backgrounds, decorative bands, and soft emphasis behind content                                           |
+| Lavender       | `#e9ccff` | `--color-lavender`       | Soft accent wash for cards, tags, sticker fills — the gentlest color in the palette                                                |
+| Ember          | `#fb4903` | `--color-ember`          | Hot accent for sticker icons, badge fills, rocket body — warmest hit in the rainbow                                                |
+| Sunburst       | `#ffd731` | `--color-sunburst`       | Sticker coin fills, highlight accents, yellow sticker decorations — never used for text backgrounds                                |
+| Voltage Violet | `#5c4ade` | `--color-voltage-violet` | Deep accent for wallet stickers, QR download cards, secondary CTAs — the anchor purple in the sticker set                          |
 
 ## Tokens — Typography
 
-### halyard-display-variable — The only typeface. Weight 500 at 51px drives display headlines with extreme uppercase confidence; the same family at weight 400 / 29px becomes the system's sole mixed-case body voice. Letter-spacing stays normal — the geometric forms do the work without tightening. Substitute: 'Inter', 'Söhne', or 'Neue Haas Grotesk' for close structural match. · `--font-halyard-display-variable`
-- **Substitute:** Inter or Söhne
-- **Weights:** 400, 500
-- **Sizes:** 8, 10, 12, 14, 15, 18, 24, 29, 41, 51px
-- **Line height:** 0.90–1.26
-- **Letter spacing:** normal across all sizes — no negative tracking even at display scale, the font's geometry handles visual weight without compression
-- **OpenType features:** `"ss01" on`
-- **Role:** The only typeface. Weight 500 at 51px drives display headlines with extreme uppercase confidence; the same family at weight 400 / 29px becomes the system's sole mixed-case body voice. Letter-spacing stays normal — the geometric forms do the work without tightening. Substitute: 'Inter', 'Söhne', or 'Neue Haas Grotesk' for close structural match.
+### Lateral — Display headlines only — the wordmark 'SLUSH' and section banners like 'ALL THINGS SUI' sit at 200–640px with crushed 0.75–0.80 line-height so the letters stack into sculptural blocks. This is anti-convention display: no other site pairs an 800-weight display face with line-height under 0.85, and the effect makes text behave like a physical object that wraps behind 3D ribbons. · `--font-lateral`
 
-### Arial — System fallback for micro-legal labels (8px uppercase credits like "* ADOBE ILLUSTRATOR"). Not a design choice — a necessity for system-rendered disclaimers. · `--font-arial`
-- **Substitute:** system-ui
-- **Weights:** 400, 500
-- **Sizes:** 8px
-- **Line height:** 1.20
-- **Role:** System fallback for micro-legal labels (8px uppercase credits like "* ADOBE ILLUSTRATOR"). Not a design choice — a necessity for system-rendered disclaimers.
+- **Substitute:** Druk, Bowlby One, Antonio
+- **Weights:** 800
+- **Sizes:** 70px, 110px, 160px, 200px, 281px, 640px
+- **Line height:** 0.75–0.80
+- **Letter spacing:** normal
+- **Role:** Display headlines only — the wordmark 'SLUSH' and section banners like 'ALL THINGS SUI' sit at 200–640px with crushed 0.75–0.80 line-height so the letters stack into sculptural blocks. This is anti-convention display: no other site pairs an 800-weight display face with line-height under 0.85, and the effect makes text behave like a physical object that wraps behind 3D ribbons.
+
+### Aeonik Pro — All UI, body, nav, buttons, subheads. Weight 500 for body and metadata (12–16px), weight 700 for subheads and nav labels (24–30px), and a 64px 700-weight step for large supporting headlines. Tight letter-spacing (-0.010em) tightens the 14–16px body; slight opening (0.030–0.032em) on nav/button labels gives pill controls breathing room. · `--font-aeonik-pro`
+
+- **Substitute:** Inter, Satoshi, General Sans
+- **Weights:** 500, 700
+- **Sizes:** 12px, 13px, 14px, 15px, 16px, 24px, 30px, 64px
+- **Line height:** 1.00–1.56
+- **Letter spacing:** -0.010em body, 0.030em nav/buttons, 0.032em uppercase labels
+- **OpenType features:** `"ss01" on, "tnum"`
+- **Role:** All UI, body, nav, buttons, subheads. Weight 500 for body and metadata (12–16px), weight 700 for subheads and nav labels (24–30px), and a 64px 700-weight step for large supporting headlines. Tight letter-spacing (-0.010em) tightens the 14–16px body; slight opening (0.030–0.032em) on nav/button labels gives pill controls breathing room.
 
 ### Type Scale
 
-| Role | Family | Weight | Size | Line Height | Letter Spacing | Token |
-|------|--------|--------|------|-------------|----------------|-------|
-| subheading | — | — | 18px | 1 | 0px | `--text-subheading` |
-| heading-sm | — | — | 24px | 1.09 | 0px | `--text-heading-sm` |
-| body | — | — | 29px | 1.26 | 0px | `--text-body` |
-| heading | — | — | 41px | 0.9 | 0px | `--text-heading` |
-| display | — | — | 51px | 0.9 | 0px | `--text-display` |
+| Role       | Family | Weight | Size  | Line Height | Letter Spacing | Token               |
+| ---------- | ------ | ------ | ----- | ----------- | -------------- | ------------------- |
+| caption    | —      | —      | 12px  | 1.56        | -0.01px        | `--text-caption`    |
+| body-lg    | —      | —      | 15px  | 1.39        | -0.01px        | `--text-body-lg`    |
+| subheading | —      | —      | 24px  | 1.2         | -0.01px        | `--text-subheading` |
+| heading-sm | —      | —      | 30px  | 1.1         | -0.01px        | `--text-heading-sm` |
+| heading    | —      | —      | 64px  | 1           | -0.01px        | `--text-heading`    |
+| display    | —      | —      | 200px | 0.8         | 0px            | `--text-display`    |
+| display-lg | —      | —      | 640px | 0.75        | 0px            | `--text-display-lg` |
 
 ## Tokens — Spacing & Shapes
+
+**Base unit:** 4px
 
 **Density:** comfortable
 
 ### Spacing Scale
 
-| Name | Value | Token |
-|------|-------|-------|
-| 6 | 6px | `--spacing-6` |
-| 8 | 8px | `--spacing-8` |
-| 9 | 9px | `--spacing-9` |
-| 10 | 10px | `--spacing-10` |
-| 12 | 12px | `--spacing-12` |
-| 14 | 14px | `--spacing-14` |
-| 18 | 18px | `--spacing-18` |
-| 24 | 24px | `--spacing-24` |
-| 31 | 31px | `--spacing-31` |
-| 41 | 41px | `--spacing-41` |
-| 45 | 45px | `--spacing-45` |
-| 68 | 68px | `--spacing-68` |
-| 204 | 204px | `--spacing-204` |
+| Name | Value | Token           |
+| ---- | ----- | --------------- |
+| 4    | 4px   | `--spacing-4`   |
+| 8    | 8px   | `--spacing-8`   |
+| 12   | 12px  | `--spacing-12`  |
+| 16   | 16px  | `--spacing-16`  |
+| 20   | 20px  | `--spacing-20`  |
+| 24   | 24px  | `--spacing-24`  |
+| 28   | 28px  | `--spacing-28`  |
+| 32   | 32px  | `--spacing-32`  |
+| 40   | 40px  | `--spacing-40`  |
+| 44   | 44px  | `--spacing-44`  |
+| 48   | 48px  | `--spacing-48`  |
+| 60   | 60px  | `--spacing-60`  |
+| 80   | 80px  | `--spacing-80`  |
+| 128  | 128px | `--spacing-128` |
+| 180  | 180px | `--spacing-180` |
+| 224  | 224px | `--spacing-224` |
 
 ### Border Radius
 
-| Element | Value |
-|---------|-------|
-| cards | 12px |
-| inputs | 0px |
-| full-round | 9999px |
-| buttons-pill | 36px |
-| buttons-outlined | 22.5px |
+| Element        | Value  |
+| -------------- | ------ |
+| nav            | 1600px |
+| body           | 30px   |
+| cards          | 20px   |
+| pills          | 1600px |
+| buttons        | 1600px |
+| wallet-icon    | 16px   |
+| cards-elevated | 40px   |
 
 ### Layout
 
+- **Page max-width:** 1440px
+- **Section gap:** 48px
 - **Card padding:** 24px
-- **Element gap:** 18px
+- **Element gap:** 4-12px
 
 ## Components
 
-### Pill Button (Filled)
-**Role:** Primary solid CTA — used once on the page for the Lusion studio link
+### Pill Nav Button
 
-36px border-radius, Bark Brown (#382416) background, Warm Cream (#ffedd7) text, 14px 24px vertical/horizontal padding, weight 500, uppercase, 8–14px size. The only filled action surface in the system — its rarity is the signal.
+**Role:** Top navigation links
+
+1600px border-radius, 1px solid #000000 border, #ffffff fill, Aeonik Pro 700 at 12–14px with 0.032em letter-spacing, 15px vertical padding, 12px horizontal padding. Sits inline in the nav bar with 4px gaps.
+
+### Filled CTA Button
+
+**Role:** Primary action — 'Launch App'
+
+40px border-radius, #000000 background, #ffffff text, Aeonik Pro 700 at 13–14px, 10px vertical and 12px horizontal padding, 1px solid #000000 border (invisible against fill). Used for the single highest-priority action per screen.
 
 ### Outlined Ghost Button
-**Role:** Secondary action or decorative button — cream border on transparent fill
 
-22.5px border-radius, transparent background, 1px Warm Cream border, Warm Cream text, 7.5px vertical padding, 0px horizontal padding, weight 500, uppercase, 8–14px. Border does the work; no fill needed.
+**Role:** Secondary action — 'Launch Web App', 'Download for Chrome'
 
-### Underline Text Link
-**Role:** Inline links and navigation items — borderless, relying on underline
+1600px border-radius, 1px solid #000000 border, #ffffff background, #000000 text, Aeonik Pro 700 at 13–14px with 0.032em letter-spacing, 10px vertical and 12px horizontal padding. Pairs beside or below the filled CTA.
 
-0px radius, transparent background, Warm Cream text, 0px padding, weight 500, uppercase, 12–14px. The default interaction — no container, just text with an underline indicator.
+### Logo Mark
 
-### Input Field (Underline Only)
-**Role:** Minimal form input — bottom border only, no full outline
+**Role:** Brand identifier in nav
 
-0px radius, transparent background, 1px Warm Cream bottom border, Warm Cream text, 1px 2px padding, 36px right padding for an inline action. The form mirrors the ghost-button restraint — no boxes, just a line.
+Circular black-outlined 'S' badge, 1600px radius, 1px #000000 border on #ffffff fill. Sits top-left at fixed position across all sections.
 
-### Fixed Top Navigation
-**Role:** Persistent site navigation — minimal, 4 items, uppercase micro-type
+### Plus Menu Button
 
-Logo wordmark "ORYZO" left-aligned in Warm Cream at 12–14px weight 500 uppercase. Right-aligned nav items: INTRO (with dashed underline indicator for active), FEATURES, PRODUCT, CONTACT — all 12px weight 500 uppercase, Warm Cream. Transparent background over the hero photograph.
+**Role:** Overflow/navigation trigger
 
-### Vertical Sidebar Label
-**Role:** Edge branding — vertical text running down the right margin
+Circular icon button, 1600px radius, 1px #000000 border, #ffffff fill, contains a + glyph in Aeonik Pro 700.
 
-Rotated 90° text "ORYZO 1-MODEL" in Warm Cream, 10–12px uppercase, sits flush right. Functions as a product serial number — a physical-product artifact translated to UI.
+### QR Download Card
 
-### Logo Wordmark
-**Role:** Brand identifier — the only graphical mark
+**Role:** App download prompt
 
-"ORYZO" in Halyard Display Variable weight 500 uppercase, up to 51px+ at display scale with 0.9 line-height. Used at two sizes: navigation lockup (12–14px) and hero lockup (51px+). No icon, no symbol — pure typographic identity.
+20px border-radius card, #5c4ade background, split into QR code panel (white) and label panel (#5c4ade with white Aeonik Pro 700 'DOWNLOAD' text). Black hairline border on the QR panel.
 
-### Hero Overlay Info Card
-**Role:** Semi-transparent attribution card in the hero
+### Sticker Decoration
 
-12px border-radius, semi-transparent Warm Cream or dark fill with low opacity, contains uppercase heading "DESIGNED BY LUSION, THE AWARD-WINNING DESIGN STUDIO." plus a dashed divider and body text. Overlays the hero photograph bottom-left.
+**Role:** Playful visual accent floating around display text
 
-### Product Reveal Section
-**Role:** Full-viewport void-mode section — centered 3D render with flanking text
+Flat illustrated stickers (rocket, coin, wallet, checkmark) with 1px #000000 outline, 16–20px radius, filled with one of the six brand colors. Positioned as overlapping, rotated decorative elements around display type — never grid-aligned.
 
-100vh height, Walnut Shadow (#100904) background, centered 3D product render, left-aligned heading at 41px uppercase "ISN'T JUST A COASTER.", right-aligned body copy at 29px weight 400 mixed-case. The signature layout pattern — three columns, generous gutters.
+### Marquee Banner
 
-### Section Divider (Dashed Hairline)
-**Role:** Visual separator between content blocks
+**Role:** Scrolling announcement strip
 
-1px dashed line in Cork Border (#40372e) or Driftwood (#6c5f51). Used sparingly between text blocks, never as decoration — always carrying structural meaning.
+Full-bleed horizontal band at page top, #000000 background, #ffffff Aeonik Pro 700 uppercase text at 12–13px with 0.032em letter-spacing, repeating message. Separates from the page edge with no padding.
 
-### Video Thumbnail Card
-**Role:** Embedded video preview with play indicator
+### Display Headline Block
 
-Small rectangular card, 12px radius, positioned in the lower-right of the hero. Contains a miniature ORYZO wordmark and a play icon. Functions as a secondary entry point without competing with the primary CTA.
+**Role:** Hero/section sculptural text
 
-### Legal/Disclaimer Text
-**Role:** System-rendered micro-copy in Arial 8px
+Lateral 800 at 200–640px, line-height 0.75–0.80, #000000 fill. Treated as a physical object that the 3D blue ribbon wraps behind. Always paired with a smaller Aeonik Pro tagline below.
 
-Fallback font (Arial 8px weight 500 uppercase) for things like "* ADOBE ILLUSTRATOR" footnotes. Visually subordinate — intentionally uses a different typeface to signal "this is not design, this is compliance."
+### Tagline Subhead
+
+**Role:** Supporting line under display text
+
+Aeonik Pro 500 at 24–64px, #000000, sits centered or left-aligned directly below the Lateral display block. The size step (24–64px) keeps it readable without competing with the display.
+
+### 3D Ribbon Element
+
+**Role:** Signature visual motif — inflatable curved tube
+
+Rendered 3D blue (#4da2ff) tubular form with a rough/grainy surface texture, full-bleed, wrapping behind display text. Functions as a brand symbol more than decoration — appears in every section.
+
+### Section Background Panel
+
+**Role:** Full-bleed section ground
+
+Alternates between #dceeff (light blue), #ffffff (white), and #cccccc (gray) across scroll. No border or shadow — sections are defined purely by color bands.
 
 ## Do's and Don'ts
 
 ### Do
-- Set all UI text in #ffedd7 (Warm Cream) — never use pure #fff; the warm tint is the system's signature.
-- Use #dc5000 (Ember) only for credit lines, the "Built by" label, and the Lusion studio link — a single accent earns its rarity through restraint.
-- Set type in uppercase weight 500 across the entire interface; use weight 400 / mixed case only for the 29px body copy that explains the product.
-- Use 36px border-radius for the one filled CTA and 22.5px for outlined ghost buttons; 12px for cards; 0px for inputs and inline links — these four values are the entire radius vocabulary.
-- Set section gaps at 100vh — each section gets its own full viewport, never compress product reveals into bands.
-- Use 1px dashed lines in #40372 for section dividers; avoid solid dividers and avoid any divider thicker than 2px.
-- Center the 3D product render in every void-mode section with text flanking symmetrically left and right at 18px gutters.
+
+- Use Lateral 800 at 200–640px with line-height 0.75–0.80 for any display headline; the crushed leading is non-negotiable for the sculptural text effect.
+- Apply the six-color sticker palette (Electric Blue, Mint Pop, Lavender, Ember, Sunburst, Voltage Violet) as a shared set — use multiple colors per screen, never pick one as 'the' accent.
+- Set all interactive elements (nav, buttons, cards) to 1px solid #000000 borders; the hand-cut outline is part of the visual language, not a fallback.
+- Round nav, buttons, and tags to 1600px (pill shape) and cards to 20–40px; softness is the system default.
+- Pair every display headline with a 3D blue ribbon or sticker cluster — display type never appears alone on a flat background.
+- Use Aeonik Pro 700 with 0.030–0.032em letter-spacing for all nav, button, and uppercase label text to give pill controls breathing room.
+- Alternate section backgrounds across #dceeff, #ffffff, and #cccccc to create visible scroll rhythm without dividers or shadows.
 
 ### Don't
-- Never use pure #fff for text or #000 for backgrounds — the warm cream and walnut shadow are the system; purity reads as wrong here.
-- Never apply #dc5000 to buttons, CTAs, or interactive surfaces — the orange is editorial credit only.
-- Never use lowercase or sentence-case for headings, nav, or labels; the only mixed-case text is the 29px body description.
-- Never add drop shadows to cards, buttons, or sections — depth comes from the two-step surface stack (#100904 → #382416), not from blur.
-- Never use border-radius below 12px on containers — the geometry is deliberately chunky, not sharp.
-- Never use more than one filled button per section; restraint is the design language.
-- Never center-align body copy — headings and body text are always left-aligned, even when flanking a centered image.
+
+- Do not use any border-radius under 16px for cards or under 1600px for buttons/tags; sharp corners break the soft sticker-book feel.
+- Do not set line-height above 0.85 on Lateral display text — the crushed leading is what makes the type sculptural rather than typographic.
+- Do not use blue (#4da2ff) as a CTA fill or link color; it is a decorative/brand surface color, not an action color. CTAs are black-fill or outlined-black only.
+- Do not add box-shadows to cards, buttons, or surfaces; elevation is communicated through color bands and black outlines, never shadows.
+- Do not use green (#55db9c) as a success state color — it is a sticker accent, not a semantic state. Reserve it for decorative/checkmark stickers.
+- Do not constrain the page to a max-width under 1280px; the inflated display type and 3D ribbons need horizontal room to breathe.
+- Do not use gradients anywhere; the 3D ribbons carry all dimensional weight, and flat color fills preserve the sticker/paper aesthetic.
 
 ## Surfaces
 
-| Level | Name | Value | Purpose |
-|-------|------|-------|---------|
-| 0 | Walnut Shadow | `#100904` | Full-bleed page canvas and section background |
-| 1 | Bark Brown | `#382416` | Filled button surface, the only elevated solid |
-| 2 | Cork Border | `#40372` | Hairline borders, dashed dividers, card outlines |
-| 3 | Warm Cream | `#ffedd7` | Foreground text, navigation, interactive borders |
-
-## Elevation
-
-The system rejects shadow-based elevation entirely. Depth is achieved through a two-step surface stack: #100904 (canvas) → #382416 (elevated solid). There are no blur, no offset, no opacity-based shadows — only a 1–2 value luminance step. This keeps the interface flat and editorial, letting the 3D product renders provide all visual depth in void-mode sections.
+| Level | Name             | Value     | Purpose                                                |
+| ----- | ---------------- | --------- | ------------------------------------------------------ |
+| 1     | Sky Wash         | `#dceeff` | Hero and primary section background — pale blue pastel |
+| 2     | Paper White      | `#ffffff` | Card surfaces, nav, outlined button fills              |
+| 3     | Concrete Gray    | `#cccccc` | Secondary section interlude, neutral breathing band    |
+| 4     | Sticker Surfaces | `#e9ccff` | Accent card fills — lavender pastel                    |
 
 ## Imagery
 
-Photography is editorial, top-down, and in-context: the cork coaster sits on a green cutting mat surrounded by pencils, a craft knife, and a paperclip — tools of the craft visible in frame. The green cutting mat (#445231) is a hero-only element, not a UI token. 3D renders dominate the product reveal sections: the cork coaster is shown isolated against Walnut Shadow, lit from the upper right with a warm rim light, rotating from top-down to 3/4 angle between sections. No lifestyle photography, no people, no stock imagery — the object is the hero and the tools are its context. Images are full-bleed, sharp-edged (no rounded masks), and treated with high contrast and warm grading.
+The visual language is dominated by 3D-rendered blue ribbons — a single signature motif that appears as a grainy, inflatable tubular form in Electric Blue (#4da2ff), wrapping around or behind display text in every section. Decorative 2D stickers (rocket, gold coin, green checkmark, purple wallet) float around headlines like physical cut-outs pinned to a board, each with a 1px black outline. No photography appears anywhere. No traditional illustration grids — everything is collage-like and asymmetrically placed. The 3D ribbons do the heavy atmospheric lifting; stickers add playfulness; the rest is type and color.
 
 ## Layout
 
-Full-bleed throughout — no max-width container, every section spans 100vw. Hero: full-viewport top-down photograph with a massive ORYZO wordmark (51px+) in the upper-left, tagline above, fixed minimal nav upper-right, vertical sidebar label running down the right edge, semi-transparent info card lower-left, video thumbnail lower-right. Subsequent sections: full-viewport Walnut Shadow canvas with a centered 3D product render flanked by left-aligned heading and right-aligned body copy — a three-column grid (text / object / text) with generous 18px gutters. Section transitions are seamless dark-on-dark; the only breaks are hairline dashed dividers. Navigation is fixed, transparent, and 4 items max. No sidebar, no footer chrome, no cards-within-cards — every screen is a single statement.
-
-## Typography Voice
-
-The system has exactly two typographic modes:
-
-1. UPPERCASE WEIGHT 500 — the default for everything: nav, headings, labels, links, button text, legal. The voice is declarative, confident, museum-label. Sizes range from 8px (legal) to 51px (display). Line-height tightens with size: 1.2 at caption, 1.0 at body-sm, 0.9 at display. No letter-spacing adjustment — the font's geometry is tight enough at every scale.
-
-2. MIXED CASE WEIGHT 400 — the exception, used only at 29px for the descriptive body copy that explains the product. This is the system's only conversational voice: "Designed to lift, insulate, and grip in all the right ways. Oryzo makes the simplest moment feel considered." The weight drop and case change are the signal — when the text shifts from 500/UPPER to 400/mixed, the user knows they are reading description, not label.
-
-The bold signature: line-height 0.9 at 41–51px display sizes. This is unusually tight — most editorial sites use 1.0–1.1. At 0.9, the uppercase letterforms overlap their line-height bounds, creating a sculptural block effect. The display type doesn't sit in lines; it stacks as solid form.
+Full-bleed scroll-based layout with no sidebar or persistent container. The marquee banner and a minimal top nav (logo left, pill nav center, filled CTA right) persist at the top. Each section is a full-viewport color band (#dceeff → #ffffff → #cccccc) with oversized Lateral display text centered or left-aligned, wrapped by 3D blue ribbons. Content arrangement is deliberately loose and collage-like rather than grid-locked: stickers overlap display type, ribbons cross behind text, and the QR card sits off-center in the secondary section. Vertical rhythm is generous (48px section gaps) but horizontal composition is intentionally asymmetric. The page reads top-to-bottom as three large color bands, each a self-contained poster.
 
 ## Agent Prompt Guide
 
-## Quick Color Reference
-- text: #ffedd7 (Warm Cream)
-- background: #100904 (Walnut Shadow)
-- surface: #382416 (Bark Brown)
-- border: #40372e (Cork Border)
-- accent: #dc5000 (Ember)
-- primary action: no distinct CTA color
+Quick Color Reference:
 
-## 3-5 Example Component Prompts
+- text: #000000
+- background: #ffffff / #dceeff / #cccccc (section-dependent)
+- border: #000000 (1px outlines everywhere)
+- accent: #4da2ff (3D ribbon blue — decorative only)
+- sticker palette: #55db9c, #e9ccff, #fb4903, #ffd731, #5c4ade
+- primary action: #ffffff (filled action)
 
-1. **Hero Lockup:** Full-bleed Walnut Shadow (#100904) canvas. ORYZO wordmark at 51px Halyard Display Variable weight 500 uppercase, line-height 0.9, color #ffedd7, positioned upper-left with 24px margin. Tagline "MADE FOR MUGS, BUILT FOR TABLES." at 12px weight 500 uppercase above the wordmark, also #ffedd7.
+Example Component Prompts:
 
-No distinct primary action color was observed; use the extracted neutral button treatments instead of inventing a filled CTA color.
+1. Create a Primary Action Button: #ffffff background, #000000 text, 9999px radius, compact pill padding. Use this filled treatment for the main CTA.
 
-3. **Ghost Outline Button:** Transparent background, 1px Warm Cream (#ffedd7) border, 22.5px border-radius, 7.5px vertical padding, Warm Cream text at 12px weight 500 uppercase. The secondary action vocabulary.
+2. Build a hero section: #dceeff full-bleed background. Centered Lateral 800 200px #000000 display headline with line-height 0.80. A 3D Electric Blue (#4da2ff) grainy tubular ribbon wrapping behind the text. Tagline below: Aeonik Pro 500 24px #000000, letter-spacing -0.01em. Two ghost buttons beneath: 'Launch Web App' and 'Download for Chrome' — both 1600px radius, 1px #000000 border, #ffffff fill, Aeonik Pro 700 13px 0.032em #000000 text, 10px/12px padding. Decorative stickers (rocket in Ember #fb4903, coin in Sunburst #ffd731, wallet in Voltage Violet #5c4ade) floating around the headline with 1px #000000 outlines, 20px radius, slight rotation.
 
-4. **Product Reveal Section:** Full-viewport (100vh) Walnut Shadow (#100904) background. Centered 3D product render occupying the middle 40% of width. Left column: heading "ISN'T JUST A COASTER." at 41px weight 500 uppercase, line-height 0.9, #ffedd7, left-aligned. Right column: body copy at 29px weight 400 mixed-case, line-height 1.26, #ffedd7, left-aligned within the column. 18px gutter between the centered object and each text column.
+3. Build a QR download card: 20px radius, #5c4ade background, 1px #000000 border. Split layout — left half is a #ffffff QR code square with 8px internal padding; right half shows 'DOWNLOAD' in Aeonik Pro 700 14px 0.032em #ffffff text centered vertically.
 
-5. **Top Navigation:** Fixed position, transparent background, full-width. Left: ORYZO wordmark at 12px Halyard weight 500 uppercase #ffedd7. Right: four nav items (INTRO, FEATURES, PRODUCT, CONTACT) at 12px weight 500 uppercase #ffedd7, with a 1px dashed #40372e underline beneath the active item.
+4. Build a marquee strip: #000000 full-bleed background, 1px top and bottom #000000 border. Scrolling Aeonik Pro 700 12px 0.032em #ffffff uppercase text repeating a promotional message. No padding inside — text sits flush to the band edges.
+
+5. Build a secondary section: #cccccc full-bleed background. Asymmetric placement: Lateral 800 281px #000000 display text at 0.76 line-height on the left, with a 3D #4da2ff ribbon arcing across the top. A green checkmark sticker (#55db9c fill, 1px #000000 border, 20px radius) on the far left, and a purple wallet sticker (#5c4ade fill, 1px #000000 border, 16px radius) on the far right, both overlapping the display type.
+
+## Gradient System
+
+No gradients. The 3D ribbon elements carry all dimensional weight, and all flat surfaces (backgrounds, cards, buttons, stickers) use solid fills. This is a hard rule — gradients would undermine the sticker-on-paper aesthetic.
+
+## Animation Philosophy
+
+The marquee strip scrolls horizontally on a continuous loop. The 3D ribbons are static 3D renders, not animated. Sticker decorations are static. The site reads as a printed collage, not a kinetic experience — motion is restricted to the marquee and minimal hover transitions on buttons.
 
 ## Similar Brands
 
-- **Lusion (the studio credited in the design)** — Same warm-dark editorial canvas, single-product hero treatment, pill-button controls, and 3D product renders as the visual centerpiece
-- **Active Theory** — Full-bleed dark mode with a single interactive 3D object commanding the viewport, minimal UI chrome, and oversized uppercase type
-- **Resn** — Editorial product-showcase sites with top-down craft photography, warm grading, and typography that steps back to let the object speak
-- **Tool of North America** — Studio portfolio sites that treat a single concept object with museum-presentation gravity — dark void, cream labels, generous negative space
-- **Buck (studio)** — Work-reveal layouts that alternate between photographic context and isolated product renders against near-black backgrounds
+- **Rainbow.me** — Same sticker-on-pastel approach with a multi-color accent palette and rounded pill buttons, though Rainbow leans darker
+- **Phantom Wallet** — Similar pastel hero with oversized display type and decorative 3D elements wrapping behind text
+- **Backpack Wallet** — Shared vivid multi-color sticker palette, rounded card surfaces, and playful 3D decorative elements on a light canvas
+- **Magic Eden** — Same bold display typography with tight leading and full-bleed colored section bands, though Magic Eden uses more photography
 
 ## Quick Start
 
@@ -234,76 +261,102 @@ No distinct primary action color was observed; use the extracted neutral button 
 ```css
 :root {
   /* Colors */
-  --color-warm-cream: #ffedd7;
-  --color-walnut-shadow: #100904;
-  --color-bark-brown: #382416;
-  --color-cork-border: #40372e;
-  --color-driftwood: #6c5f51;
-  --color-ember-accent: #dc5000;
-  --color-pure-black: #000000;
+  --color-carbon: #000000;
+  --color-paper-white: #ffffff;
+  --color-sky-wash: #dceeff;
+  --color-concrete-gray: #cccccc;
+  --color-soft-mist: #e9e9e9;
+  --color-electric-blue: #4da2ff;
+  --color-mint-pop: #55db9c;
+  --color-lavender: #e9ccff;
+  --color-ember: #fb4903;
+  --color-sunburst: #ffd731;
+  --color-voltage-violet: #5c4ade;
 
   /* Typography — Font Families */
-  --font-halyard-display-variable: 'halyard-display-variable', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-arial: 'Arial', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-lateral:
+    "Lateral", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  --font-aeonik-pro:
+    "Aeonik Pro", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
 
   /* Typography — Scale */
-  --text-subheading: 18px;
-  --leading-subheading: 1;
-  --tracking-subheading: 0px;
-  --text-heading-sm: 24px;
-  --leading-heading-sm: 1.09;
-  --tracking-heading-sm: 0px;
-  --text-body: 29px;
-  --leading-body: 1.26;
-  --tracking-body: 0px;
-  --text-heading: 41px;
-  --leading-heading: 0.9;
-  --tracking-heading: 0px;
-  --text-display: 51px;
-  --leading-display: 0.9;
+  --text-caption: 12px;
+  --leading-caption: 1.56;
+  --tracking-caption: -0.01px;
+  --text-body-lg: 15px;
+  --leading-body-lg: 1.39;
+  --tracking-body-lg: -0.01px;
+  --text-subheading: 24px;
+  --leading-subheading: 1.2;
+  --tracking-subheading: -0.01px;
+  --text-heading-sm: 30px;
+  --leading-heading-sm: 1.1;
+  --tracking-heading-sm: -0.01px;
+  --text-heading: 64px;
+  --leading-heading: 1;
+  --tracking-heading: -0.01px;
+  --text-display: 200px;
+  --leading-display: 0.8;
   --tracking-display: 0px;
+  --text-display-lg: 640px;
+  --leading-display-lg: 0.75;
+  --tracking-display-lg: 0px;
 
   /* Typography — Weights */
-  --font-weight-regular: 400;
   --font-weight-medium: 500;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
 
   /* Spacing */
-  --spacing-6: 6px;
+  --spacing-unit: 4px;
+  --spacing-4: 4px;
   --spacing-8: 8px;
-  --spacing-9: 9px;
-  --spacing-10: 10px;
   --spacing-12: 12px;
-  --spacing-14: 14px;
-  --spacing-18: 18px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
   --spacing-24: 24px;
-  --spacing-31: 31px;
-  --spacing-41: 41px;
-  --spacing-45: 45px;
-  --spacing-68: 68px;
-  --spacing-204: 204px;
+  --spacing-28: 28px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-44: 44px;
+  --spacing-48: 48px;
+  --spacing-60: 60px;
+  --spacing-80: 80px;
+  --spacing-128: 128px;
+  --spacing-180: 180px;
+  --spacing-224: 224px;
 
   /* Layout */
+  --page-max-width: 1440px;
+  --section-gap: 48px;
   --card-padding: 24px;
-  --element-gap: 18px;
+  --element-gap: 4-12px;
 
   /* Border Radius */
-  --radius-xl: 12px;
-  --radius-2xl: 22.5px;
-  --radius-3xl: 36px;
-  --radius-full: 9999px;
+  --radius-2xl: 16px;
+  --radius-2xl-2: 20px;
+  --radius-3xl: 30px;
+  --radius-3xl-2: 40px;
+  --radius-full: 1440px;
+  --radius-full-2: 1500px;
+  --radius-full-3: 1600px;
 
   /* Named Radii */
-  --radius-cards: 12px;
-  --radius-inputs: 0px;
-  --radius-full-round: 9999px;
-  --radius-buttons-pill: 36px;
-  --radius-buttons-outlined: 22.5px;
+  --radius-nav: 1600px;
+  --radius-body: 30px;
+  --radius-cards: 20px;
+  --radius-pills: 1600px;
+  --radius-buttons: 1600px;
+  --radius-wallet-icon: 16px;
+  --radius-cards-elevated: 40px;
 
   /* Surfaces */
-  --surface-walnut-shadow: #100904;
-  --surface-bark-brown: #382416;
-  --surface-cork-border: #40372;
-  --surface-warm-cream: #ffedd7;
+  --surface-sky-wash: #dceeff;
+  --surface-paper-white: #ffffff;
+  --surface-concrete-gray: #cccccc;
+  --surface-sticker-surfaces: #e9ccff;
 }
 ```
 
@@ -312,54 +365,74 @@ No distinct primary action color was observed; use the extracted neutral button 
 ```css
 @theme {
   /* Colors */
-  --color-warm-cream: #ffedd7;
-  --color-walnut-shadow: #100904;
-  --color-bark-brown: #382416;
-  --color-cork-border: #40372e;
-  --color-driftwood: #6c5f51;
-  --color-ember-accent: #dc5000;
-  --color-pure-black: #000000;
+  --color-carbon: #000000;
+  --color-paper-white: #ffffff;
+  --color-sky-wash: #dceeff;
+  --color-concrete-gray: #cccccc;
+  --color-soft-mist: #e9e9e9;
+  --color-electric-blue: #4da2ff;
+  --color-mint-pop: #55db9c;
+  --color-lavender: #e9ccff;
+  --color-ember: #fb4903;
+  --color-sunburst: #ffd731;
+  --color-voltage-violet: #5c4ade;
 
   /* Typography */
-  --font-halyard-display-variable: 'halyard-display-variable', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-arial: 'Arial', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-lateral:
+    "Lateral", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  --font-aeonik-pro:
+    "Aeonik Pro", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
 
   /* Typography — Scale */
-  --text-subheading: 18px;
-  --leading-subheading: 1;
-  --tracking-subheading: 0px;
-  --text-heading-sm: 24px;
-  --leading-heading-sm: 1.09;
-  --tracking-heading-sm: 0px;
-  --text-body: 29px;
-  --leading-body: 1.26;
-  --tracking-body: 0px;
-  --text-heading: 41px;
-  --leading-heading: 0.9;
-  --tracking-heading: 0px;
-  --text-display: 51px;
-  --leading-display: 0.9;
+  --text-caption: 12px;
+  --leading-caption: 1.56;
+  --tracking-caption: -0.01px;
+  --text-body-lg: 15px;
+  --leading-body-lg: 1.39;
+  --tracking-body-lg: -0.01px;
+  --text-subheading: 24px;
+  --leading-subheading: 1.2;
+  --tracking-subheading: -0.01px;
+  --text-heading-sm: 30px;
+  --leading-heading-sm: 1.1;
+  --tracking-heading-sm: -0.01px;
+  --text-heading: 64px;
+  --leading-heading: 1;
+  --tracking-heading: -0.01px;
+  --text-display: 200px;
+  --leading-display: 0.8;
   --tracking-display: 0px;
+  --text-display-lg: 640px;
+  --leading-display-lg: 0.75;
+  --tracking-display-lg: 0px;
 
   /* Spacing */
-  --spacing-6: 6px;
+  --spacing-4: 4px;
   --spacing-8: 8px;
-  --spacing-9: 9px;
-  --spacing-10: 10px;
   --spacing-12: 12px;
-  --spacing-14: 14px;
-  --spacing-18: 18px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
   --spacing-24: 24px;
-  --spacing-31: 31px;
-  --spacing-41: 41px;
-  --spacing-45: 45px;
-  --spacing-68: 68px;
-  --spacing-204: 204px;
+  --spacing-28: 28px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-44: 44px;
+  --spacing-48: 48px;
+  --spacing-60: 60px;
+  --spacing-80: 80px;
+  --spacing-128: 128px;
+  --spacing-180: 180px;
+  --spacing-224: 224px;
 
   /* Border Radius */
-  --radius-xl: 12px;
-  --radius-2xl: 22.5px;
-  --radius-3xl: 36px;
-  --radius-full: 9999px;
+  --radius-2xl: 16px;
+  --radius-2xl-2: 20px;
+  --radius-3xl: 30px;
+  --radius-3xl-2: 40px;
+  --radius-full: 1440px;
+  --radius-full-2: 1500px;
+  --radius-full-3: 1600px;
 }
 ```
