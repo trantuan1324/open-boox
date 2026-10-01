@@ -7,7 +7,7 @@ import { FULL, ScrollTrigger, gsap, useGSAP } from '../motion/gsap';
 import { STICKERS } from '../svg/stickers';
 
 // Section 3: a phone mockup built in HTML whose screen scrolls real covers (stand-in for Slush's app video),
-// plus two small mockup ↔ text pairs. The phone scales in at "top center" ([SM §5.10]).
+// plus two small mockup ↔ text pairs. The phone scales in once its top reaches 75% of the viewport ([SM §5.10] used "top center"; moved earlier).
 export function Showcase({ books, categories }: { books: BookSummary[]; categories: CategoryDto[] }) {
   const root = useRef<HTMLElement>(null);
   const shown = books.slice(0, Math.min(8, books.length - (books.length % 2)));
@@ -24,7 +24,8 @@ export function Showcase({ books, categories }: { books: BookSummary[]; categori
           autoAlpha: 0,
           duration: 1.2,
           ease: 'slush-bounce',
-          scrollTrigger: { trigger: phone, start: 'top center', once: true },
+          // Trigger on the untransformed wrapper so the from-state (yPercent 40, scale .75) doesn't shift the point.
+          scrollTrigger: { trigger: root.current!.querySelector('.obx-phone-wrap'), start: 'top 75%', once: true },
         });
         const scroll = gsap.to(grid, { yPercent: -50, duration: 20, ease: 'none', repeat: -1 });
         ScrollTrigger.create({

@@ -61,7 +61,9 @@ export function horizontalLoop(items: HTMLElement[], config: LoopConfig = {}): H
     (xPercents[length - 1] / 100) * widths[length - 1] -
     startX +
     spaceBefore[0] +
-    items[length - 1].offsetWidth * scaleX(items[length - 1]);
+    items[length - 1].offsetWidth * scaleX(items[length - 1]) +
+    // Upstream's `paddingRight` option: the last item's right margin, so the seam gap matches the others.
+    parseFloat(getComputedStyle(items[length - 1]).marginRight);
 
   const populateWidths = () => {
     let b1 = container.getBoundingClientRect();

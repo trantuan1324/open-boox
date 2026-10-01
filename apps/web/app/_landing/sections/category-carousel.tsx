@@ -15,6 +15,13 @@ export function CategoryCarousel({ categories }: { categories: CategoryDto[] }) 
   const loop = useRef<HorizontalLoop | null>(null);
   const pressX = useRef(0);
   const [active, setActive] = useState(0);
+  const n = categories.length;
+  // A seamless loop needs a track wider than the viewport plus one slide; otherwise slides wrap inside the visible
+  // area (uneven gaps, flicker while dragging). Repeat the categories until there are at least 12 slides
+  // (12 × 356px ≈ 4270px, enough for 2× a 1920px screen).
+  const copies = n > 1 ? Math.ceil(12 / n) : 1;
+  const slides = Array.from({ length: copies }, (_, copy) => categories.map((category, i) => ({ category, i, copy }))).flat();
+  const activeCategory = n ? active % n : 0;
 
   useGSAP(
     () => {
@@ -94,18 +101,24 @@ export function CategoryCarousel({ categories }: { categories: CategoryDto[] }) 
       </div>
       <div className="obx-cats__viewport">
         <div className="obx-cats__track">
-          {categories.map((category, i) => {
+          {slides.map(({ category, i, copy }, slideIndex) => {
             const Sticker = STICKERS[i % STICKERS.length];
             return (
               <CurtainLink
-                key={category.id}
-                id={`obx-cat-${i}`}
+                key={`${category.id}-${copy}`}
+                id={copy === 0 ? `obx-cat-${i}` : undefined}
+                aria-hidden={copy > 0 || undefined}
+                tabIndex={copy > 0 ? -1 : undefined}
                 href={`/books?category=${category.slug}`}
-                className={`obx-cat${i === active ? ' is-active' : ''}`}
+                className={`obx-cat${slideIndex === active ? ' is-active' : ''}`}
                 style={{ background: cycleColor(i) }}
                 data-cursor="Kéo"
                 draggable={false}
-                onFocus={() => go(i)}
+                onFocus={(event) => {
+                  // Keyboard focus only: a mouse press also focuses the link, and a toIndex tween started then
+                  // fights the drag (the whole strip jumps).
+                  if (event.currentTarget.matches(':focus-visible')) go(slideIndex);
+                }}
                 onPointerDown={(event) => {
                   pressX.current = event.clientX;
                 }}
@@ -133,9 +146,13 @@ export function CategoryCarousel({ categories }: { categories: CategoryDto[] }) 
                 role="tab"
                 className="obx-dot"
                 aria-label={category.name}
-                aria-selected={i === active}
+                aria-selected={i === activeCategory}
                 aria-controls={`obx-cat-${i}`}
-                onClick={() => go(i)}
+                onClick={() => {
+                  // Go to the copy of category i nearest to the current slide.
+                  const current = loop.current?.current() ?? active;
+                  go(current - (current % n) + i);
+                }}
               />
             ))}
           </div>
