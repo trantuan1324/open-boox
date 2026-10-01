@@ -24,6 +24,7 @@ export function createCurtainStore() {
     /** true = the click is handled here (preventDefault); false = navigate normally. */
     intercept(target: string): boolean {
       if (!listeners.size) return false;
+      if (state === 'revealing') return false;
       if (state !== 'idle') return true;
       href = target;
       set('covering');

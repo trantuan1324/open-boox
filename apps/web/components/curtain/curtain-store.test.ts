@@ -40,6 +40,16 @@ describe('curtain store', () => {
     expect(store.get()).toBe('idle');
   });
 
+  it('lets links through while revealing', () => {
+    const store = createCurtainStore();
+    store.subscribe(() => {});
+    store.intercept('/plans');
+    store.markCovered();
+    store.beginReveal();
+    expect(store.intercept('/books')).toBe(false);
+    expect(store.get()).toBe('revealing');
+  });
+
   it('stops notifying after unsubscribe', () => {
     const store = createCurtainStore();
     const listener = vi.fn();

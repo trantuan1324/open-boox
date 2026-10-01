@@ -51,29 +51,37 @@ export function CurtainOverlay() {
         if (el) el.dataset.state = state;
         if (state !== 'covering' || !href || !el) return;
         void (async () => {
-          const m = (motion.current ??= await import('@/app/_landing/motion/gsap'));
-          const { gsap, REDUCE } = m;
-          const fade = el.querySelector('[data-curtain-fade]');
-          const panels = el.querySelectorAll('[data-curtain-panel]');
-          const colors = gsap.utils.shuffle([...COLORS]);
-          gsap.set(el, { autoAlpha: 1 });
-          const tl = gsap.timeline({
-            onComplete: () => {
-              curtainStore.markCovered();
-              router.push(href);
-              timer.current = setTimeout(reveal, 3000);
-            },
-          });
-          if (window.matchMedia(REDUCE).matches) {
-            gsap.set(panels, { autoAlpha: 0 });
-            tl.fromTo(fade, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 });
-          } else {
-            gsap.set(fade, { autoAlpha: 0 });
-            tl.fromTo(
-              panels,
-              { autoAlpha: 1, backgroundColor: (i: number) => colors[i], xPercent: 120, rotateY: -45, z: -300 },
-              { xPercent: 0, rotateY: 0, z: 0, duration: 0.8, ease: 'slush-bounce', stagger: 0.08 },
-            );
+          try {
+            const m = (motion.current ??= await import('@/app/_landing/motion/gsap'));
+            const { gsap, REDUCE } = m;
+            const fade = el.querySelector('[data-curtain-fade]');
+            const panels = el.querySelectorAll('[data-curtain-panel]');
+            const colors = gsap.utils.shuffle([...COLORS]);
+            gsap.set(el, { autoAlpha: 1 });
+            const tl = gsap.timeline({
+              onComplete: () => {
+                curtainStore.markCovered();
+                router.push(href);
+                timer.current = setTimeout(reveal, 3000);
+              },
+            });
+            if (window.matchMedia(REDUCE).matches) {
+              gsap.set(panels, { autoAlpha: 0 });
+              tl.fromTo(fade, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 });
+            } else {
+              gsap.set(fade, { autoAlpha: 0 });
+              tl.fromTo(
+                panels,
+                { autoAlpha: 1, backgroundColor: (i: number) => colors[i], xPercent: 120, rotateY: -45, z: -300 },
+                { xPercent: 0, rotateY: 0, z: 0, duration: 0.8, ease: 'slush-bounce', stagger: 0.08 },
+              );
+            }
+          } catch {
+            // gsap failed to load: skip the curtain but still navigate.
+            el.style.visibility = 'hidden';
+            el.style.opacity = '0';
+            curtainStore.finish();
+            router.push(href);
           }
         })();
       }),
