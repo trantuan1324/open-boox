@@ -79,12 +79,11 @@ apps/web/app/
   page.tsx                    # server: fetch + ghép section; import './landing.css'
   landing.css                 # viết lại toàn bộ (prefix .obx-)
   _landing/
-    data.ts                   # fetch + fallback + hàm thuần (§5.1)
+    data.ts                   # fetch + fallback + nội dung tĩnh + hàm thuần (§5.1)
     data.test.ts
     motion/
       gsap.ts                 # 'use client'; registerPlugin, 2 ease, defaults; export gsap & plugin
       landing-motion.tsx      # client, mount 1 lần trong page: Lenis↔ticker + quét data-* (§4.3)
-      split.ts                # splitChars/splitLines + aria
       cursor.tsx              # client
     svg/
       wordmark.tsx  stickers.tsx  illustrations.tsx
@@ -117,15 +116,15 @@ Nền tảng (`motion/gsap.ts`):
 
 | Hiệu ứng | Tham số | Khác [SM] |
 | --- | --- | --- |
-| Intro hero | [SM §5.1]: wordmark split-flap (mỗi chữ `yPercent −100`, 1.25s, stagger 0.15, tầng 2 +0.5s); tagline chars x −0.25em, 0.65s, stagger 0.015 from end; `[data-load-stagger]` y 3em, 1s, stagger 0.1 tại +0.5s; sticker scale 0.2 / rotate −90 / autoAlpha 0, 1s, stagger 0.1 random; nav `yPercent 0`, 0.8s slush, delay 0.6 (trạng thái đầu `yPercent −100`) | Sticker SVG: sau khi vào, thêm 1 nhịp wobble rotate ±6° bằng slush-bounce (thay cho việc "play" Lottie) |
-| Nav ẩn/hiện | [SM §5.2]: pill `yPercent −300`/0, 0.75s bounce, stagger 0.03 (xuống: from start, lên: from end), deadzone 10px, chỉ khi scrollY > 50, chỉ ≥992; hover "+" thì reveal; mobile "+" mở menu (pill `xPercent 300 → 0` from end, nút rotate 90°, gạch ngang scaleX 0) | Nav đặt trong sheet hero ở trạng thái đầu, fixed khi cuộn |
+| Intro hero | [SM §5.1]: wordmark split-flap — mỗi ô chữ chứa 2 tầng (chữ viền → chữ đặc), cả cột lăn từ ô trống qua tầng viền tới tầng đặc trong một tween 1.25s, stagger 0.15 (gộp "tầng 2 +0.5s" của [SM] vào cùng một lần lăn); tagline chars x −0.25em, 0.65s, stagger 0.015 from end; `[data-load-stagger]` y 3em, 1s, stagger 0.1 tại +0.5s; sticker scale 0.2 / rotate −90 / autoAlpha 0, 1s, stagger 0.1 random; nav `yPercent 0`, 0.8s slush, delay 0.6 (trạng thái đầu `yPercent −100`) | Sticker SVG: sau khi vào, thêm 1 nhịp wobble rotate ±6° bằng slush-bounce (thay cho việc "play" Lottie) |
+| Nav ẩn/hiện | [SM §5.2]: pill `yPercent −300`/0, 0.75s bounce, stagger 0.03 (xuống: from start, lên: from end), deadzone 10px, chỉ khi scrollY > 50, chỉ ≥992; hover "+" hoặc focus bàn phím vào nav thì reveal; mobile "+" mở menu (pill `xPercent 300 → 0` from end, nút rotate 90°, gạch ngang scaleX 0) | Nav dùng `position: sticky` (top 12px) đè lên hero thay cho fixed; focus bàn phím cũng reveal |
 | Slant chars | [SM §5.6] | — |
-| Heading 3D | [SM §5.7] | — |
+| Heading 3D | [SM §5.7] | Dòng được đánh dấu sẵn bằng `[data-line]` thay vì SplitText lines, vì statement có card chèn inline |
 | Card 3D | [SM §5.8] | — |
 | Parallax | [SM §5.9] | — |
 | Mockup vào | [SM §5.10]: scale 0.75, yPercent 40, autoAlpha 0, 1.2s bounce, `top center` once | Áp cho mockup HTML. Lưới bìa trong mockup cuộn `yPercent` loop linear 20s |
-| Marquee | [SM §5.5]: nhân đôi track, xPercent loop linear; hệ số 1 / 0.5 (≤991) / 0.25 (≤479); đảo `timeScale` theo `self.direction`; trôi ±10vw scrub. Speed: banner 25s, word hàng 1 15s, word hàng 2 20s (ngược chiều), cover 25s, footer 20s | Speed từng hàng tự gán ([SM §9.5] chưa xác định) |
-| Tabs | [SM §5.11] | — |
+| Marquee | [SM §5.5]: nhân đôi track, xPercent loop linear; thời lượng một vòng = `speed × (bề rộng 1 nhóm / bề rộng viewport) × hệ số`, hệ số 1 / 0.5 (≤991) / 0.25 (≤479); đảo `timeScale` theo hướng cuộn; trôi ±10vw scrub. Speed: banner 25s, word hàng 1 15s, word hàng 2 20s (ngược chiều), cover 25s, footer 20s | Speed từng hàng tự gán ([SM §9.5] chưa xác định). **Đính chính**: hệ số bù cho viewport hẹp nên tốc độ px/s gần như **không đổi** giữa desktop và mobile, chứ không phải "chậm lại" |
+| Tabs | [SM §5.11] | Các panel xếp chồng trong cùng một ô grid nên không cần tween chiều cao |
 | Carousel | [SM §5.12] | — |
 | Stack | [SM §5.13] | — |
 | Cursor | [SM §5.4] | Chỉ chạy khi `(hover: hover) and (pointer: fine)` |
@@ -153,16 +152,16 @@ Component mount 1 lần, dùng `gsap.matchMedia()` với 2 điều kiện `full:
 
 - `CurtainOverlay` render trong `app/layout.tsx`, nằm ngoài `HeaderGate`. Bình thường là `null` hoặc `display: none`, không tải GSAP.
 - `CurtainLink` (`href`, `children`, `className`):
-  - Click thường (không modifier, button 0, cùng origin) thì `preventDefault`. Prefetch route bằng `router.prefetch`.
+  - Click thường (không modifier, button 0, cùng origin) thì `preventDefault`. Prefetch do `next/link` tự làm với link trong viewport.
   - Gọi `curtainStore.cover()`: overlay `import('gsap')` động, xáo 3 màu từ palette, chạy **pha 1** (0.8s): 3 tấm radius 2em bay vào phủ màn hình theo choreography [SM §5.16]. Xong thì `router.push(href)`.
-  - Modifier-click, chuột giữa hoặc khi đang ở trạng thái `covering`: để hành vi mặc định.
+  - Modifier-click, chuột giữa, hoặc overlay chưa mount: để hành vi mặc định. Đang `covering`/`covered`: nuốt click (tránh điều hướng hai lần khi double-click).
 - Overlay theo dõi `usePathname()`. Pathname đổi khi đang `covered` thì chạy **pha 2** (1.25s bounce): các tấm bay ra, radius 2em → 0, overlay về 0 trong 0.8s slush, rồi `idle`.
 - **Lối thoát**: sau 3s ở `covered` mà pathname chưa đổi thì tự chạy pha 2. Overlay không bao giờ chặn tương tác khi `idle` (`pointer-events: none`).
 - Reduced motion: overlay màu `ink` fade in/out 0.3s.
 
 ### 4.5 Accessibility
 
-- Mỗi phần tử được split có `aria-label` bằng text gốc; các wrapper do split tạo ra có `aria-hidden`.
+- Mỗi phần tử được split có `aria-label` bằng text gốc; các wrapper do split tạo ra có `aria-hidden` (SplitText ≥3.13 tự làm với `aria: 'auto'`, nên không cần helper riêng). Chuỗi tiếng Việt viết ở dạng NFC.
 - Wordmark SVG có `aria-hidden`, `h1` sr-only mô tả trang.
 - Sticker và minh hoạ có `aria-hidden`. Bản sao trong marquee có `aria-hidden`.
 - Cursor có `pointer-events: none`, `aria-hidden`.
@@ -177,6 +176,7 @@ Component mount 1 lần, dùng `gsap.matchMedia()` với 2 điều kiện `full:
 
 - `cheapestPlanPrice(plans): number | null`: trả giá thấp nhất; mảng rỗng → `null`.
 - `pickFeaturedBook(books, rand = Math.random): BookSummary | null`: chọn ngẫu nhiên trong các cuốn có `coverUrl`; không có cuốn nào → `null`. Test bằng `rand` cố định.
+- `howItWorksCards(total)`: 4 card bước; `total > 0` thì chèn card stat ở vị trí 3; `null` hoặc `0` thì không chèn.
 - `cycleColor(i, palette)`: xoay vòng, đúng với `i ≥ palette.length`.
 - `loadLanding(fetcher)`: mỗi nguồn lỗi độc lập; `plans`/`categories` lỗi → fallback; `books` lỗi → `books: []`, `total: null`. Test bằng fetcher giả.
 
@@ -202,7 +202,7 @@ Như §6. Kết quả ghi vào `handover.md`, kèm số `ScrollTrigger.getAll().
 - [ ] Chỉ có 2 ease (cộng `power3` cho cursor); không còn transition hay keyframe tự chế cũ.
 - [ ] Intro đúng thứ tự: wordmark lăn → chars chạy from end → khối +0.5s → sticker random → nav trượt xuống.
 - [ ] Nav: pill ẩn khi cuộn xuống, hiện khi cuộn lên (stagger 0.03); hover "+" reveal; mobile "+" mở menu.
-- [ ] Có 5 marquee; nối vòng không giật; đảo chiều khi đổi hướng cuộn; chậm lại ở ≤991 và ≤479.
+- [ ] Có 5 marquee; nối vòng không giật; đảo chiều khi đổi hướng cuộn; tốc độ px/s gần như nhau ở 1440 và 375.
 - [ ] Features: slant và card 3D chạy ở `top 80%` once; zig-zag đảo chiều; xuống 1 cột khi <768.
 - [ ] Carousel kéo có quán tính, autoplay 4s, dừng khi hover và khi ra khỏi viewport; dot đồng bộ.
 - [ ] Tabs: pill di chuyển bằng Flip khi click và hover; nền visual đổi màu; tự chuyển 1 lần khi cuộn tới.
