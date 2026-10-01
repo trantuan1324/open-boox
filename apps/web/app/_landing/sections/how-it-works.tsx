@@ -35,7 +35,7 @@ export function HowItWorks({ total, signedIn }: { total: number | null; signedIn
               card,
               reduce
                 ? { zIndex: i }
-                : { x: Math.max(0, p - i) * step, scale: 1 - 0.4 * d, rotation: -10 * d, zIndex: i },
+                : { x: Math.max(0, p - i) * step * 0.85, scale: 1 - 0.4 * d, rotation: -10 * d, zIndex: i },
             );
           });
         };
@@ -46,6 +46,7 @@ export function HowItWorks({ total, signedIn }: { total: number | null; signedIn
           inertia: !reduce,
           bounds: { minX: -(n - 1) * step, maxX: 0 },
           snap: (x: number) => Math.round(x / step) * step,
+          onPress: () => gsap.killTweensOf(track),
           onDrag: update,
           onThrowUpdate: update,
         });
@@ -56,6 +57,7 @@ export function HowItWorks({ total, signedIn }: { total: number | null; signedIn
             x: -index * step,
             duration: reduce ? 0 : 0.725,
             ease: 'slush-bounce',
+            overwrite: 'auto',
             onUpdate: () => {
               drag.update();
               update();
@@ -63,10 +65,14 @@ export function HowItWorks({ total, signedIn }: { total: number | null; signedIn
           });
         };
 
+        let lastWidth = window.innerWidth;
         const onResize = () => {
+          if (window.innerWidth === lastWidth) return;
+          lastWidth = window.innerWidth;
+          const index = Math.round(position());
           measure();
-          gsap.set(track, { x: 0 });
           drag.applyBounds({ minX: -(n - 1) * step, maxX: 0 });
+          gsap.set(track, { x: -index * step });
           drag.update();
           update();
         };
@@ -75,6 +81,7 @@ export function HowItWorks({ total, signedIn }: { total: number | null; signedIn
 
         return () => {
           window.removeEventListener('resize', onResize);
+          gsap.killTweensOf(track);
           drag.kill();
           go.current = () => {};
         };
@@ -98,7 +105,7 @@ export function HowItWorks({ total, signedIn }: { total: number | null; signedIn
         </Link>
       </div>
       <div className="obx-how__stage">
-        <ul className="obx-how__track" data-cursor="Kéo" aria-label="Các bước">
+        <ul className="obx-how__track" role="list" data-cursor="Kéo" aria-label="Các bước">
           {cards.map((card) =>
             card.kind === 'step' ? (
               <li key={card.step.n} className="obx-how-card">
