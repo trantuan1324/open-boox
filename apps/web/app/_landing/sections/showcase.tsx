@@ -10,7 +10,7 @@ import { STICKERS } from '../svg/stickers';
 // plus two small mockup ↔ text pairs. The phone scales in at "top center" ([SM §5.10]).
 export function Showcase({ books, categories }: { books: BookSummary[]; categories: CategoryDto[] }) {
   const root = useRef<HTMLElement>(null);
-  const shown = books.slice(0, 8);
+  const shown = books.slice(0, Math.min(8, books.length - (books.length % 2)));
 
   useGSAP(
     () => {
