@@ -36,3 +36,20 @@ test('no horizontal scroll at 375px', async ({ page }) => {
   await scrollToBottom(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });
+
+test('hero has the page heading and shows its tagline after the intro', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Open Boox');
+  await expect(page.locator('.obx-hero__tagline')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Chọn gói mượn ↗' })).toBeVisible();
+});
+
+test.describe('reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test('hero content is visible straight away', async ({ page }) => {
+    await page.goto('/');
+    // Shorter than the 2s CSS fallback, so this proves nothing was hidden in the first place.
+    await expect(page.getByRole('link', { name: 'Chọn gói mượn ↗' })).toBeVisible({ timeout: 500 });
+  });
+});
