@@ -43,7 +43,15 @@
 - Curtain: failed dynamic import recovers by finishing the store and pushing the route without the curtain; `intercept` returns false while 'revealing'.
 - Worktree created from local HEAD (native tool would branch from origin/master, which lacks the spec/plan commits).
 
+## Final whole-branch review (opus) and fix wave
+- Verdict "with fixes": 0 Critical, 3 Important accessibility gaps traced to plan assumptions. Fixed in `a365011`, re-reviewed clean; landing e2e now 21/21.
+  - Split text: hero tagline uses an sr-only copy + `aria: 'none'` split on an aria-hidden span; footer slogan is an `h2`; a space before every `<br />` in split headings keeps word boundaries in accessible names.
+  - Moving rows: focusing a carousel slide centres it and pauses autoplay while focus is inside; 8px clip padding keeps focus rings visible; cover-marquee tiles are `tabIndex={-1}` (mouse shortcuts; the catalog stays reachable by keyboard elsewhere).
+  - Nav: "+" precedes the pills in the DOM (desktop visual order kept with CSS `order`), so Tab after opening the mobile menu reaches the pills; on desktop "+" focuses the first pill.
+  - Also: marquee and showcase loops pause off-screen, `lagSmoothing` restored on unmount, marquee breakpoint seam at 479–480px closed.
+
 ## Open items
+- Loops that start off-screen run until first scrolled through (one-line fix noted in the review); desktop Tab order (logo, "+", pills, CTA) differs from the visual order.
 - Hover invert on buttons verified by CSS review only, not visually.
 - Reduced motion verified by e2e only, not in a browser.
 - `pnpm audit --prod` high advisory on `deepmerge-ts` (Prisma toolchain), not from this branch; needs a Prisma bump.
