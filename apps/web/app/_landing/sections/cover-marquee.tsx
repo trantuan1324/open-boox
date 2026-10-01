@@ -1,5 +1,5 @@
 import type { BookSummary } from '@open-boox/shared';
-import Link from 'next/link';
+import { CurtainLink } from '@/components/curtain/curtain-link';
 import { BookCover } from '@/components/books/book-cover';
 import { cycleColor } from '../data';
 import { STICKERS } from '../svg/stickers';
@@ -14,7 +14,7 @@ export function CoverMarquee({ books }: { books: BookSummary[] }) {
       <Marquee speed={25} repeat={books.length ? Math.max(1, Math.ceil(12 / books.length)) : 2}>
         {books.length
           ? books.map((book, i) => (
-              <Link
+              <CurtainLink
                 key={book.id}
                 href={`/books/${book.slug}`}
                 className="obx-cover-tile"
@@ -25,7 +25,7 @@ export function CoverMarquee({ books }: { books: BookSummary[] }) {
                   <BookCover src={book.coverUrl} title={book.title} sizes="120px" />
                 </span>
                 <span className="obx-cover-tile__author">{book.author}</span>
-              </Link>
+              </CurtainLink>
             ))
           : STICKERS.map((Sticker, i) => (
               <span key={i} className="obx-cover-tile" style={{ background: cycleColor(i, TILE_PALETTE) }}>

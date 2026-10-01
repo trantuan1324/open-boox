@@ -1,5 +1,5 @@
 import type { PlanDto } from '@open-boox/shared';
-import Link from 'next/link';
+import { CurtainLink } from '@/components/curtain/curtain-link';
 import type { ComponentType } from 'react';
 import { ArtCalendar, ArtStack, ArtSwap } from '../svg/illustrations';
 
@@ -46,9 +46,9 @@ export function Features({ plans }: { plans: PlanDto[] }) {
               <em>{line2}</em>
             </h2>
             <p className="obx-body">{body}</p>
-            <Link href="/plans" className="obx-btn obx-btn--dark">
+            <CurtainLink href="/plans" className="obx-btn obx-btn--dark">
               Xem các gói ↗
-            </Link>
+            </CurtainLink>
           </div>
           <div className="obx-feature__visual" data-card-reveal="wrap">
             <div className={`obx-card obx-card--${tone}`} data-card-reveal="card">

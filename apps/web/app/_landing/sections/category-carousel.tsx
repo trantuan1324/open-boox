@@ -1,7 +1,7 @@
 'use client';
 
 import type { CategoryDto } from '@open-boox/shared';
-import Link from 'next/link';
+import { CurtainLink } from '@/components/curtain/curtain-link';
 import { useRef, useState } from 'react';
 import { cycleColor } from '../data';
 import { FULL, REDUCE, ScrollTrigger, gsap, useGSAP } from '../motion/gsap';
@@ -80,16 +80,16 @@ export function CategoryCarousel({ categories }: { categories: CategoryDto[] }) 
           <br />
           <em>cũng có</em>
         </h2>
-        <Link href="/books" className="obx-btn">
+        <CurtainLink href="/books" className="obx-btn">
           Xem tất cả sách
-        </Link>
+        </CurtainLink>
       </div>
       <div className="obx-cats__viewport">
         <div className="obx-cats__track">
           {categories.map((category, i) => {
             const Sticker = STICKERS[i % STICKERS.length];
             return (
-              <Link
+              <CurtainLink
                 key={category.id}
                 id={`obx-cat-${i}`}
                 href={`/books?category=${category.slug}`}
@@ -106,7 +106,7 @@ export function CategoryCarousel({ categories }: { categories: CategoryDto[] }) 
               >
                 <Sticker className="obx-cat__sticker" />
                 <span className="obx-display obx-italic obx-cat__name">{category.name}</span>
-              </Link>
+              </CurtainLink>
             );
           })}
         </div>

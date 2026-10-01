@@ -1,6 +1,6 @@
 import type { BookSummary } from '@open-boox/shared';
 import Image from 'next/image';
-import Link from 'next/link';
+import { CurtainLink } from '@/components/curtain/curtain-link';
 import { isOptimizedCoverHost } from '@/lib/books/cover';
 import { StickerBook } from '../svg/stickers';
 
@@ -16,7 +16,7 @@ export function Statement({ book }: { book: BookSummary | null }) {
         <span className="obx-statement__line" data-line>
           Giao{' '}
           {book?.coverUrl ? (
-            <Link href={`/books/${book.slug}`} className="obx-featured" data-cursor="Xem sách">
+            <CurtainLink href={`/books/${book.slug}`} className="obx-featured" data-cursor="Xem sách">
               <Image
                 src={book.coverUrl}
                 alt={`Bìa sách ${book.title}`}
@@ -29,7 +29,7 @@ export function Statement({ book }: { book: BookSummary | null }) {
                 <span className="obx-featured__title">{book.title}</span>
                 <span>{book.author}</span>
               </span>
-            </Link>
+            </CurtainLink>
           ) : (
             <span className="obx-featured" aria-hidden="true">
               <StickerBook className="obx-featured__sticker" />

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { CurtainLink } from '@/components/curtain/curtain-link';
 import { useRef } from 'react';
 import { howItWorksCards } from '../data';
 import { Draggable, FULL, REDUCE, gsap, useGSAP } from '../motion/gsap';
@@ -100,9 +100,9 @@ export function HowItWorks({ total, signedIn }: { total: number | null; signedIn
           <em>hoạt động</em>
         </h2>
         <p className="obx-how__sub">Bốn bước từ lúc chọn gói tới lúc sách nằm trên tay bạn.</p>
-        <Link href={signedIn ? '/plans' : '/register'} className="obx-btn obx-btn--dark">
+        <CurtainLink href={signedIn ? '/plans' : '/register'} className="obx-btn obx-btn--dark">
           {signedIn ? 'Chọn gói ↗' : 'Bắt đầu ↗'}
-        </Link>
+        </CurtainLink>
       </div>
       <div className="obx-how__stage">
         <ul className="obx-how__track" role="list" data-cursor="Kéo" aria-label="Các bước">

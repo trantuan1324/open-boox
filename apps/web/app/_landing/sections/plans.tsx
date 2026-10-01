@@ -1,5 +1,5 @@
 import type { PlanDto } from '@open-boox/shared';
-import Link from 'next/link';
+import { CurtainLink } from '@/components/curtain/curtain-link';
 import { formatVnd } from '@/lib/format';
 import { cycleColor } from '../data';
 import { StickerBook, StickerCoin, StickerStar } from '../svg/stickers';
@@ -35,9 +35,9 @@ export function Plans({ plans }: { plans: PlanDto[] }) {
               <p className="obx-plan__price">
                 {formatVnd(plan.monthlyPrice)} <span>/ 30 ngày</span>
               </p>
-              <Link href="/plans" className="obx-btn obx-btn--dark obx-btn--sm">
+              <CurtainLink href="/plans" className="obx-btn obx-btn--dark obx-btn--sm">
                 Chọn {plan.name} ↗
-              </Link>
+              </CurtainLink>
               <Sticker className="obx-plan__sticker" />
             </article>
           );

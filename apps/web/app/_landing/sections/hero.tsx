@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { CurtainLink } from '@/components/curtain/curtain-link';
 import { type CSSProperties, useRef, useState } from 'react';
 import { FULL, REDUCE, SplitText, gsap, useGSAP } from '../motion/gsap';
 import { StickerBook, StickerBookmark, StickerGlasses, StickerParcel } from '../svg/stickers';
@@ -85,12 +85,12 @@ export function Hero() {
         Mượn sách theo gói, mua khi muốn giữ, và để chúng tôi giao đến tận cửa.
       </p>
       <div className="obx-hero__actions" data-load-stagger>
-        <Link href="/plans" className="obx-btn obx-btn--dark">
+        <CurtainLink href="/plans" className="obx-btn obx-btn--dark">
           Chọn gói mượn ↗
-        </Link>
-        <Link href="/books" className="obx-btn">
+        </CurtainLink>
+        <CurtainLink href="/books" className="obx-btn">
           Xem kho sách
-        </Link>
+        </CurtainLink>
       </div>
       {STICKERS.map(({ Sticker, style }, i) => (
         <span key={i} className="obx-hero__sticker" style={style} data-hero-sticker>

@@ -159,3 +159,62 @@ test('FAQ answers the shipping question with the configured fees', async ({ page
   // The footer sits inside <main>, so it has no contentinfo role; select it by class.
   await expect(page.locator('footer.obx-footer')).toContainText('© 2026 Open Boox');
 });
+
+test.describe('curtain', () => {
+  const cta = (page: Page) => page.getByRole('link', { name: 'Chọn gói mượn ↗' });
+  const curtain = (page: Page) => page.locator('[data-curtain]');
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForTimeout(1500);
+  });
+
+  test('CTA plays the curtain and lands on a usable /plans', async ({ page }) => {
+    await cta(page).click();
+    await expect(curtain(page)).not.toHaveAttribute('data-state', 'idle');
+    await page.waitForURL('**/plans');
+    await expect(curtain(page)).toHaveAttribute('data-state', 'idle', { timeout: 5000 });
+    await page.getByRole('link', { name: 'Sách', exact: true }).first().click({ trial: true });
+  });
+
+  test('back to the landing after a curtain navigation', async ({ page }) => {
+    await cta(page).click();
+    await page.waitForURL('**/plans');
+    await expect(curtain(page)).toHaveAttribute('data-state', 'idle', { timeout: 5000 });
+    await page.goBack();
+    await page.waitForURL((url) => url.pathname === '/');
+    await expect(page.locator('.obx-hero__tagline')).toBeVisible();
+    await expect(curtain(page)).toHaveAttribute('data-state', 'idle');
+    await cta(page).click({ trial: true });
+  });
+
+  test('double click navigates once', async ({ page }) => {
+    await cta(page).dblclick();
+    await page.waitForURL('**/plans');
+    await expect(curtain(page)).toHaveAttribute('data-state', 'idle', { timeout: 5000 });
+    await page.goBack();
+    await page.waitForURL((url) => url.pathname === '/');
+  });
+
+  test('modifier click opens a new tab without the curtain', async ({ page, context }) => {
+    const [popup] = await Promise.all([
+      context.waitForEvent('page'),
+      cta(page).click({ modifiers: ['ControlOrMeta'] }),
+    ]);
+    await popup.waitForURL('**/plans');
+    expect(new URL(popup.url()).pathname).toBe('/plans');
+    await expect(curtain(page)).toHaveAttribute('data-state', 'idle');
+    expect(new URL(page.url()).pathname).toBe('/');
+  });
+});
+
+test.describe('curtain with reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test('fades instead and still lands on /plans', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('link', { name: 'Chọn gói mượn ↗' }).click();
+    await page.waitForURL('**/plans');
+    await expect(page.locator('[data-curtain]')).toHaveAttribute('data-state', 'idle', { timeout: 3000 });
+  });
+});

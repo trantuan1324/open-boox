@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { CurtainLink } from '@/components/curtain/curtain-link';
 import { Marquee } from '../ui/marquee';
 
 const LINKS = [
@@ -29,10 +29,10 @@ export function Footer() {
       <div className="obx-footer__grid">
         <nav className="obx-footer__tiles" aria-label="Chân trang">
           {LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="obx-footer__tile">
+            <CurtainLink key={link.href} href={link.href} className="obx-footer__tile">
               <span aria-hidden="true">↗</span>
               <span className="obx-display">{link.label}</span>
-            </Link>
+            </CurtainLink>
           ))}
         </nav>
         <div className="obx-footer__card">

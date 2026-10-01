@@ -1,5 +1,5 @@
 import { SHIPPING_FEES, WAREHOUSE_PROVINCE } from '@open-boox/shared';
-import Link from 'next/link';
+import { CurtainLink } from '@/components/curtain/curtain-link';
 import { formatVnd } from '@/lib/format';
 
 // Rules from builder/spec/app_design.md only; fees come from the shared constants so they cannot drift.
@@ -32,9 +32,9 @@ export function JoinFaq({ signedIn }: { signedIn: boolean }) {
           <br />
           <em>{signedIn ? 'xem sách đang giữ' : 'mượn cuốn đầu tiên'}</em>
         </h2>
-        <Link href={signedIn ? '/account' : '/register'} className="obx-btn obx-btn--dark">
+        <CurtainLink href={signedIn ? '/account' : '/register'} className="obx-btn obx-btn--dark">
           {signedIn ? 'Tài khoản ↗' : 'Đăng ký ↗'}
-        </Link>
+        </CurtainLink>
       </div>
       <div className="obx-join__card">
         <h2 className="obx-display obx-join__title" data-anim-slant>

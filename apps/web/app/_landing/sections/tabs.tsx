@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { CurtainLink } from '@/components/curtain/curtain-link';
 import { type KeyboardEvent, useRef, useState } from 'react';
 import { FULL, Flip, REDUCE, ScrollTrigger, SplitText, gsap, useGSAP } from '../motion/gsap';
 import { ArtBorrow, ArtBuy, ArtDeliver } from '../svg/illustrations';
@@ -194,9 +194,9 @@ export function Tabs() {
                 <em>{tab.title[1]}</em>
               </h3>
               <p className="obx-body obx-tab-panel__body">{tab.body}</p>
-              <Link href={tab.href} className="obx-btn obx-btn--dark obx-tab-panel__link">
+              <CurtainLink href={tab.href} className="obx-btn obx-btn--dark obx-tab-panel__link">
                 {tab.link} ↗
-              </Link>
+              </CurtainLink>
             </div>
           </div>
         ))}

@@ -2,6 +2,7 @@
 
 import type { PublicUser } from '@open-boox/shared';
 import Link from 'next/link';
+import { CurtainLink } from '@/components/curtain/curtain-link';
 import { useRef, useState } from 'react';
 import { CartLink } from '@/components/cart/cart-link';
 import { FULL, REDUCE, gsap, useGSAP } from '../motion/gsap';
@@ -100,14 +101,14 @@ export function Nav({ user }: { user: PublicUser | null }) {
       <nav className="obx-nav__right" aria-label="Chính">
         <ul id="obx-nav-pills" className="obx-nav__pills" data-open={open} onClick={() => setOpen(false)}>
           <li className="obx-nav__li">
-            <Link href="/books" className={PILL}>
+            <CurtainLink href="/books" className={PILL}>
               Sách
-            </Link>
+            </CurtainLink>
           </li>
           <li className="obx-nav__li">
-            <Link href="/plans" className={PILL}>
+            <CurtainLink href="/plans" className={PILL}>
               Gói mượn
-            </Link>
+            </CurtainLink>
           </li>
           <li className="obx-nav__li">
             <a href="#cach-hoat-dong" className={PILL}>
@@ -116,16 +117,16 @@ export function Nav({ user }: { user: PublicUser | null }) {
           </li>
           {user?.role === 'ADMIN' && (
             <li className="obx-nav__li">
-              <Link href="/admin" className={PILL}>
+              <CurtainLink href="/admin" className={PILL}>
                 Quản trị
-              </Link>
+              </CurtainLink>
             </li>
           )}
           {!user && (
             <li className="obx-nav__li">
-              <Link href="/login" className={PILL}>
+              <CurtainLink href="/login" className={PILL}>
                 Đăng nhập
-              </Link>
+              </CurtainLink>
             </li>
           )}
           <li className="obx-nav__li">
@@ -144,13 +145,13 @@ export function Nav({ user }: { user: PublicUser | null }) {
           <span className="obx-nav__plus-v" />
         </button>
         {user ? (
-          <Link href="/account" className={`${PILL} obx-btn--dark`}>
+          <CurtainLink href="/account" className={`${PILL} obx-btn--dark`}>
             Tài khoản
-          </Link>
+          </CurtainLink>
         ) : (
-          <Link href="/register" className={`${PILL} obx-btn--dark`}>
+          <CurtainLink href="/register" className={`${PILL} obx-btn--dark`}>
             Đăng ký ↗
-          </Link>
+          </CurtainLink>
         )}
       </nav>
     </header>
