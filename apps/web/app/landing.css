@@ -218,6 +218,16 @@ body:has(.obx-home) {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .obx-marquee {
+    overflow-x: auto;
+  }
+
+  .obx-marquee [inert] {
+    display: none;
+  }
+}
+
 .obx-marquee__track,
 .obx-marquee__half,
 .obx-marquee__chunk {
@@ -264,13 +274,14 @@ body:has(.obx-home) {
   display: flex;
   align-items: center;
   margin-right: var(--obx-gap);
-  padding: 0.14em 0.3em 0.06em;
+  padding: 0.14em 0.3em 0.12em;
   border-radius: 30px;
   font-size: clamp(72px, 10vw, 150px);
   white-space: nowrap;
 }
 
 .obx-tile__text {
+  margin-bottom: 0;
   font-size: 1em;
 }
 
@@ -283,8 +294,8 @@ body:has(.obx-home) {
 
 .obx-tile .obx-sticker {
   position: absolute;
-  top: -0.12em;
-  right: -0.08em;
+  top: 0.06em;
+  right: 0.06em;
   width: 0.7em;
   rotate: 12deg;
 }

@@ -11,7 +11,7 @@ const TILE_PALETTE = ['#4da2ff', '#ffd731', '#55db9c', '#e9ccff'];
 export function CoverMarquee({ books }: { books: BookSummary[] }) {
   return (
     <section className="obx-sheet obx-sheet--frame obx-covers" aria-label="Sách trong kho">
-      <Marquee speed={25} repeat={books.length ? Math.max(1, Math.ceil(8 / books.length)) : 2}>
+      <Marquee speed={25} repeat={books.length ? Math.max(1, Math.ceil(12 / books.length)) : 2}>
         {books.length
           ? books.map((book, i) => (
               <Link

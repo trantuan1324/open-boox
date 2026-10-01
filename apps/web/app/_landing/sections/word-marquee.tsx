@@ -30,10 +30,10 @@ function Tiles({ tiles, sticker }: { tiles: Tile[]; sticker: 'coin' | 'star' }) 
 export function WordMarquee() {
   return (
     <section className="obx-sheet obx-sheet--frame obx-words" aria-label="Mượn, mua, giao, đọc">
-      <Marquee speed={15}>
+      <Marquee speed={15} repeat={2}>
         <Tiles tiles={ROW_1} sticker="coin" />
       </Marquee>
-      <Marquee speed={20} reverse>
+      <Marquee speed={20} reverse repeat={2}>
         <Tiles tiles={ROW_2} sticker="star" />
       </Marquee>
     </section>
