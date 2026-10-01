@@ -11,6 +11,7 @@ import { Nav } from './_landing/sections/nav';
 import { Plans } from './_landing/sections/plans';
 import { Showcase } from './_landing/sections/showcase';
 import { Statement } from './_landing/sections/statement';
+import { Tabs } from './_landing/sections/tabs';
 import { WordMarquee } from './_landing/sections/word-marquee';
 import './landing.css';
 
@@ -30,6 +31,7 @@ export default async function HomePage() {
       <Statement book={pickFeaturedBook(data.books)} />
       <CategoryCarousel categories={data.categories} />
       <WordMarquee />
+      <Tabs />
       <Plans plans={data.plans} />
       <CoverMarquee books={data.books} />
     </div>

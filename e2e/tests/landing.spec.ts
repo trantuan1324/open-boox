@@ -121,3 +121,17 @@ test('category dots select a slide', async ({ page }) => {
   await page.getByRole('button', { name: 'Thể loại trước' }).click();
   await expect(dots.nth(1)).toHaveAttribute('aria-selected', 'true');
 });
+
+test('tabs follow the arrow keys', async ({ page }) => {
+  await page.goto('/');
+  const tablist = page.getByRole('tablist', { name: 'Cách dùng Open Boox' });
+  await tablist.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1500); // the one-time auto-advance has fired by now
+  await tablist.getByRole('tab', { name: 'Mượn' }).click();
+  await page.keyboard.press('ArrowRight');
+  await expect(tablist.getByRole('tab', { name: 'Mua' })).toHaveAttribute('aria-selected', 'true');
+  await expect(tablist.getByRole('tab', { name: 'Mua' })).toBeFocused();
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await expect(tablist.getByRole('tab', { name: 'Giao' })).toHaveAttribute('aria-selected', 'true');
+});
