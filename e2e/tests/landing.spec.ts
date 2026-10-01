@@ -97,3 +97,17 @@ test.describe('nav', () => {
     await expect(navPill(page)).toBeInViewport();
   });
 });
+
+test.describe('reduced motion scroll reveals', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test('every revealed heading ends fully visible', async ({ page }) => {
+    await page.goto('/');
+    const headings = page.locator('[data-anim-slant], [data-heading-reveal]');
+    expect(await headings.count()).toBeGreaterThan(0);
+    for (const heading of await headings.all()) {
+      await heading.scrollIntoViewIfNeeded();
+      await expect(heading).toHaveCSS('opacity', '1');
+    }
+  });
+});

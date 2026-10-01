@@ -675,3 +675,193 @@ body:has(.obx-home) {
     visibility: visible;
   }
 }
+
+/* ---------- 4 · Features ---------- */
+
+.obx-features {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(64px, 8vw, 128px);
+}
+
+.obx-feature {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+}
+
+.obx-feature--flip .obx-feature__visual {
+  order: -1;
+}
+
+.obx-feature__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.obx-feature__title {
+  font-size: clamp(64px, 9vw, 160px);
+}
+
+.obx-card {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  padding: 24px;
+  border: 1px solid var(--color-ink);
+  border-radius: 20px;
+}
+
+.obx-card--lilac { background: var(--color-lilac); }
+.obx-card--blue { background: var(--color-blue); }
+.obx-card--sunburst { background: var(--color-sunburst); }
+
+.obx-art {
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 767px) {
+  .obx-feature {
+    grid-template-columns: 1fr;
+  }
+
+  .obx-feature__visual {
+    order: -1;
+  }
+}
+
+/* ---------- 5 · Statement ---------- */
+
+.obx-statement__text {
+  font-size: clamp(56px, 11.1vw, 160px);
+  text-align: center;
+}
+
+.obx-statement__line {
+  display: block;
+}
+
+.obx-featured {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 0.8em;
+  margin: 0 0.05em;
+  padding: 0.06em 0.12em 0.06em 0.06em;
+  vertical-align: middle;
+  border: 1px solid var(--color-ink);
+  border-radius: 20px;
+  background: var(--color-indigo);
+  color: var(--color-paper);
+  transition: all 0.5s var(--obx-ease-bounce);
+}
+
+.obx-featured:hover {
+  rotate: -3deg;
+}
+
+.obx-featured__cover {
+  width: auto;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.obx-featured__sticker {
+  width: auto;
+  height: 100%;
+}
+
+.obx-featured__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 14ch;
+  font: 500 16px/1.2 var(--font-sans);
+  text-align: left;
+  text-transform: none;
+}
+
+.obx-featured__title {
+  font-weight: 700;
+}
+
+@media (max-width: 767px) {
+  .obx-featured__meta {
+    display: none;
+  }
+}
+
+/* ---------- 10 · Plans ---------- */
+
+.obx-plans {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.obx-plans__title {
+  font-size: clamp(56px, 11.1vw, 160px);
+}
+
+.obx-plans__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.obx-plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  min-height: 420px;
+  padding: 28px;
+  overflow: clip;
+  border: 1px solid var(--color-ink);
+  border-radius: 30px;
+}
+
+.obx-plan__name {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.obx-plan__books {
+  font-size: clamp(56px, 6vw, 96px);
+}
+
+.obx-plan__price {
+  margin-top: auto;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.obx-plan__price span {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.obx-plan__sticker {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 72px;
+  rotate: 10deg;
+}
+
+@media (max-width: 991px) {
+  .obx-plans__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .obx-plan {
+    min-height: 320px;
+  }
+}
