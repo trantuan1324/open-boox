@@ -204,6 +204,40 @@
   font-size: 0.92rem;
 }
 
+.obx-pill:active {
+  transform: translateY(0) scale(0.96);
+}
+
+/* Nav entrance: pills drop in staggered on load */
+.obx-logo,
+.obx-nav .obx-pill {
+  animation: obx-rise 0.7s cubic-bezier(0.65, 0.05, 0, 1) backwards;
+}
+
+.obx-logo {
+  animation-delay: 0.05s;
+}
+
+.obx-nav__group > *:nth-child(1) {
+  animation-delay: 0.12s;
+}
+
+.obx-nav__group > *:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.obx-nav__group > *:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+.obx-nav__group > *:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+.obx-nav__group > *:nth-child(5) {
+  animation-delay: 0.36s;
+}
+
 /* ---------- S1 · Hero ---------- */
 
 .obx-hero {
@@ -435,6 +469,16 @@
   background: var(--obx-blue);
 }
 
+/* Visual blocks scale in when their row reveals */
+.obx-visual {
+  transform: scale(0.94) rotate(-1.5deg);
+  transition: transform 0.7s cubic-bezier(0.65, 0.05, 0, 1);
+}
+
+.obx-reveal--in .obx-visual {
+  transform: none;
+}
+
 .obx-visual__emoji {
   font-size: clamp(4.5rem, 10vw, 9.5rem);
 }
@@ -568,9 +612,10 @@
   font-family: var(--font-obx-display), sans-serif;
   font-weight: 400;
   font-size: clamp(3.5rem, 13vw, 11.8rem);
-  line-height: 0.84;
+  line-height: 1;
   text-transform: uppercase;
   white-space: nowrap;
+  transform: skewX(calc(var(--vel, 0) * 1.4deg));
 }
 
 .obx-mq2__sep {
@@ -580,7 +625,7 @@
 
 .obx-mq2__row--blue .obx-mq2__item {
   color: var(--obx-blue);
-  transform: skewX(-8deg);
+  transform: skewX(calc(-8deg + var(--vel, 0) * 1.4deg));
 }
 
 /* ---------- S9 · Plans ---------- */
@@ -827,4 +872,23 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* ---------- Lenis smooth scroll ---------- */
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
 }

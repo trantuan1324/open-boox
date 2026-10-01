@@ -6,6 +6,8 @@ import { CartLink } from '@/components/cart/cart-link';
 import { apiPublic, getCurrentUser } from '@/lib/api/server';
 import { formatVnd } from '@/lib/format';
 import { Reveal } from './reveal';
+import { ScrollFX } from './scroll-fx';
+import { SmoothScroll } from './smooth-scroll';
 import './landing.css';
 
 const anton = Anton({
@@ -79,10 +81,10 @@ const FALLBACK_CATEGORIES: CategoryDto[] = [
   { id: 'thieu-nhi', name: 'Thiếu nhi', slug: 'thieu-nhi' },
 ];
 
-const HERO_STICKERS: Array<{ emoji: string; style: CSSProperties }> = [
-  { emoji: '📚', style: { top: '11%', left: '6%', '--rot': '-8deg', '--bg': '#ffd731', '--size': 'clamp(72px, 10vw, 150px)' } as CSSProperties },
-  { emoji: '👓', style: { bottom: '8%', right: '5%', '--rot': '10deg', '--bg': '#e9ccff', '--size': 'clamp(64px, 9vw, 130px)', animationDelay: '0.9s' } as CSSProperties },
-  { emoji: '🔖', style: { top: '8%', right: '17%', '--rot': '-12deg', '--bg': '#55db9c', '--size': 'clamp(56px, 8vw, 110px)', animationDelay: '1.8s' } as CSSProperties },
+const HERO_STICKERS: Array<{ emoji: string; parallax: number; style: CSSProperties }> = [
+  { emoji: '📚', parallax: 0.12, style: { top: '11%', left: '6%', '--rot': '-8deg', '--bg': '#ffd731', '--size': 'clamp(72px, 10vw, 150px)' } as CSSProperties },
+  { emoji: '👓', parallax: -0.08, style: { bottom: '8%', right: '5%', '--rot': '10deg', '--bg': '#e9ccff', '--size': 'clamp(64px, 9vw, 130px)', animationDelay: '0.9s' } as CSSProperties },
+  { emoji: '🔖', parallax: 0.16, style: { top: '8%', right: '17%', '--rot': '-12deg', '--bg': '#55db9c', '--size': 'clamp(56px, 8vw, 110px)', animationDelay: '1.8s' } as CSSProperties },
 ];
 
 async function fetchWithFallback<T>(path: string, fallback: T): Promise<T> {
@@ -128,6 +130,8 @@ export default async function HomePage() {
 
   return (
     <div className={`obx-home ${anton.variable} ${interTight.variable}`}>
+      <SmoothScroll />
+      <ScrollFX />
       <div className="obx-banner">
         <Marquee duration={28}>
           {BANNER_ITEMS.map((item) => (
@@ -184,7 +188,7 @@ export default async function HomePage() {
 
           <div className="obx-hero__stage">
             {HERO_STICKERS.map((s, i) => (
-              <span key={i} className="obx-sticker" style={s.style}>
+              <span key={i} className="obx-sticker" data-parallax={s.parallax} style={s.style}>
                 {s.emoji}
               </span>
             ))}
@@ -223,11 +227,17 @@ export default async function HomePage() {
         <section className="obx-panel obx-panel--blue obx-statement">
           <Reveal>
             <p className="obx-statement__line">Mọi cuốn sách</p>
+          </Reveal>
+          <Reveal delay={140}>
             <p className="obx-statement__line obx-statement__row">
               Giao
-              <span className="obx-statement__sticker">📚</span>
+              <span className="obx-statement__sticker" data-parallax="-0.1">
+                📚
+              </span>
               tận cửa
             </p>
+          </Reveal>
+          <Reveal delay={280}>
             <p className="obx-statement__line">
               <span className="obx-skew">Trong một gói</span>
             </p>
