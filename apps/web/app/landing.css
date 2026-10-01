@@ -204,3 +204,120 @@ body:has(.obx-home) {
   visibility: hidden;
   opacity: 0;
 }
+
+/* ---------- Marquee ---------- */
+
+.obx-marquee {
+  overflow: clip;
+}
+
+/* Buffer for the ±10vw drift; dropped under reduced motion so the first item is not cut. */
+@media (prefers-reduced-motion: no-preference) {
+  .obx-marquee__drift {
+    margin-left: -10vw;
+  }
+}
+
+.obx-marquee__track,
+.obx-marquee__half,
+.obx-marquee__chunk {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.obx-marquee__track {
+  width: max-content;
+}
+
+/* ---------- 0 · Banner ---------- */
+
+.obx-banner {
+  margin-inline: calc(-1 * var(--obx-gap));
+  background: var(--color-lilac);
+}
+
+.obx-banner__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  padding-right: 24px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ---------- 7 · Word marquee, 11 · Cover marquee ---------- */
+
+.obx-words,
+.obx-covers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--obx-gap);
+}
+
+.obx-tile {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin-right: var(--obx-gap);
+  padding: 0.14em 0.3em 0.06em;
+  border-radius: 30px;
+  font-size: clamp(72px, 10vw, 150px);
+  white-space: nowrap;
+}
+
+.obx-tile__text {
+  font-size: 1em;
+}
+
+.obx-tile--paper { background: var(--color-paper); }
+.obx-tile--ember { background: var(--color-ember); }
+.obx-tile--blue { background: var(--color-blue); }
+.obx-tile--sunburst { background: var(--color-sunburst); }
+.obx-tile--mint { background: var(--color-mint); }
+.obx-tile--lilac { background: var(--color-lilac); }
+
+.obx-tile .obx-sticker {
+  position: absolute;
+  top: -0.12em;
+  right: -0.08em;
+  width: 0.7em;
+  rotate: 12deg;
+}
+
+.obx-cover-tile {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 249px;
+  aspect-ratio: 1;
+  margin-right: var(--obx-gap);
+  padding: 20px;
+  border-radius: 30px;
+}
+
+.obx-cover-tile__cover {
+  width: 112px;
+}
+
+.obx-cover-tile__sticker {
+  width: 120px;
+}
+
+.obx-cover-tile__author {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
