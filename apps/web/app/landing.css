@@ -1268,7 +1268,7 @@ body:has(.obx-home) {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  aspect-ratio: 1;
+  aspect-ratio: 5 / 4;
   min-width: 0;
   padding: 20px;
   border-radius: 30px;
@@ -1288,14 +1288,16 @@ body:has(.obx-home) {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 48px;
-  padding: clamp(28px, 5vw, 80px);
+  gap: 32px;
+  padding: clamp(24px, 4vw, 56px);
   border-radius: 40px;
   background: var(--color-mint);
 }
 
+/* "CHỌN" sits right above "RỒI": the dot below and the stacked marks need more leading than 1.2. */
 .obx-footer__slogan {
-  font-size: clamp(56px, 8vw, 150px);
+  font-size: clamp(44px, 6vw, 104px);
+  line-height: 1.35;
 }
 
 .obx-footer__meta {
