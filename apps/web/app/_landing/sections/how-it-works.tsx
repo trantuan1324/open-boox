@@ -96,6 +96,7 @@ export function HowItWorks({ total, signedIn }: { total: number | null; signedIn
       <div className="obx-how__intro">
         <h2 id="obx-how-title" className="obx-display obx-how__title" data-anim-slant>
           Cách
+          {' '}
           <br />
           <em>hoạt động</em>
         </h2>

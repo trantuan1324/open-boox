@@ -36,11 +36,12 @@ export function Footer() {
           ))}
         </nav>
         <div className="obx-footer__card">
-          <p className="obx-display obx-footer__slogan" data-anim-slant>
+          <h2 className="obx-display obx-footer__slogan" data-anim-slant>
             Chọn gói.
+            {' '}
             <br />
             <em>Rồi cứ thế mà đọc.</em>
-          </p>
+          </h2>
           <div className="obx-footer__meta">
             <span>© 2026 Open Boox</span>
             <span>Mượn · Mua · Giao tận nơi</span>

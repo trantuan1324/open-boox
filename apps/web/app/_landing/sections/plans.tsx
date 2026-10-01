@@ -13,6 +13,7 @@ export function Plans({ plans }: { plans: PlanDto[] }) {
     <section className="obx-sheet obx-plans" aria-labelledby="obx-plans-title">
       <h2 id="obx-plans-title" className="obx-display obx-plans__title" data-anim-slant>
         Một gói,
+        {' '}
         <br />
         <em>cả thư viện</em>
       </h2>

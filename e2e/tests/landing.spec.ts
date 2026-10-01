@@ -218,3 +218,38 @@ test.describe('curtain with reduced motion', () => {
     await expect(page.locator('[data-curtain]')).toHaveAttribute('data-state', 'idle', { timeout: 3000 });
   });
 });
+
+test.describe('landing a11y and focus', () => {
+  test('hero tagline is announced', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForTimeout(1500);
+    expect(await page.locator('.obx-hero__tagline').ariaSnapshot()).toContain('Đọc nhiều hơn. Sở hữu ít hơn.');
+  });
+
+  test('split headings keep word boundaries', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForTimeout(1500);
+    await expect(page.getByRole('heading', { name: 'Giữ nhiều cuốn cùng lúc' })).toBeAttached();
+  });
+
+  test('mobile menu is next in tab order', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/');
+    await page.waitForTimeout(1500);
+    await page.getByRole('button', { name: 'Mở menu' }).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Đóng menu' })).toHaveAttribute('aria-expanded', 'true');
+    await expect(navPill(page)).toBeVisible();
+    await page.keyboard.press('Tab');
+    await expect(navPill(page)).toBeFocused();
+  });
+
+  test('focused category slide is visible', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/');
+    await page.locator('.obx-cats__viewport').scrollIntoViewIfNeeded();
+    await page.locator('.obx-cat').nth(2).focus();
+    await page.waitForTimeout(1000);
+    await expect(page.locator('.obx-cat').nth(2)).toBeInViewport({ ratio: 0.9 });
+  });
+});

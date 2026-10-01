@@ -30,8 +30,8 @@ export function Marquee({ children, speed, reverse = false, repeat = 1, label, c
     mm.add(
       {
         desktop: '(min-width: 992px)',
-        tablet: '(min-width: 480px) and (max-width: 991px)',
-        phone: '(max-width: 479px)',
+        tablet: '(min-width: 480px) and (max-width: 991.98px)',
+        phone: '(max-width: 479.98px)',
         reduce: REDUCE,
       },
       (ctx) => {
@@ -52,6 +52,7 @@ export function Marquee({ children, speed, reverse = false, repeat = 1, label, c
           trigger: el,
           start: 'top bottom',
           end: 'bottom top',
+          onToggle: (self) => loop.paused(!self.isActive),
           onUpdate: (self) => {
             if (self.direction === direction) return;
             direction = self.direction;

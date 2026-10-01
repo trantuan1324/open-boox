@@ -96,6 +96,7 @@ export function LandingMotion() {
 
       return () => {
         gsap.ticker.remove(raf);
+        gsap.ticker.lagSmoothing(500, 33);
         lenis.destroy();
       };
     });

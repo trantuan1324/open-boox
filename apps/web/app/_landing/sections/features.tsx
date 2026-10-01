@@ -42,6 +42,7 @@ export function Features({ plans }: { plans: PlanDto[] }) {
           <div className="obx-feature__text">
             <h2 className="obx-display obx-feature__title" data-anim-slant>
               {line1}
+              {' '}
               <br />
               <em>{line2}</em>
             </h2>

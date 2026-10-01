@@ -18,6 +18,7 @@ export function CoverMarquee({ books }: { books: BookSummary[] }) {
                 key={book.id}
                 href={`/books/${book.slug}`}
                 className="obx-cover-tile"
+                tabIndex={-1}
                 style={{ background: cycleColor(i, TILE_PALETTE) }}
                 data-cursor="Xem sách"
               >

@@ -31,7 +31,7 @@ export function Hero() {
         }
         const q = gsap.utils.selector(root);
         const nav = document.querySelector('.obx-nav');
-        const tagline = SplitText.create(q('.obx-hero__tagline'), { type: 'words,chars' });
+        const tagline = SplitText.create(q('.obx-hero__tagline-text'), { type: 'words,chars', aria: 'none' });
         const stickers = q('[data-hero-sticker]');
 
         const tl = gsap.timeline({ delay: 0.15, defaults: { ease: 'slush-bounce' } });
@@ -80,7 +80,12 @@ export function Hero() {
         </svg>
       </div>
       <Wordmark />
-      <p className="obx-heading obx-hero__tagline">Đọc nhiều hơn. Sở hữu ít hơn.</p>
+      <p className="obx-heading obx-hero__tagline">
+        <span className="sr-only">Đọc nhiều hơn. Sở hữu ít hơn.</span>
+        <span className="obx-hero__tagline-text" aria-hidden="true">
+          Đọc nhiều hơn. Sở hữu ít hơn.
+        </span>
+      </p>
       <p className="obx-body obx-hero__sub" data-load-stagger>
         Mượn sách theo gói, mua khi muốn giữ, và để chúng tôi giao đến tận cửa.
       </p>

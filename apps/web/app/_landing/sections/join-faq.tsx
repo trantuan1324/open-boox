@@ -29,6 +29,7 @@ export function JoinFaq({ signedIn }: { signedIn: boolean }) {
       <div className="obx-join__card">
         <h2 className="obx-display obx-join__title" data-anim-slant>
           {signedIn ? 'Vào tài khoản' : 'Tạo tài khoản'}
+          {' '}
           <br />
           <em>{signedIn ? 'xem sách đang giữ' : 'mượn cuốn đầu tiên'}</em>
         </h2>
@@ -39,6 +40,7 @@ export function JoinFaq({ signedIn }: { signedIn: boolean }) {
       <div className="obx-join__card">
         <h2 className="obx-display obx-join__title" data-anim-slant>
           Hỏi nhanh
+          {' '}
           <br />
           <em>đáp gọn</em>
         </h2>

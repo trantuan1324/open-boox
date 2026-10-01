@@ -3,7 +3,7 @@
 import type { BookSummary, CategoryDto } from '@open-boox/shared';
 import { useRef } from 'react';
 import { BookCover } from '@/components/books/book-cover';
-import { FULL, gsap, useGSAP } from '../motion/gsap';
+import { FULL, ScrollTrigger, gsap, useGSAP } from '../motion/gsap';
 import { STICKERS } from '../svg/stickers';
 
 // Section 3: a phone mockup built in HTML whose screen scrolls real covers (stand-in for Slush's app video),
@@ -26,7 +26,13 @@ export function Showcase({ books, categories }: { books: BookSummary[]; categori
           ease: 'slush-bounce',
           scrollTrigger: { trigger: phone, start: 'top center', once: true },
         });
-        gsap.to(grid, { yPercent: -50, duration: 20, ease: 'none', repeat: -1 });
+        const scroll = gsap.to(grid, { yPercent: -50, duration: 20, ease: 'none', repeat: -1 });
+        ScrollTrigger.create({
+          trigger: phone,
+          start: 'top bottom',
+          end: 'bottom top',
+          onToggle: (self) => scroll.paused(!self.isActive),
+        });
       });
       return () => mm.revert();
     },

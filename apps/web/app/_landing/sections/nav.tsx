@@ -81,7 +81,11 @@ export function Nav({ user }: { user: PublicUser | null }) {
   );
 
   const toggle = () => {
-    if (!window.matchMedia(DESKTOP).matches) setOpen((value) => !value);
+    if (window.matchMedia(DESKTOP).matches) {
+      root.current?.querySelector<HTMLAnchorElement>('.obx-nav__li a')?.focus();
+      return;
+    }
+    setOpen((value) => !value);
   };
 
   return (
@@ -99,6 +103,17 @@ export function Nav({ user }: { user: PublicUser | null }) {
         OB
       </Link>
       <nav className="obx-nav__right" aria-label="Chính">
+        <button
+          type="button"
+          className="obx-nav__plus"
+          aria-expanded={open}
+          aria-controls="obx-nav-pills"
+          aria-label={open ? 'Đóng menu' : 'Mở menu'}
+          onClick={toggle}
+        >
+          <span className="obx-nav__plus-h" />
+          <span className="obx-nav__plus-v" />
+        </button>
         <ul id="obx-nav-pills" className="obx-nav__pills" data-open={open} onClick={() => setOpen(false)}>
           <li className="obx-nav__li">
             <CurtainLink href="/books" className={PILL}>
@@ -133,17 +148,6 @@ export function Nav({ user }: { user: PublicUser | null }) {
             <CartLink />
           </li>
         </ul>
-        <button
-          type="button"
-          className="obx-nav__plus"
-          aria-expanded={open}
-          aria-controls="obx-nav-pills"
-          aria-label={open ? 'Đóng menu' : 'Mở menu'}
-          onClick={toggle}
-        >
-          <span className="obx-nav__plus-h" />
-          <span className="obx-nav__plus-v" />
-        </button>
         {user ? (
           <CurtainLink href="/account" className={`${PILL} obx-btn--dark`}>
             Tài khoản

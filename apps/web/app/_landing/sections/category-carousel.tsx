@@ -39,8 +39,9 @@ export function CategoryCarousel({ categories }: { categories: CategoryDto[] }) 
 
         let onScreen = false;
         let hovering = false;
+        let focused = false;
         const tick = gsap.delayedCall(4, () => {
-          if (onScreen && !hovering) carousel.next({ duration: 0.725, ease: 'slush-bounce' });
+          if (onScreen && !hovering && !focused) carousel.next({ duration: 0.725, ease: 'slush-bounce' });
           tick.restart(true);
         });
         ScrollTrigger.create({
@@ -53,11 +54,17 @@ export function CategoryCarousel({ categories }: { categories: CategoryDto[] }) 
         });
         const enter = () => (hovering = true);
         const leave = () => (hovering = false);
+        const focusIn = () => (focused = true);
+        const focusOut = (event: FocusEvent) => (focused = root.current!.contains(event.relatedTarget as Node | null));
         root.current!.addEventListener('pointerenter', enter);
         root.current!.addEventListener('pointerleave', leave);
+        root.current!.addEventListener('focusin', focusIn);
+        root.current!.addEventListener('focusout', focusOut);
         return () => {
           root.current?.removeEventListener('pointerenter', enter);
           root.current?.removeEventListener('pointerleave', leave);
+          root.current?.removeEventListener('focusin', focusIn);
+          root.current?.removeEventListener('focusout', focusOut);
           carousel.destroy();
           loop.current = null;
         };
@@ -77,6 +84,7 @@ export function CategoryCarousel({ categories }: { categories: CategoryDto[] }) 
       <div className="obx-cats__head">
         <h2 id="obx-cats-title" className="obx-display obx-cats__title" data-anim-slant>
           Kệ nào
+          {' '}
           <br />
           <em>cũng có</em>
         </h2>
@@ -97,6 +105,7 @@ export function CategoryCarousel({ categories }: { categories: CategoryDto[] }) 
                 style={{ background: cycleColor(i) }}
                 data-cursor="Kéo"
                 draggable={false}
+                onFocus={() => go(i)}
                 onPointerDown={(event) => {
                   pressX.current = event.clientX;
                 }}

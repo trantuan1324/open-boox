@@ -190,6 +190,7 @@ export function Tabs() {
             <div className="obx-tab-panel__text">
               <h3 className="obx-display obx-tab-panel__title">
                 {tab.title[0]}
+                {' '}
                 <br />
                 <em>{tab.title[1]}</em>
               </h3>
