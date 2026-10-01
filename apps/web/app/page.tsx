@@ -6,8 +6,10 @@ import { Banner } from './_landing/sections/banner';
 import { CategoryCarousel } from './_landing/sections/category-carousel';
 import { CoverMarquee } from './_landing/sections/cover-marquee';
 import { Features } from './_landing/sections/features';
+import { Footer } from './_landing/sections/footer';
 import { Hero } from './_landing/sections/hero';
 import { HowItWorks } from './_landing/sections/how-it-works';
+import { JoinFaq } from './_landing/sections/join-faq';
 import { Nav } from './_landing/sections/nav';
 import { Plans } from './_landing/sections/plans';
 import { Showcase } from './_landing/sections/showcase';
@@ -36,6 +38,8 @@ export default async function HomePage() {
       <HowItWorks total={data.total} signedIn={!!user} />
       <Plans plans={data.plans} />
       <CoverMarquee books={data.books} />
+      <JoinFaq signedIn={!!user} />
+      <Footer />
     </div>
   );
 }

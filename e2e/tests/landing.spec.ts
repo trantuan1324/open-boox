@@ -149,3 +149,13 @@ test('how it works: the nav anchor scrolls there and the next button moves the s
   await section.getByRole('button', { name: 'Bước tiếp' }).click();
   await expect.poll(trackX).toBeLessThan(-100);
 });
+
+test('FAQ answers the shipping question with the configured fees', async ({ page }) => {
+  await page.goto('/');
+  const question = page.getByText('Phí giao bao nhiêu?');
+  await question.scrollIntoViewIfNeeded();
+  await question.click();
+  await expect(page.getByText(/Hà Nội 20\.000 đ, các tỉnh khác 35\.000 đ/)).toBeVisible();
+  // The footer sits inside <main>, so it has no contentinfo role; select it by class.
+  await expect(page.locator('footer.obx-footer')).toContainText('© 2026 Open Boox');
+});

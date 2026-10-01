@@ -1141,3 +1141,166 @@ body:has(.obx-home) {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- 12 · Join + FAQ ---------- */
+
+.obx-join {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--obx-gap);
+}
+
+.obx-join__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px;
+  padding: clamp(28px, 4vw, 56px);
+  border-radius: 40px;
+  background: var(--color-sunburst);
+}
+
+.obx-join__card :focus-visible {
+  outline-color: var(--color-ink);
+}
+
+.obx-join__title {
+  font-size: clamp(56px, 6vw, 112px);
+}
+
+.obx-faq {
+  width: 100%;
+}
+
+.obx-faq details {
+  padding: 16px 0;
+  border-top: 1px solid var(--color-ink);
+}
+
+.obx-faq summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.obx-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.obx-faq summary::after {
+  content: '+';
+  transition: rotate 0.5s var(--obx-ease-bounce);
+}
+
+.obx-faq details[open] summary::after {
+  rotate: 45deg;
+}
+
+.obx-faq p {
+  margin-top: 12px;
+}
+
+@media (max-width: 991px) {
+  .obx-join {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- 13 · Footer ---------- */
+
+.obx-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--obx-gap);
+}
+
+.obx-footer__band {
+  position: relative;
+}
+
+.obx-footer__badge {
+  position: absolute;
+  top: 50%;
+  right: 24px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 120px;
+  height: 120px;
+  border: 2px solid var(--color-paper);
+  border-radius: 50%;
+  background: var(--color-indigo);
+  color: var(--color-paper);
+  font: 800 48px/1 var(--font-display);
+  translate: 0 -50%;
+}
+
+.obx-footer__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--obx-gap);
+}
+
+.obx-footer__tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--obx-gap);
+}
+
+.obx-footer__tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  aspect-ratio: 1;
+  padding: 20px;
+  border-radius: 30px;
+  background: var(--color-paper);
+  transition: all 0.5s var(--obx-ease-bounce);
+}
+
+.obx-footer__tile:hover {
+  background: var(--color-lilac);
+}
+
+.obx-footer__tile .obx-display {
+  font-size: clamp(28px, 3.5vw, 56px);
+}
+
+.obx-footer__card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+  padding: clamp(28px, 5vw, 80px);
+  border-radius: 40px;
+  background: var(--color-mint);
+}
+
+.obx-footer__slogan {
+  font-size: clamp(56px, 8vw, 150px);
+}
+
+.obx-footer__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@media (max-width: 991px) {
+  .obx-footer__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .obx-footer__badge {
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+  }
+}
