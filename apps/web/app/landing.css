@@ -75,7 +75,7 @@ body:has(.obx-home) {
   font-family: var(--font-display);
   font-weight: 800;
   text-transform: uppercase;
-  line-height: 1.1;
+  line-height: 1.2;
   margin-bottom: 0;
   padding-top: 0;
   font-size: 160px;

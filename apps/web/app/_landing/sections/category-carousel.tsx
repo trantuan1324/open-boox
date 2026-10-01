@@ -101,7 +101,7 @@ export function CategoryCarousel({ categories }: { categories: CategoryDto[] }) 
                   pressX.current = event.clientX;
                 }}
                 onClick={(event) => {
-                  if (Math.abs(event.clientX - pressX.current) > 5) event.preventDefault();
+                  if (event.detail > 0 && Math.abs(event.clientX - pressX.current) > 5) event.preventDefault();
                 }}
               >
                 <Sticker className="obx-cat__sticker" />
@@ -111,28 +111,30 @@ export function CategoryCarousel({ categories }: { categories: CategoryDto[] }) 
           })}
         </div>
       </div>
-      <div className="obx-cats__controls">
-        <button type="button" className="obx-round" aria-label="Thể loại trước" onClick={() => go(active - 1)}>
-          ←
-        </button>
-        <div className="obx-cats__dots" role="tablist" aria-label="Chọn thể loại">
-          {categories.map((category, i) => (
-            <button
-              key={category.id}
-              type="button"
-              role="tab"
-              className="obx-dot"
-              aria-label={category.name}
-              aria-selected={i === active}
-              aria-controls={`obx-cat-${i}`}
-              onClick={() => go(i)}
-            />
-          ))}
+      {categories.length > 1 && (
+        <div className="obx-cats__controls">
+          <button type="button" className="obx-round" aria-label="Thể loại trước" onClick={() => go((loop.current?.current() ?? active) - 1)}>
+            ←
+          </button>
+          <div className="obx-cats__dots" role="tablist" aria-label="Chọn thể loại">
+            {categories.map((category, i) => (
+              <button
+                key={category.id}
+                type="button"
+                role="tab"
+                className="obx-dot"
+                aria-label={category.name}
+                aria-selected={i === active}
+                aria-controls={`obx-cat-${i}`}
+                onClick={() => go(i)}
+              />
+            ))}
+          </div>
+          <button type="button" className="obx-round" aria-label="Thể loại tiếp" onClick={() => go((loop.current?.current() ?? active) + 1)}>
+            →
+          </button>
         </div>
-        <button type="button" className="obx-round" aria-label="Thể loại tiếp" onClick={() => go(active + 1)}>
-          →
-        </button>
-      </div>
+      )}
     </section>
   );
 }
