@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { HeaderGate } from './header-gate';
 import { SiteHeader } from '@/components/site-header';
 import './globals.css';
 
@@ -15,7 +16,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi" className={inter.variable}>
       <body className="min-h-screen antialiased">
-        <SiteHeader />
+        <HeaderGate>
+          <SiteHeader />
+        </HeaderGate>
         <main>{children}</main>
       </body>
     </html>
