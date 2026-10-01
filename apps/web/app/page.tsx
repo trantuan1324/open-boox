@@ -7,6 +7,7 @@ import { CategoryCarousel } from './_landing/sections/category-carousel';
 import { CoverMarquee } from './_landing/sections/cover-marquee';
 import { Features } from './_landing/sections/features';
 import { Hero } from './_landing/sections/hero';
+import { HowItWorks } from './_landing/sections/how-it-works';
 import { Nav } from './_landing/sections/nav';
 import { Plans } from './_landing/sections/plans';
 import { Showcase } from './_landing/sections/showcase';
@@ -32,6 +33,7 @@ export default async function HomePage() {
       <CategoryCarousel categories={data.categories} />
       <WordMarquee />
       <Tabs />
+      <HowItWorks total={data.total} signedIn={!!user} />
       <Plans plans={data.plans} />
       <CoverMarquee books={data.books} />
     </div>

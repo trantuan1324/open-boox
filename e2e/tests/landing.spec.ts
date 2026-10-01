@@ -135,3 +135,17 @@ test('tabs follow the arrow keys', async ({ page }) => {
   await page.keyboard.press('ArrowLeft');
   await expect(tablist.getByRole('tab', { name: 'Giao' })).toHaveAttribute('aria-selected', 'true');
 });
+
+test('how it works: the nav anchor scrolls there and the next button moves the stack', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await page.waitForTimeout(1500);
+  await page.getByRole('navigation', { name: 'Chính' }).getByRole('link', { name: 'Cách hoạt động' }).click();
+  const section = page.locator('#cach-hoat-dong');
+  await expect(section).toBeInViewport();
+  const track = section.locator('.obx-how__track');
+  const trackX = () => track.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41);
+  expect(await trackX()).toBe(0);
+  await section.getByRole('button', { name: 'Bước tiếp' }).click();
+  await expect.poll(trackX).toBeLessThan(-100);
+});
