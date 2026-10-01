@@ -22,7 +22,7 @@ export function AddToCartButton({ book }: { book: Omit<CartLine, 'quantity'> }) 
       {added && (
         <p role="status" className="text-[14px]">
           Đã thêm vào giỏ ·{' '}
-          <Link href="/cart" className="font-medium uppercase underline">
+          <Link href="/cart" className="font-bold uppercase tracking-[0.03em] underline">
             Xem giỏ
           </Link>
         </p>

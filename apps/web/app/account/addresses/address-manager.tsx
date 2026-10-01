@@ -39,13 +39,13 @@ export function AddressManager({ addresses }: { addresses: AddressDto[] }) {
       {addresses.length === 0 && <p className="text-[16px]">Bạn chưa có địa chỉ nào.</p>}
       <ul className="flex flex-col gap-[18px]">
         {addresses.map((address) => (
-          <li key={address.id} className="rounded-[12px] border border-dashed border-cork-border p-[24px]">
+          <li key={address.id} className="rounded-[20px] border border-ink p-[24px]">
             {editing === address.id ? (
               <AddressForm address={address} onSaved={saved} onCancel={() => setEditing(null)} />
             ) : (
               <div className="flex flex-col gap-[12px]">
                 <AddressLines address={address} />
-                {address.isDefault && <p className="text-[12px] font-medium uppercase">Mặc định</p>}
+                {address.isDefault && <p className="text-[12px] font-bold uppercase tracking-[0.03em]">Mặc định</p>}
                 <div className="flex flex-wrap gap-[12px]">
                   <Button variant="ghost" onClick={() => setEditing(address.id)}>
                     Sửa
@@ -77,13 +77,13 @@ export function AddressManager({ addresses }: { addresses: AddressDto[] }) {
         ))}
       </ul>
       {error && (
-        <p role="alert" className="text-[14px] text-ember-accent">
+        <p role="alert" className="text-[14px] text-ember">
           {error}
         </p>
       )}
       {editing === 'new' ? (
-        <section className="flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]">
-          <h2 className="text-[18px] font-medium uppercase">Địa chỉ mới</h2>
+        <section className="flex flex-col gap-[18px] rounded-[20px] border border-ink p-[24px]">
+          <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Địa chỉ mới</h2>
           <AddressForm onSaved={saved} onCancel={addresses.length > 0 ? () => setEditing(null) : undefined} />
         </section>
       ) : (

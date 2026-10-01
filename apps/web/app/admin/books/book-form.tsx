@@ -11,10 +11,9 @@ import { TextField } from '@/components/ui/text-field';
 import { apiClient } from '@/lib/api/client';
 import { applyApiError } from '@/lib/errors/form';
 
-const LABEL = 'text-[12px] font-medium uppercase';
-const FIELD =
-  'rounded-none border-0 border-b border-warm-cream bg-walnut-shadow px-0.5 py-1 text-[16px] outline-none focus:border-ember-accent';
-const ERROR = 'text-[12px] text-ember-accent';
+const LABEL = 'text-[12px] font-bold uppercase tracking-[0.03em]';
+const FIELD = 'rounded-[16px] border border-ink bg-paper px-[16px] py-[12px] text-[16px]';
+const ERROR = 'text-[12px] text-ember';
 
 export function BookForm({ categories, book }: { categories: CategoryDto[]; book?: AdminBookDetail }) {
   const router = useRouter();
@@ -89,7 +88,7 @@ export function BookForm({ categories, book }: { categories: CategoryDto[]; book
         {errors.description && <p className={ERROR}>{errors.description.message}</p>}
       </div>
       {formError && (
-        <p role="alert" className="text-[14px] text-ember-accent">
+        <p role="alert" className="text-[14px] text-ember">
           {formError}
         </p>
       )}

@@ -27,7 +27,7 @@ export default async function BooksPage({
   const href = (change: Partial<BookListQuery>) => filterHref('/books', filters, change);
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-[31px] px-[24px] py-[41px]">
+    <div className="sheet mx-auto flex w-full max-w-6xl flex-col gap-[31px] px-[20px] py-[48px] md:px-[48px] md:py-[72px]">
       <PageTitle>Sách</PageTitle>
       <form action="/books" className="flex max-w-md items-end gap-[12px]">
         {filters.category && <input type="hidden" name="category" value={filters.category} />}
@@ -60,14 +60,14 @@ export default async function BooksPage({
         })}
       </nav>
       {result.items.length === 0 ? (
-        <div className="flex flex-col gap-[12px] rounded-[12px] border border-dashed border-cork-border p-[24px]">
+        <div className="flex flex-col gap-[12px] rounded-[20px] border border-ink p-[24px]">
           <p className="text-[16px]">Không tìm thấy sách phù hợp.</p>
-          <Link href="/books" className="self-start text-[12px] font-medium uppercase underline">
+          <Link href="/books" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
             Xóa bộ lọc
           </Link>
         </div>
       ) : (
-        <ul className="grid grid-cols-2 gap-[24px] sm:grid-cols-3 lg:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-[16px] sm:grid-cols-3 md:gap-[24px] lg:grid-cols-4">
           {result.items.map((book) => (
             <li key={book.id}>
               <BookCard book={book} />
@@ -76,7 +76,7 @@ export default async function BooksPage({
         </ul>
       )}
       {totalPages > 1 && (
-        <nav aria-label="Phân trang" className="flex items-center gap-[18px] text-[12px] font-medium uppercase">
+        <nav aria-label="Phân trang" className="flex items-center gap-[18px] text-[12px] font-bold uppercase tracking-[0.03em]">
           {filters.page > 1 && <Link href={href({ page: filters.page - 1 })}>Trước</Link>}
           <span>
             Trang {filters.page}/{totalPages}

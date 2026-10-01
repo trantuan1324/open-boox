@@ -21,7 +21,7 @@ export default async function EditBookPage({ params }: { params: Promise<{ id: s
     <div className="flex flex-col gap-[41px]">
       <div className="flex flex-col gap-[12px]">
         <PageTitle>{book.title}</PageTitle>
-        <Link href={`/books/${book.slug}`} className="self-start text-[12px] font-medium uppercase underline">
+        <Link href={`/books/${book.slug}`} className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
           Xem trang công khai
         </Link>
       </div>

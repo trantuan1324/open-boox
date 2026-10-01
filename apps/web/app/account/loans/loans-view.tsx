@@ -15,7 +15,7 @@ import { LOAN_STATUS_LABEL } from '@/lib/loans/labels';
 import { toggleLoan } from '@/lib/loans/selection';
 import { SHIPMENT_STATUS_LABEL } from '@/lib/shipments/labels';
 
-const box = 'flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]';
+const box = 'flex flex-col gap-[18px] rounded-[20px] border border-ink p-[24px]';
 
 export function LoansView({ loans, addresses }: { loans: LoanDto[]; addresses: AddressDto[] }) {
   const router = useRouter();
@@ -48,7 +48,7 @@ export function LoansView({ loans, addresses }: { loans: LoanDto[]; addresses: A
         {loans.map((loan) => (
           <li
             key={loan.id}
-            className="flex flex-wrap items-center gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[18px]"
+            className="flex flex-wrap items-center gap-[18px] rounded-[20px] border border-ink p-[18px]"
           >
             {loan.status === 'ACTIVE' && (
               <input
@@ -63,14 +63,14 @@ export function LoansView({ loans, addresses }: { loans: LoanDto[]; addresses: A
               <BookCover src={loan.book.coverUrl} title={loan.book.title} sizes="56px" />
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-[4px]">
-              <Link href={`/books/${loan.book.slug}`} className="text-[16px] font-medium uppercase">
+              <Link href={`/books/${loan.book.slug}`} className="text-[16px] font-bold uppercase">
                 {loan.book.title}
               </Link>
               <p className="text-[14px]">
                 Yêu cầu {formatDate(loan.requestedAt)} · Giao hàng: {SHIPMENT_STATUS_LABEL[loan.shipmentStatus]}
               </p>
             </div>
-            <span className={`text-[12px] font-medium uppercase ${loan.status === 'CANCELLED' ? 'text-ember-accent' : ''}`}>
+            <span className={`text-[12px] font-bold uppercase tracking-[0.03em] ${loan.status === 'CANCELLED' ? 'text-ember' : ''}`}>
               {LOAN_STATUS_LABEL[loan.status]}
             </span>
           </li>
@@ -78,11 +78,11 @@ export function LoansView({ loans, addresses }: { loans: LoanDto[]; addresses: A
       </ul>
       {returnable.length > 0 && (
         <section className={box}>
-          <h2 className="text-[18px] font-medium uppercase">Trả sách</h2>
+          <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Trả sách</h2>
           <p className="text-[14px]">Chọn tối đa {LOANS_PER_RETURN_MAX} cuốn; một lần thu hồi cho tất cả, miễn phí.</p>
           <AddressPicker addresses={addresses} value={addressId} onChange={setAddressId} name="return-address" />
           {error && (
-            <p role="alert" className="text-[14px] text-ember-accent">
+            <p role="alert" className="text-[14px] text-ember">
               {error}
             </p>
           )}

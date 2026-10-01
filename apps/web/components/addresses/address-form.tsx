@@ -76,7 +76,7 @@ export function AddressForm({
       />
       {isProvince(city) && <p className="text-[14px]">Phí giao hàng: {formatVnd(shippingFeeFor(city))}</p>}
       {formError && (
-        <p role="alert" className="text-[14px] text-ember-accent">
+        <p role="alert" className="text-[14px] text-ember">
           {formError}
         </p>
       )}

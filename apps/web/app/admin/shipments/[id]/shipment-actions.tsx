@@ -64,24 +64,24 @@ export function ShipmentActions({ shipment }: { shipment: AdminShipmentDetail })
       {next.length > 0 && (
         <form onSubmit={update} className="flex max-w-md flex-col gap-[18px]">
           <div className="flex flex-col gap-2">
-            <label htmlFor="status" className="text-[12px] font-medium uppercase">
+            <label htmlFor="status" className="text-[12px] font-bold uppercase tracking-[0.03em]">
               Trạng thái mới
             </label>
             <select
               id="status"
               value={selected}
               onChange={(e) => setStatus(e.target.value as ShipmentStatus)}
-              className="rounded-none border-0 border-b border-warm-cream bg-transparent px-0.5 py-1 text-[16px] outline-none focus:border-ember-accent"
+              className="rounded-[16px] border border-ink bg-paper px-[16px] py-[12px] text-[16px]"
             >
               {next.map((s) => (
-                <option key={s} value={s} className="bg-bark-brown">
+                <option key={s} value={s}>
                   {SHIPMENT_STATUS_LABEL[s]}
                 </option>
               ))}
             </select>
           </div>
           <div className="flex flex-col gap-2">
-            <label htmlFor="note" className="text-[12px] font-medium uppercase">
+            <label htmlFor="note" className="text-[12px] font-bold uppercase tracking-[0.03em]">
               Ghi chú
             </label>
             <textarea
@@ -90,7 +90,7 @@ export function ShipmentActions({ shipment }: { shipment: AdminShipmentDetail })
               maxLength={SHIPMENT_NOTE_MAX}
               rows={3}
               onChange={(e) => setNote(e.target.value)}
-              className="rounded-none border-0 border-b border-warm-cream bg-transparent px-0.5 py-1 text-[16px] outline-none focus:border-ember-accent"
+              className="rounded-[16px] border border-ink bg-paper px-[16px] py-[12px] text-[16px]"
             />
             <p className="text-[12px]">Khách hàng sẽ thấy ghi chú này.</p>
           </div>

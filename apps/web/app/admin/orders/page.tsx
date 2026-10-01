@@ -8,7 +8,7 @@ import { formatDateTime, formatVnd } from '@/lib/format';
 import { ORDER_STATUS_LABEL } from '@/lib/orders/labels';
 import { SHIPMENT_STATUS_LABEL } from '@/lib/shipments/labels';
 
-const TH = 'py-[10px] pr-[18px] text-left text-[12px] font-medium uppercase';
+const TH = 'py-[10px] pr-[18px] text-left text-[12px] font-bold uppercase tracking-[0.03em]';
 const TD = 'py-[10px] pr-[18px] text-[14px]';
 
 export default async function AdminOrdersPage({
@@ -35,11 +35,11 @@ export default async function AdminOrdersPage({
         ))}
       </nav>
       {result.items.length === 0 ? (
-        <p className="rounded-[12px] border border-dashed border-cork-border p-[24px] text-[16px]">Chưa có đơn hàng nào.</p>
+        <p className="rounded-[20px] border border-ink p-[24px] text-[16px]">Chưa có đơn hàng nào.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
-            <thead className="border-b border-dashed border-cork-border">
+            <thead className="border-b border-ink">
               <tr>
                 <th className={TH}>Mã</th>
                 <th className={TH}>Ngày đặt</th>
@@ -52,7 +52,7 @@ export default async function AdminOrdersPage({
             </thead>
             <tbody>
               {result.items.map((order) => (
-                <tr key={order.id} className="border-b border-dashed border-cork-border">
+                <tr key={order.id} className="border-b border-ink">
                   <td className={TD}>{shortCode(order.id)}</td>
                   <td className={TD}>
                     <Link href={`/admin/orders/${order.id}`} className="underline">
@@ -60,10 +60,10 @@ export default async function AdminOrdersPage({
                     </Link>
                   </td>
                   <td className={TD}>{order.customerEmail}</td>
-                  <td className={`${TD} ${order.status === 'CANCELLED' ? 'text-ember-accent' : ''}`}>
+                  <td className={`${TD} ${order.status === 'CANCELLED' ? 'text-ember' : ''}`}>
                     {ORDER_STATUS_LABEL[order.status]}
                   </td>
-                  <td className={`${TD} ${order.latestShipmentStatus === 'FAILED' ? 'text-ember-accent' : ''}`}>
+                  <td className={`${TD} ${order.latestShipmentStatus === 'FAILED' ? 'text-ember' : ''}`}>
                     {order.latestShipmentStatus ? SHIPMENT_STATUS_LABEL[order.latestShipmentStatus] : '—'}
                   </td>
                   <td className={TD}>{order.itemCount}</td>
@@ -75,7 +75,7 @@ export default async function AdminOrdersPage({
         </div>
       )}
       {totalPages > 1 && (
-        <nav aria-label="Phân trang" className="flex items-center gap-[18px] text-[12px] font-medium uppercase">
+        <nav aria-label="Phân trang" className="flex items-center gap-[18px] text-[12px] font-bold uppercase tracking-[0.03em]">
           {page > 1 && <Link href={href({ page: page - 1 })}>Trước</Link>}
           <span>
             Trang {page}/{totalPages}

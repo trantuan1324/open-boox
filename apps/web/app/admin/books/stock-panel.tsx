@@ -37,8 +37,8 @@ export function StockPanel({ bookId, quantity }: { bookId: string; quantity: num
   }
 
   return (
-    <section className="flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]">
-      <h2 className="text-[18px] font-medium uppercase">Tồn kho bán: {quantity}</h2>
+    <section className="flex flex-col gap-[18px] rounded-[20px] border border-ink p-[24px]">
+      <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Tồn kho bán: {quantity}</h2>
       <form onSubmit={submit} className="flex flex-wrap items-end gap-[12px]">
         <TextField
           label="Nhập (+) hoặc xuất (−)"
@@ -53,7 +53,7 @@ export function StockPanel({ bookId, quantity }: { bookId: string; quantity: num
         </Button>
       </form>
       {error && (
-        <p role="alert" className="text-[14px] text-ember-accent">
+        <p role="alert" className="text-[14px] text-ember">
           {error}
         </p>
       )}

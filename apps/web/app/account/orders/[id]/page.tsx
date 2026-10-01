@@ -10,7 +10,7 @@ import { formatDateTime, formatVnd } from '@/lib/format';
 import { ORDER_STATUS_LABEL } from '@/lib/orders/labels';
 import { CancelOrderButton } from './cancel-order-button';
 
-const box = 'flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]';
+const box = 'flex flex-col gap-[18px] rounded-[20px] border border-ink p-[24px]';
 
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,15 +18,15 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   if (!order) notFound();
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-[31px] px-[24px] py-[41px]">
+    <div className="sheet mx-auto flex w-full max-w-3xl flex-col gap-[31px] px-[20px] py-[48px] md:px-[48px] md:py-[72px]">
       <div className="flex flex-col gap-[12px]">
-        <Link href="/account/orders" className="self-start text-[12px] font-medium uppercase underline">
+        <Link href="/account/orders" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
           Đơn hàng
         </Link>
         <PageTitle>Chi tiết đơn</PageTitle>
         <p className="text-[16px]">
           {formatDateTime(order.createdAt)} ·{' '}
-          <span className={`font-medium uppercase ${order.status === 'CANCELLED' ? 'text-ember-accent' : ''}`}>
+          <span className={`font-bold uppercase ${order.status === 'CANCELLED' ? 'text-ember' : ''}`}>
             {ORDER_STATUS_LABEL[order.status]}
           </span>
         </p>
@@ -37,7 +37,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           {order.pendingPaymentId && (
             <Link
               href={`/checkout/mock/${order.pendingPaymentId}`}
-              className="rounded-[36px] bg-bark-brown px-6 py-3.5 text-[14px] font-medium uppercase leading-none"
+              className="rounded-full bg-ink px-6 py-3.5 text-[13px] font-bold uppercase tracking-[0.03em] leading-none text-paper"
             >
               Thanh toán
             </Link>
@@ -47,7 +47,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       )}
 
       <section className={box}>
-        <h2 className="text-[18px] font-medium uppercase">Sách</h2>
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Sách</h2>
         <ul className="flex flex-col gap-[12px]">
           {order.items.map((item) => (
             <li key={item.bookId} className="flex flex-wrap justify-between gap-[12px] text-[16px]">
@@ -65,20 +65,20 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <dd>{formatVnd(order.subtotal)}</dd>
           <dt>Phí giao hàng</dt>
           <dd>{formatVnd(order.shippingFee)}</dd>
-          <dt className="font-medium uppercase">Tổng</dt>
+          <dt className="font-bold uppercase">Tổng</dt>
           <dd className="font-medium">{formatVnd(order.total)}</dd>
         </dl>
       </section>
 
       {order.shipments.length > 0 && (
         <section className={box}>
-          <h2 className="text-[18px] font-medium uppercase">Giao hàng</h2>
+          <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Giao hàng</h2>
           <DeliveryAttempts shipments={order.shipments} />
         </section>
       )}
 
       <section className={box}>
-        <h2 className="text-[18px] font-medium uppercase">Giao tới</h2>
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Giao tới</h2>
         <AddressLines address={order.address} />
       </section>
     </div>

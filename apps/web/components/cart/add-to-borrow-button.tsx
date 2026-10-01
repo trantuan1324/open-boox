@@ -17,7 +17,7 @@ export function AddToBorrowButton({ book }: { book: BorrowLine }) {
         {LABEL[state]}
       </Button>
       {state !== 'can-add' && (
-        <Link href="/cart" className="text-[12px] font-medium uppercase underline">
+        <Link href="/cart" className="text-[12px] font-bold uppercase tracking-[0.03em] underline">
           Xem giỏ
         </Link>
       )}

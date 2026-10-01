@@ -7,7 +7,7 @@ import { apiServer } from '@/lib/api/server';
 import { formatDateTime } from '@/lib/format';
 import { LOAN_STATUS_LABEL } from '@/lib/loans/labels';
 
-const TH = 'py-[10px] pr-[18px] text-left text-[12px] font-medium uppercase';
+const TH = 'py-[10px] pr-[18px] text-left text-[12px] font-bold uppercase tracking-[0.03em]';
 const TD = 'py-[10px] pr-[18px] text-[14px]';
 
 export default async function AdminLoansPage({
@@ -34,11 +34,11 @@ export default async function AdminLoansPage({
         ))}
       </nav>
       {result.items.length === 0 ? (
-        <p className="rounded-[12px] border border-dashed border-cork-border p-[24px] text-[16px]">Chưa có yêu cầu mượn nào.</p>
+        <p className="rounded-[20px] border border-ink p-[24px] text-[16px]">Chưa có yêu cầu mượn nào.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
-            <thead className="border-b border-dashed border-cork-border">
+            <thead className="border-b border-ink">
               <tr>
                 <th className={TH}>Mã</th>
                 <th className={TH}>Ngày yêu cầu</th>
@@ -52,13 +52,13 @@ export default async function AdminLoansPage({
             </thead>
             <tbody>
               {result.items.map((loan) => (
-                <tr key={loan.id} className="border-b border-dashed border-cork-border">
+                <tr key={loan.id} className="border-b border-ink">
                   <td className={TD}>{shortCode(loan.id)}</td>
                   <td className={TD}>{formatDateTime(loan.requestedAt)}</td>
                   <td className={TD}>{loan.customerEmail}</td>
                   <td className={TD}>{loan.bookTitle}</td>
                   <td className={TD}>{loan.barcode}</td>
-                  <td className={`${TD} ${loan.status === 'CANCELLED' ? 'text-ember-accent' : ''}`}>
+                  <td className={`${TD} ${loan.status === 'CANCELLED' ? 'text-ember' : ''}`}>
                     {LOAN_STATUS_LABEL[loan.status]}
                   </td>
                   <td className={TD}>
@@ -82,7 +82,7 @@ export default async function AdminLoansPage({
         </div>
       )}
       {totalPages > 1 && (
-        <nav aria-label="Phân trang" className="flex items-center gap-[18px] text-[12px] font-medium uppercase">
+        <nav aria-label="Phân trang" className="flex items-center gap-[18px] text-[12px] font-bold uppercase tracking-[0.03em]">
           {page > 1 && <Link href={href({ page: page - 1 })}>Trước</Link>}
           <span>
             Trang {page}/{totalPages}

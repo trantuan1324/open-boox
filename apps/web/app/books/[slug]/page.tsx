@@ -15,16 +15,19 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   if (!book) notFound();
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-[41px] px-[24px] py-[41px] md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+    <div className="sheet mx-auto grid w-full max-w-5xl gap-[41px] px-[20px] py-[48px] md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:px-[48px] md:py-[72px]">
       <BookCover src={book.coverUrl} title={book.title} sizes="(min-width: 768px) 40vw, 100vw" />
       <div className="flex flex-col gap-[24px]">
-        <Link href={`/books?category=${book.categorySlug}`} className="self-start text-[12px] font-medium uppercase underline">
+        <Link
+          href={`/books?category=${book.categorySlug}`}
+          className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline"
+        >
           {book.categoryName}
         </Link>
         <PageTitle>{book.title}</PageTitle>
         <p className="text-[18px]">{book.author}</p>
-        <dl className="grid grid-cols-[max-content_1fr] gap-x-[31px] gap-y-[12px] rounded-[12px] border border-dashed border-cork-border p-[24px] text-[16px]">
-          <dt className="text-[12px] font-medium uppercase">Mua</dt>
+        <dl className="grid grid-cols-[max-content_1fr] gap-x-[31px] gap-y-[12px] rounded-[20px] border border-ink p-[24px] text-[16px]">
+          <dt className="text-[12px] font-bold uppercase tracking-[0.03em]">Mua</dt>
           <dd>
             {book.salePrice === null ? (
               'Không bán'
@@ -34,14 +37,14 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
                 {book.saleStock > 0 ? (
                   `Còn ${book.saleStock} cuốn để bán`
                 ) : (
-                  <span className="text-ember-accent">Hết hàng</span>
+                  <span className="text-ember">Hết hàng</span>
                 )}
               </>
             )}
           </dd>
-          <dt className="text-[12px] font-medium uppercase">Mượn</dt>
+          <dt className="text-[12px] font-bold uppercase tracking-[0.03em]">Mượn</dt>
           <dd>{book.availableCopies > 0 ? `Còn ${book.availableCopies} bản cho mượn` : 'Hiện không còn bản cho mượn'}</dd>
-          <dt className="text-[12px] font-medium uppercase">ISBN</dt>
+          <dt className="text-[12px] font-bold uppercase tracking-[0.03em]">ISBN</dt>
           <dd>{book.isbn}</dd>
         </dl>
         <div className="flex flex-col gap-[12px]">

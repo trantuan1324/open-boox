@@ -9,7 +9,7 @@ export function BookCover({ src, title, sizes }: { src: string | null; title: st
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const failed = failedSrc === src;
   return (
-    <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[12px] bg-bark-brown">
+    <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[16px] border border-ink bg-sunburst">
       {src && !failed ? (
         <Image
           src={src}
@@ -22,7 +22,7 @@ export function BookCover({ src, title, sizes }: { src: string | null; title: st
         />
       ) : (
         <div className="flex h-full items-end p-[12px]">
-          <span className="text-[14px] font-medium uppercase leading-[1.1]">{title}</span>
+          <span className="display text-[18px] leading-[0.9]">{title}</span>
         </div>
       )}
     </div>

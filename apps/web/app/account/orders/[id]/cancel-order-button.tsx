@@ -32,7 +32,7 @@ export function CancelOrderButton({ orderId }: { orderId: string }) {
         Hủy đơn
       </Button>
       {error && (
-        <p role="alert" className="text-[14px] text-ember-accent">
+        <p role="alert" className="text-[14px] text-ember">
           {error}
         </p>
       )}

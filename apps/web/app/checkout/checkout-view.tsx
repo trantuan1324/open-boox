@@ -12,7 +12,7 @@ import { formatVnd } from '@/lib/format';
 import { describeQuoteError, type QuoteProblem } from '@/lib/orders/quote-errors';
 import { quoteMatches } from '@/lib/orders/quote-match';
 
-const box = 'flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]';
+const box = 'flex flex-col gap-[18px] rounded-[20px] border border-ink p-[24px]';
 
 export function CheckoutView({ addresses }: { addresses: AddressDto[] }) {
   const router = useRouter();
@@ -61,7 +61,7 @@ export function CheckoutView({ addresses }: { addresses: AddressDto[] }) {
     return (
       <div className={box}>
         <p className="text-[16px]">Giỏ hàng đang trống.</p>
-        <Link href="/books" className="self-start text-[12px] font-medium uppercase underline">
+        <Link href="/books" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
           Xem sách
         </Link>
       </div>
@@ -71,12 +71,12 @@ export function CheckoutView({ addresses }: { addresses: AddressDto[] }) {
   return (
     <div className="flex flex-col gap-[31px]">
       <section className={box}>
-        <h2 className="text-[18px] font-medium uppercase">Giao tới</h2>
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Giao tới</h2>
         <AddressPicker addresses={addresses} value={addressId} onChange={setAddressId} />
       </section>
 
       <section className={box}>
-        <h2 className="text-[18px] font-medium uppercase">Sách</h2>
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Sách</h2>
         <ul className="flex flex-col gap-[12px]">
           {lines.map((line, i) => (
             <li key={line.bookId} className="flex flex-col gap-[4px]">
@@ -86,11 +86,11 @@ export function CheckoutView({ addresses }: { addresses: AddressDto[] }) {
                 </span>
                 {quote && <span>{formatVnd(quote.items[i]!.lineTotal)}</span>}
               </div>
-              {problem?.lines[i] && <p className="text-[14px] text-ember-accent">{problem.lines[i]}</p>}
+              {problem?.lines[i] && <p className="text-[14px] text-ember">{problem.lines[i]}</p>}
             </li>
           ))}
         </ul>
-        <Link href="/cart" className="self-start text-[12px] font-medium uppercase underline">
+        <Link href="/cart" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
           Sửa giỏ hàng
         </Link>
       </section>
@@ -102,14 +102,14 @@ export function CheckoutView({ addresses }: { addresses: AddressDto[] }) {
             <dd>{formatVnd(quote.subtotal)}</dd>
             <dt>Phí giao hàng</dt>
             <dd>{formatVnd(quote.shippingFee)}</dd>
-            <dt className="font-medium uppercase">Tổng</dt>
+            <dt className="font-bold uppercase">Tổng</dt>
             <dd className="font-medium">{formatVnd(quote.total)}</dd>
           </dl>
         ) : (
           !problem && <p className="text-[16px]">{addressId ? 'Đang tính tiền…' : 'Chọn hoặc thêm địa chỉ giao hàng.'}</p>
         )}
         {problem && (
-          <p role="alert" className="text-[14px] text-ember-accent">
+          <p role="alert" className="text-[14px] text-ember">
             {problem.message}
           </p>
         )}

@@ -15,12 +15,12 @@ export default async function OrdersPage({
   const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-[31px] px-[24px] py-[41px]">
+    <div className="sheet mx-auto flex w-full max-w-3xl flex-col gap-[31px] px-[20px] py-[48px] md:px-[48px] md:py-[72px]">
       <PageTitle>Đơn hàng</PageTitle>
       {result.items.length === 0 ? (
-        <div className="flex flex-col gap-[12px] rounded-[12px] border border-dashed border-cork-border p-[24px]">
+        <div className="flex flex-col gap-[12px] rounded-[20px] border border-ink p-[24px]">
           <p className="text-[16px]">Bạn chưa có đơn hàng nào.</p>
-          <Link href="/books" className="self-start text-[12px] font-medium uppercase underline">
+          <Link href="/books" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
             Xem sách
           </Link>
         </div>
@@ -30,14 +30,14 @@ export default async function OrdersPage({
             <li key={order.id}>
               <Link
                 href={`/account/orders/${order.id}`}
-                className="flex flex-wrap items-center justify-between gap-[12px] rounded-[12px] border border-dashed border-cork-border p-[18px] text-[16px]"
+                className="flex flex-wrap items-center justify-between gap-[12px] rounded-[20px] border border-ink p-[18px] text-[16px]"
               >
                 <span>
                   {formatDateTime(order.createdAt)} · {order.itemCount} cuốn
                 </span>
                 <span>{formatVnd(order.total)}</span>
                 <span
-                  className={`text-[12px] font-medium uppercase ${order.status === 'CANCELLED' ? 'text-ember-accent' : ''}`}
+                  className={`text-[12px] font-bold uppercase tracking-[0.03em] ${order.status === 'CANCELLED' ? 'text-ember' : ''}`}
                 >
                   {ORDER_STATUS_LABEL[order.status]}
                 </span>
@@ -47,7 +47,7 @@ export default async function OrdersPage({
         </ul>
       )}
       {totalPages > 1 && (
-        <nav aria-label="Phân trang" className="flex items-center gap-[18px] text-[12px] font-medium uppercase">
+        <nav aria-label="Phân trang" className="flex items-center gap-[18px] text-[12px] font-bold uppercase tracking-[0.03em]">
           {page > 1 && <Link href={`/account/orders?page=${page - 1}`}>Trang trước</Link>}
           <span>
             Trang {page}/{totalPages}

@@ -52,7 +52,7 @@ export function RegisterForm({ next }: { next: string }) {
         error={errors.password?.message}
       />
       {formError && (
-        <p role="alert" className="text-[14px] text-ember-accent">
+        <p role="alert" className="text-[14px] text-ember">
           {formError}
         </p>
       )}
@@ -61,7 +61,7 @@ export function RegisterForm({ next }: { next: string }) {
       </Button>
       <p className="text-[14px]">
         Đã có tài khoản?{' '}
-        <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-medium uppercase underline">
+        <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-bold uppercase tracking-[0.03em] underline">
           Đăng nhập
         </Link>
       </p>

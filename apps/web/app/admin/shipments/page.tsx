@@ -14,7 +14,7 @@ import { apiServer } from '@/lib/api/server';
 import { formatDateTime } from '@/lib/format';
 import { SHIPMENT_STATUS_LABEL, SHIPMENT_TYPE_LABEL } from '@/lib/shipments/labels';
 
-const TH = 'py-[10px] pr-[18px] text-left text-[12px] font-medium uppercase';
+const TH = 'py-[10px] pr-[18px] text-left text-[12px] font-bold uppercase tracking-[0.03em]';
 const TD = 'py-[10px] pr-[18px] text-[14px]';
 
 export default async function AdminShipmentsPage({
@@ -54,11 +54,11 @@ export default async function AdminShipmentsPage({
         </nav>
       </div>
       {result.items.length === 0 ? (
-        <p className="rounded-[12px] border border-dashed border-cork-border p-[24px] text-[16px]">Chưa có lần giao nào.</p>
+        <p className="rounded-[20px] border border-ink p-[24px] text-[16px]">Chưa có lần giao nào.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
-            <thead className="border-b border-dashed border-cork-border">
+            <thead className="border-b border-ink">
               <tr>
                 <th className={TH}>Mã</th>
                 <th className={TH}>Ngày tạo</th>
@@ -70,7 +70,7 @@ export default async function AdminShipmentsPage({
             </thead>
             <tbody>
               {result.items.map((s) => (
-                <tr key={s.id} className="border-b border-dashed border-cork-border">
+                <tr key={s.id} className="border-b border-ink">
                   <td className={TD}>{shortCode(s.id)}</td>
                   <td className={TD}>
                     <Link href={`/admin/shipments/${s.id}`} className="underline">
@@ -87,7 +87,7 @@ export default async function AdminShipmentsPage({
                       '—'
                     )}
                   </td>
-                  <td className={`${TD} ${s.status === 'FAILED' ? 'text-ember-accent' : ''}`}>
+                  <td className={`${TD} ${s.status === 'FAILED' ? 'text-ember' : ''}`}>
                     {SHIPMENT_STATUS_LABEL[s.status]}
                   </td>
                   <td className={TD}>
@@ -106,7 +106,7 @@ export default async function AdminShipmentsPage({
         </div>
       )}
       {totalPages > 1 && (
-        <nav aria-label="Phân trang" className="flex items-center gap-[18px] text-[12px] font-medium uppercase">
+        <nav aria-label="Phân trang" className="flex items-center gap-[18px] text-[12px] font-bold uppercase tracking-[0.03em]">
           {page > 1 && <Link href={href({ page: page - 1 })}>Trước</Link>}
           <span>
             Trang {page}/{totalPages}

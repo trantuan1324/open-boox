@@ -9,9 +9,9 @@ export function DeliveryAttempts({ shipments, linkToAdmin = false }: { shipments
     <div className="flex flex-col gap-[24px]">
       {deliveryAttempts(shipments).map(({ number, shipment }) => (
         <div key={shipment.id} className="flex flex-col gap-[8px]">
-          <h3 className="text-[14px] font-medium uppercase">
+          <h3 className="text-[13px] font-bold uppercase tracking-[0.03em]">
             Lần giao {number} ·{' '}
-            <span className={shipment.status === 'FAILED' ? 'text-ember-accent' : ''}>
+            <span className={shipment.status === 'FAILED' ? 'text-ember' : ''}>
               {SHIPMENT_STATUS_LABEL[shipment.status]}
             </span>
             {linkToAdmin && (

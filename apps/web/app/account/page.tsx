@@ -7,9 +7,9 @@ import { LogoutButton } from './logout-button';
 export default async function AccountPage() {
   const user = await apiServer<PublicUser>('/auth/me');
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-10 px-4 py-16">
+    <div className="sheet mx-auto flex w-full max-w-3xl flex-col gap-10 px-[20px] py-[48px] md:px-[48px] md:py-[72px]">
       <PageTitle>Tài khoản</PageTitle>
-      <nav aria-label="Tài khoản" className="flex gap-[18px] text-[12px] font-medium uppercase">
+      <nav aria-label="Tài khoản" className="flex gap-[18px] text-[12px] font-bold uppercase tracking-[0.03em]">
         <Link href="/account/orders" className="underline">
           Đơn hàng
         </Link>
@@ -23,12 +23,12 @@ export default async function AccountPage() {
           Gói đăng ký
         </Link>
       </nav>
-      <dl className="grid grid-cols-[max-content_1fr] gap-x-8 gap-y-4 rounded-[12px] border border-dashed border-cork-border p-6 text-[16px]">
-        <dt className="text-[12px] font-medium uppercase">Họ tên</dt>
+      <dl className="grid grid-cols-[max-content_1fr] gap-x-8 gap-y-4 rounded-[20px] border border-ink p-6 text-[16px]">
+        <dt className="text-[12px] font-bold uppercase tracking-[0.03em]">Họ tên</dt>
         <dd>{user.fullName}</dd>
-        <dt className="text-[12px] font-medium uppercase">Email</dt>
+        <dt className="text-[12px] font-bold uppercase tracking-[0.03em]">Email</dt>
         <dd>{user.email}</dd>
-        <dt className="text-[12px] font-medium uppercase">Điện thoại</dt>
+        <dt className="text-[12px] font-bold uppercase tracking-[0.03em]">Điện thoại</dt>
         <dd>{user.phone}</dd>
       </dl>
       <LogoutButton />

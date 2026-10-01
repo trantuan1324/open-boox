@@ -9,8 +9,8 @@ import { useBorrowCart } from '@/lib/cart/use-borrow-cart';
 import { useCart } from '@/lib/cart/use-cart';
 import { formatVnd } from '@/lib/format';
 
-const row = 'flex flex-wrap items-center justify-between gap-[12px] rounded-[12px] border border-dashed border-cork-border p-[18px]';
-const next = 'self-start rounded-[36px] bg-bark-brown px-6 py-3.5 text-[14px] font-medium uppercase leading-none';
+const row = 'flex flex-wrap items-center justify-between gap-[12px] rounded-[20px] border border-ink p-[18px]';
+const next = 'self-start rounded-full bg-ink px-6 py-3.5 text-[13px] font-bold uppercase tracking-[0.03em] leading-none text-paper';
 
 export function CartView() {
   const buy = useCart();
@@ -19,9 +19,9 @@ export function CartView() {
 
   if (buy.lines.length === 0 && borrow.lines.length === 0) {
     return (
-      <div className="flex flex-col gap-[12px] rounded-[12px] border border-dashed border-cork-border p-[24px]">
+      <div className="flex flex-col gap-[12px] rounded-[20px] border border-ink p-[24px]">
         <p className="text-[16px]">Giỏ hàng đang trống.</p>
-        <Link href="/books" className="self-start text-[12px] font-medium uppercase underline">
+        <Link href="/books" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
           Xem sách
         </Link>
       </div>
@@ -32,12 +32,12 @@ export function CartView() {
     <div className="flex flex-col gap-[41px]">
       {buy.lines.length > 0 && (
         <section className="flex flex-col gap-[24px]">
-          <h2 className="text-[18px] font-medium uppercase">Mua</h2>
+          <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Mua</h2>
           <ul className="flex flex-col gap-[12px]">
             {buy.lines.map((line) => (
               <li key={line.bookId} className={row}>
                 <div className="flex flex-col gap-[4px]">
-                  <Link href={`/books/${line.slug}`} className="text-[16px] font-medium uppercase">
+                  <Link href={`/books/${line.slug}`} className="text-[16px] font-bold uppercase">
                     {line.title}
                   </Link>
                   <p className="text-[14px]">{formatVnd(line.salePrice)}</p>
@@ -75,11 +75,11 @@ export function CartView() {
       )}
       {borrow.lines.length > 0 && (
         <section className="flex flex-col gap-[24px]">
-          <h2 className="text-[18px] font-medium uppercase">Mượn</h2>
+          <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Mượn</h2>
           <ul className="flex flex-col gap-[12px]">
             {borrow.lines.map((line) => (
               <li key={line.bookId} className={row}>
-                <Link href={`/books/${line.slug}`} className="text-[16px] font-medium uppercase">
+                <Link href={`/books/${line.slug}`} className="text-[16px] font-bold uppercase">
                   {line.title}
                 </Link>
                 <Button variant="ghost" onClick={() => borrow.update((ls) => removeBorrowLine(ls, line.bookId))}>

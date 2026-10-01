@@ -12,7 +12,7 @@ export default async function MockPaymentPage({ params }: { params: Promise<{ pa
   if (!payment) notFound();
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-[31px] px-[24px] py-[41px]">
+    <div className="sheet mx-auto flex w-full max-w-xl flex-col gap-[31px] px-[20px] py-[48px] md:px-[48px] md:py-[72px]">
       <PageTitle>Thanh toán thử</PageTitle>
       <p className="text-[16px]">Cổng thanh toán giả lập — chọn kết quả để tiếp tục.</p>
       <p className="text-[29px] font-medium">{formatVnd(payment.amount)}</p>

@@ -37,7 +37,7 @@ export function MockPaymentPanel({ payment }: { payment: PaymentDto }) {
     return (
       <div className="flex flex-col gap-[12px]">
         <p className="text-[16px]">Trạng thái thanh toán: {PAYMENT_STATUS_LABEL[payment.status]}</p>
-        <Link href={done} className="self-start text-[12px] font-medium uppercase underline">
+        <Link href={done} className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
           {payment.subscriptionId ? 'Xem gói' : 'Xem đơn hàng'}
         </Link>
       </div>
@@ -55,7 +55,7 @@ export function MockPaymentPanel({ payment }: { payment: PaymentDto }) {
         </Button>
       </div>
       {error && (
-        <p role="alert" className="text-[14px] text-ember-accent">
+        <p role="alert" className="text-[14px] text-ember">
           {error}
         </p>
       )}

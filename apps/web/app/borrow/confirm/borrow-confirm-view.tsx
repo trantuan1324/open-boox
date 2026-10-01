@@ -12,7 +12,7 @@ import { removeBorrowLine } from '@/lib/cart/borrow-cart';
 import { useBorrowCart } from '@/lib/cart/use-borrow-cart';
 import { messageFor } from '@/lib/errors/messages';
 
-const box = 'flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]';
+const box = 'flex flex-col gap-[18px] rounded-[20px] border border-ink p-[24px]';
 
 export function BorrowConfirmView({ addresses }: { addresses: AddressDto[] }) {
   const router = useRouter();
@@ -46,7 +46,7 @@ export function BorrowConfirmView({ addresses }: { addresses: AddressDto[] }) {
     return (
       <div className={box}>
         <p className="text-[16px]">Giỏ mượn đang trống.</p>
-        <Link href="/books?availability=loan" className="self-start text-[12px] font-medium uppercase underline">
+        <Link href="/books?availability=loan" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
           Xem sách cho mượn
         </Link>
       </div>
@@ -56,11 +56,11 @@ export function BorrowConfirmView({ addresses }: { addresses: AddressDto[] }) {
   return (
     <div className="flex flex-col gap-[31px]">
       <section className={box}>
-        <h2 className="text-[18px] font-medium uppercase">Giao tới</h2>
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Giao tới</h2>
         <AddressPicker addresses={addresses} value={addressId} onChange={setAddressId} />
       </section>
       <section className={box}>
-        <h2 className="text-[18px] font-medium uppercase">Sách mượn</h2>
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Sách mượn</h2>
         <ul className="flex flex-col gap-[12px]">
           {lines.map((line) => (
             <li key={line.bookId} className="flex flex-wrap items-center justify-between gap-[12px] text-[16px]">
@@ -75,10 +75,10 @@ export function BorrowConfirmView({ addresses }: { addresses: AddressDto[] }) {
       </section>
       <section className={box}>
         {error && (
-          <p role="alert" className="text-[14px] text-ember-accent">
+          <p role="alert" className="text-[14px] text-ember">
             {error.message}{' '}
             {error.code === 'SUBSCRIPTION_INACTIVE' && (
-              <Link href="/plans" className="font-medium uppercase underline">
+              <Link href="/plans" className="font-bold uppercase tracking-[0.03em] underline">
                 Xem các gói
               </Link>
             )}

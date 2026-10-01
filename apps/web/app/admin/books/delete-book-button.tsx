@@ -32,7 +32,7 @@ export function DeleteBookButton({ bookId }: { bookId: string }) {
         Xóa sách
       </Button>
       {error && (
-        <p role="alert" className="text-[14px] text-ember-accent">
+        <p role="alert" className="text-[14px] text-ember">
           {error}
         </p>
       )}

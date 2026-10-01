@@ -14,7 +14,7 @@ import { SHIPMENT_STATUS_LABEL, SHIPMENT_TYPE_LABEL } from '@/lib/shipments/labe
 import { CancelLoansButton } from './cancel-loans-button';
 import { ShipmentActions } from './shipment-actions';
 
-const box = 'flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]';
+const box = 'flex flex-col gap-[18px] rounded-[20px] border border-ink p-[24px]';
 
 export default async function AdminShipmentPage({
   params,
@@ -44,7 +44,7 @@ export default async function AdminShipmentPage({
   return (
     <div className="flex flex-col gap-[31px]">
       <div className="flex flex-col gap-[12px]">
-        <Link href="/admin/shipments" className="self-start text-[12px] font-medium uppercase underline">
+        <Link href="/admin/shipments" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
           Giao hàng
         </Link>
         <PageTitle>
@@ -52,12 +52,12 @@ export default async function AdminShipmentPage({
         </PageTitle>
         <p className="text-[16px]">
           {formatDateTime(shipment.createdAt)} ·{' '}
-          <span className={`font-medium uppercase ${shipment.status === 'FAILED' ? 'text-ember-accent' : ''}`}>
+          <span className={`font-bold uppercase ${shipment.status === 'FAILED' ? 'text-ember' : ''}`}>
             {SHIPMENT_STATUS_LABEL[shipment.status]}
           </span>{' '}
           · Phí {formatVnd(shipment.fee)}
         </p>
-        <div className="flex flex-wrap gap-[18px] text-[12px] font-medium uppercase">
+        <div className="flex flex-wrap gap-[18px] text-[12px] font-bold uppercase tracking-[0.03em]">
           {shipment.orderId && (
             <Link href={`/admin/orders/${shipment.orderId}`} className="underline">
               Xem đơn
@@ -77,20 +77,20 @@ export default async function AdminShipmentPage({
       </div>
 
       {error && (
-        <p role="alert" className="rounded-[12px] border border-dashed border-cork-border p-[18px] text-[16px] text-ember-accent">
+        <p role="alert" className="rounded-[20px] border border-ink p-[18px] text-[16px] text-ember">
           {messageFor(error)}
         </p>
       )}
 
       <section className={box}>
-        <h2 className="text-[18px] font-medium uppercase">Cập nhật</h2>
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Cập nhật</h2>
         {finished ? <p className="text-[16px]">Lần giao này đã kết thúc.</p> : <ShipmentActions shipment={shipment} />}
         {canCancelLoans && <CancelLoansButton shipmentId={shipment.id} />}
       </section>
 
       {loans && (
         <section className={box}>
-          <h2 className="text-[18px] font-medium uppercase">Sách mượn</h2>
+          <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Sách mượn</h2>
           {loans.items.length === 0 ? (
             <p className="text-[16px]">
               {shipment.retriedById ? 'Các yêu cầu mượn đã chuyển sang lần giao mới.' : 'Không có yêu cầu mượn nào.'}
@@ -102,7 +102,7 @@ export default async function AdminShipmentPage({
                   <span>
                     {shortCode(loan.id)} · {loan.bookTitle} · {loan.barcode} · {loan.customerEmail}
                   </span>
-                  <span className={`font-medium uppercase ${loan.status === 'CANCELLED' ? 'text-ember-accent' : ''}`}>
+                  <span className={`font-bold uppercase ${loan.status === 'CANCELLED' ? 'text-ember' : ''}`}>
                     {LOAN_STATUS_LABEL[loan.status]}
                   </span>
                 </li>
@@ -113,12 +113,12 @@ export default async function AdminShipmentPage({
       )}
 
       <section className={box}>
-        <h2 className="text-[18px] font-medium uppercase">Lịch sử</h2>
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Lịch sử</h2>
         <ShipmentEvents events={shipment.events} />
       </section>
 
       <section className={box}>
-        <h2 className="text-[18px] font-medium uppercase">Giao tới</h2>
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Giao tới</h2>
         <AddressLines address={shipment.address} />
       </section>
     </div>

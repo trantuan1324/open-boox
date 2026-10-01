@@ -9,5 +9,12 @@ export function CartLink() {
   const { lines } = useCart();
   const { lines: borrowLines } = useBorrowCart();
   const count = cartCount(lines) + borrowLines.length;
-  return <Link href="/cart">Giỏ hàng{count > 0 ? ` (${count})` : ''}</Link>;
+  return (
+    <Link
+      href="/cart"
+      className="rounded-full border border-ink bg-paper px-[18px] py-[13px] text-[13px] font-bold uppercase leading-none tracking-[0.03em] text-ink transition hover:scale-[1.03]"
+    >
+      Giỏ ({count})
+    </Link>
+  );
 }

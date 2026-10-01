@@ -51,16 +51,16 @@ export function CopiesPanel({ bookId, copies }: { bookId: string; copies: BookCo
   }
 
   return (
-    <section className="flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]">
-      <h2 className="text-[18px] font-medium uppercase">Bản cho mượn ({copies.length})</h2>
+    <section className="flex flex-col gap-[18px] rounded-[20px] border border-ink p-[24px]">
+      <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Bản cho mượn ({copies.length})</h2>
       {copies.length === 0 ? (
         <p className="text-[16px]">Chưa có bản nào.</p>
       ) : (
         <ul className="flex flex-col">
           {copies.map((copy) => (
-            <li key={copy.id} className="flex items-center justify-between gap-[12px] border-b border-dashed border-cork-border py-[10px] text-[14px]">
+            <li key={copy.id} className="flex items-center justify-between gap-[12px] border-b border-ink py-[10px] text-[14px]">
               <span>{copy.barcode}</span>
-              <span className={copy.status === 'LOST' ? 'text-ember-accent' : ''}>{STATUS_LABEL[copy.status]}</span>
+              <span className={copy.status === 'LOST' ? 'text-ember' : ''}>{STATUS_LABEL[copy.status]}</span>
               {copy.status === 'AVAILABLE' ? (
                 <Button type="button" variant="ghost" disabled={pending} onClick={() => markLost(copy)}>
                   Đánh dấu mất
@@ -79,7 +79,7 @@ export function CopiesPanel({ bookId, copies }: { bookId: string; copies: BookCo
         </Button>
       </form>
       {error && (
-        <p role="alert" className="text-[14px] text-ember-accent">
+        <p role="alert" className="text-[14px] text-ember">
           {error}
         </p>
       )}

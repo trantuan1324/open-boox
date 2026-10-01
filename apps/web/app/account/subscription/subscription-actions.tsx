@@ -10,7 +10,7 @@ import { messageFor } from '@/lib/errors/messages';
 import { formatVnd } from '@/lib/format';
 import type { PlanOption } from '@/lib/subscriptions/plan-options';
 
-const box = 'flex flex-col gap-[18px] rounded-[12px] border border-dashed border-cork-border p-[24px]';
+const box = 'flex flex-col gap-[18px] rounded-[20px] border border-ink p-[24px]';
 
 export function SubscriptionActions({ subscription, options }: { subscription: SubscriptionDto; options: PlanOption[] }) {
   const router = useRouter();
@@ -34,7 +34,7 @@ export function SubscriptionActions({ subscription, options }: { subscription: S
   return (
     <>
       <section className={box}>
-        <h2 className="text-[18px] font-medium uppercase">Đổi gói</h2>
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Đổi gói</h2>
         {options.length === 0 ? (
           <p className="text-[16px]">Không có gói nào khác.</p>
         ) : (
@@ -63,7 +63,7 @@ export function SubscriptionActions({ subscription, options }: { subscription: S
         )}
       </section>
       <section className={box}>
-        <h2 className="text-[18px] font-medium uppercase">Gia hạn tự động</h2>
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Gia hạn tự động</h2>
         {subscription.cancelAtPeriodEnd ? (
           <Button disabled={pending} onClick={() => run('resume')} className="self-start">
             Tiếp tục gói
@@ -80,7 +80,7 @@ export function SubscriptionActions({ subscription, options }: { subscription: S
         )}
       </section>
       {error && (
-        <p role="alert" className="text-[14px] text-ember-accent">
+        <p role="alert" className="text-[14px] text-ember">
           {error}
         </p>
       )}

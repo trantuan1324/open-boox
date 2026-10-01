@@ -33,10 +33,10 @@ export function SubscribeButton({ planCode }: { planCode: string }) {
         Đăng ký
       </Button>
       {error && (
-        <p role="alert" className="text-[14px] text-ember-accent">
+        <p role="alert" className="text-[14px] text-ember">
           {messageFor(error)}{' '}
           {error === 'SUBSCRIPTION_ALREADY_EXISTS' && (
-            <Link href="/account/subscription" className="font-medium uppercase underline">
+            <Link href="/account/subscription" className="font-bold uppercase tracking-[0.03em] underline">
               Xem gói của bạn
             </Link>
           )}
