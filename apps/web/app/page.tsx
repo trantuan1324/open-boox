@@ -3,6 +3,7 @@ import { loadLanding, pickFeaturedBook } from './_landing/data';
 import { Cursor } from './_landing/motion/cursor';
 import { LandingMotion } from './_landing/motion/landing-motion';
 import { Banner } from './_landing/sections/banner';
+import { CategoryCarousel } from './_landing/sections/category-carousel';
 import { CoverMarquee } from './_landing/sections/cover-marquee';
 import { Features } from './_landing/sections/features';
 import { Hero } from './_landing/sections/hero';
@@ -27,6 +28,7 @@ export default async function HomePage() {
       </div>
       <Features plans={data.plans} />
       <Statement book={pickFeaturedBook(data.books)} />
+      <CategoryCarousel categories={data.categories} />
       <WordMarquee />
       <Plans plans={data.plans} />
       <CoverMarquee books={data.books} />

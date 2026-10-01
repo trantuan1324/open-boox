@@ -111,3 +111,13 @@ test.describe('reduced motion scroll reveals', () => {
     }
   });
 });
+
+test('category dots select a slide', async ({ page }) => {
+  await page.goto('/');
+  const dots = page.getByRole('tablist', { name: 'Chọn thể loại' }).getByRole('tab');
+  await dots.nth(2).scrollIntoViewIfNeeded();
+  await dots.nth(2).click();
+  await expect(dots.nth(2)).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('button', { name: 'Thể loại trước' }).click();
+  await expect(dots.nth(1)).toHaveAttribute('aria-selected', 'true');
+});
