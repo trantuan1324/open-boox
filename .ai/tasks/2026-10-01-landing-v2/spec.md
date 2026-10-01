@@ -30,7 +30,7 @@
 - Font: **Barlow Condensed 800 + italic** (display) và **Be Vietnam Pro** (UI), đã load trong `layout.tsx`. Bỏ Anton và Inter Tight trong `page.tsx`.
 - Token màu trong `theme.css`, dùng như đang có: `ink #000`, `paper #fff`, `sky #dceeff`, `blue #4da2ff`, `indigo #5c4ade`, `sunburst #ffd731`, `ember #fb4903`, `lilac #e9ccff`, `mint #55db9c`. Không gradient, không box-shadow cho UI.
 - Radius: sheet 40px, box/tile 30px, card 20px, pill 999px. Viền 1px đen (2px cho nút tròn). Khoảng cách giữa các sheet 12px (8px khi ≤767).
-- Typography: [SM §3.2]. Display UPPERCASE, line-height 0.8, `margin-bottom: -0.1em`; cỡ 160 / 128 (≤991) / 99px (≤767). Heading 64px/1.0, tracking −0.01em. Body 16/1.25. Label nút 16px, 500, UPPER, tracking 0.03em.
+- Typography: [SM §3.2]. Display UPPERCASE, line-height **1.2** (đính chính khi triển khai: 0.8 của [SM] làm dấu tiếng Việt của hai dòng chồng lên nhau — dấu hỏi của "TRẢ" đè lên "KHÔNG", dấu nặng của "ĐỌC" rơi xuống dòng dưới; trường hợp xấu nhất là dấu nặng nằm ngay trên dấu ngã, như "KỆ / CŨNG", cần khoảng 1.17em nên chọn 1.2), không dùng margin/padding âm; cỡ 160 / 128 (≤991) / 99px (≤767). Heading 64px/1.0, tracking −0.01em. Body 16/1.25. Label nút 16px, 500, UPPER, tracking 0.03em.
 - Breakpoint CSS: 479 / 767 / 991. JS: 768 cho slider/tabs, 992 cho nav desktop.
 - Dependency mới: `gsap`, `@gsap/react`. `lenis` đã có.
 - Landing phải render được khi API lỗi, dùng fallback như hiện tại.

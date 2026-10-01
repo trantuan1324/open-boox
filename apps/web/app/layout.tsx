@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Barlow_Condensed, Be_Vietnam_Pro } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { HeaderGate } from './header-gate';
+import { CurtainOverlay } from '@/components/curtain/curtain-overlay';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import './globals.css';
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <HeaderGate>
           <SiteFooter />
         </HeaderGate>
+        <CurtainOverlay />
       </body>
     </html>
   );

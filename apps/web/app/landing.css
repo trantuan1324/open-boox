@@ -1,643 +1,893 @@
-/* Open Boox landing — slush.app-inspired style, content per ui_design/Wire*.dc.html.
-   All rules are scoped under .obx-home so the rest of the app keeps its theme. */
+/* Open Boox landing v2 — slush design & motion language.
+   Spec: .ai/tasks/2026-10-01-landing-v2/spec.md. Every rule is scoped to .obx-*; sections append blocks below. */
+
+body:has(.obx-home) {
+  overflow-x: clip;
+}
 
 .obx-home {
-  --obx-blue: #4da2ff;
-  --obx-blue-100: #dceeff;
-  --obx-violet-100: #f8f0ff;
-  --obx-violet-700: #e9ccff;
-  --obx-green: #55db9c;
-  --obx-green-100: #99e9c4;
-  --obx-yellow: #ffd731;
-  --obx-yellow-100: #ffefad;
-  --obx-orange: #fb4903;
-  --obx-purple: #5c4ade;
+  --obx-gap: 12px;
+  --obx-pad: clamp(16px, 5vw, 80px);
+  --obx-ease-bounce: linear(
+    0 0%, 0.5737 7.6%, 0.8382 11.87%, 0.9463 14.19%, 1.0292 16.54%, 1.0886 18.97%, 1.1258 21.53%, 1.137 22.97%,
+    1.1424 24.48%, 1.1423 26.1%, 1.1366 27.86%, 1.1165 31.01%, 1.0507 38.62%, 1.0219 42.57%, 0.9995 46.99%,
+    0.9872 51.63%, 0.9842 58.77%, 1.0011 81.26%, 1 100%
+  );
 
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: #000;
-  color: #000;
-  font-family: var(--font-obx-body), ui-sans-serif, system-ui, sans-serif;
+  gap: var(--obx-gap);
+  font-family: var(--font-sans);
+  color: var(--color-ink);
 }
 
-.obx-home a {
+@media (max-width: 767px) {
+  .obx-home {
+    --obx-gap: 8px;
+  }
+}
+
+:where(.obx-home) a {
+  color: inherit;
   text-decoration: none;
 }
 
-/* ---------- Section stack on black frame ---------- */
-
-.obx-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 12px 12px 12px;
+.obx-home :focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 3px;
 }
 
-.obx-panel {
-  --panel-x: clamp(16px, 7.6vw, 110px);
+/* ---------- Sheets ---------- */
+
+.obx-sheet {
   position: relative;
-  border-radius: clamp(20px, 3vw, 30px);
-  overflow: hidden;
+  overflow: clip;
+  border-radius: 40px;
+  background: var(--color-paper);
+  padding: clamp(48px, 7vw, 112px) var(--obx-pad);
 }
 
-.obx-panel--blue {
-  background: var(--obx-blue-100);
+.obx-sheet--sky {
+  background: var(--color-sky);
 }
 
-.obx-panel--white {
-  background: #fff;
+/* Black band: no fill, so the body frame shows through. */
+.obx-sheet--frame {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  overflow: visible;
 }
 
-.obx-panel--dark {
-  background: #000;
-  border: 1.5px solid #333;
-  color: #fff;
+.obx-sheet--frame :focus-visible {
+  outline-color: var(--color-paper);
 }
 
-.obx-panel--green {
-  background: var(--obx-green);
+@media (max-width: 767px) {
+  .obx-sheet {
+    border-radius: 30px;
+  }
 }
 
-.obx-skew {
-  display: inline-block;
-  transform: skewX(-8deg);
+/* ---------- Type ---------- */
+
+.obx-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 1.2;
+  margin-bottom: 0;
+  padding-top: 0;
+  font-size: 160px;
+}
+
+.obx-display em,
+.obx-italic {
+  font-style: italic;
+}
+
+@media (max-width: 991px) {
+  .obx-display {
+    font-size: 128px;
+  }
+}
+
+@media (max-width: 767px) {
+  .obx-display {
+    font-size: 99px;
+  }
+}
+
+@media (max-width: 479px) {
+  .obx-display {
+    font-size: 20vw;
+  }
+}
+
+.obx-heading {
+  font-size: clamp(32px, 4.44vw, 64px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+.obx-body {
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+/* ---------- Buttons ---------- */
+
+.obx-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  border: 1px solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.5s var(--obx-ease-bounce);
+}
+
+.obx-btn:hover {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  transform: translateY(-2px);
+}
+
+.obx-btn--dark {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.obx-btn--dark:hover {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.obx-btn--sm {
+  padding: 12px 18px;
+  font-size: 13px;
+}
+
+.obx-round {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.5s var(--obx-ease-bounce);
+}
+
+.obx-round:hover {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.obx-sticker {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ---------- Cursor ---------- */
+
+.obx-cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  padding: 10px 16px;
+  border: 1.5px solid var(--color-ink);
+  border-radius: 1500px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: 700 15px/1 var(--font-sans);
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
 }
 
 /* ---------- Marquee ---------- */
 
 .obx-marquee {
-  overflow: hidden;
+  overflow: clip;
 }
 
-.obx-marquee__track {
-  display: flex;
-  width: max-content;
-  animation: obx-marquee linear infinite;
-}
-
-.obx-marquee__track--reverse {
-  animation-direction: reverse;
-}
-
-.obx-marquee__group {
-  display: flex;
-  flex: none;
-  align-items: center;
-}
-
-@keyframes obx-marquee {
-  to {
-    transform: translateX(-50%);
+/* Buffer for the ±10vw drift; dropped under reduced motion so the first item is not cut. */
+@media (prefers-reduced-motion: no-preference) {
+  .obx-marquee__drift {
+    margin-left: -10vw;
   }
 }
 
-/* ---------- Announcement banner ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .obx-marquee {
+    overflow-x: auto;
+  }
 
-.obx-banner {
-  background: var(--obx-violet-700);
-  border-bottom: 2px solid #000;
-  padding: 10px 0;
+  .obx-marquee [inert] {
+    display: none;
+  }
 }
 
-.obx-banner .obx-marquee__group {
-  gap: 1.6em;
+.obx-marquee__track,
+.obx-marquee__half,
+.obx-marquee__chunk {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.obx-marquee__track {
+  width: max-content;
+}
+
+/* ---------- 0 · Banner ---------- */
+
+.obx-banner {
+  margin-inline: calc(-1 * var(--obx-gap));
+  background: var(--color-lilac);
 }
 
 .obx-banner__item {
   display: inline-flex;
   align-items: center;
-  gap: 1.6em;
-  font-size: 0.78rem;
+  gap: 24px;
+  padding-right: 24px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  line-height: 20px;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.obx-banner__dot {
-  font-size: 0.8em;
+/* ---------- 7 · Word marquee, 11 · Cover marquee ---------- */
+
+.obx-words,
+.obx-covers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--obx-gap);
 }
 
-/* ---------- Nav ---------- */
-
-.obx-nav {
+.obx-tile {
   position: relative;
-  z-index: 3;
+  flex-shrink: 0;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 18px clamp(16px, 3vw, 40px);
+  margin-right: var(--obx-gap);
+  padding: 0.14em 0.3em 0.12em;
+  border-radius: 30px;
+  font-size: clamp(72px, 10vw, 150px);
+  white-space: nowrap;
 }
 
-.obx-nav__group {
+.obx-tile__text {
+  margin-bottom: 0;
+  font-size: 1em;
+}
+
+.obx-tile--paper { background: var(--color-paper); }
+.obx-tile--ember { background: var(--color-ember); }
+.obx-tile--blue { background: var(--color-blue); }
+.obx-tile--sunburst { background: var(--color-sunburst); }
+.obx-tile--mint { background: var(--color-mint); }
+.obx-tile--lilac { background: var(--color-lilac); }
+
+.obx-tile .obx-sticker {
+  position: absolute;
+  top: 0.06em;
+  right: 0.06em;
+  width: 0.7em;
+  rotate: 12deg;
+}
+
+.obx-cover-tile {
+  flex-shrink: 0;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.obx-logo {
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
-  border: 2px solid #000;
-  border-radius: 999px;
-  background: #fff;
-  color: #000;
-  font-family: var(--font-obx-display), sans-serif;
-  font-size: 19px;
-  letter-spacing: 0.02em;
-  transition: transform 0.8s cubic-bezier(0.65, 0.05, 0, 1);
-}
-
-.obx-logo:hover {
-  transform: rotate(360deg);
-}
-
-/* ---------- Pills ---------- */
-
-.obx-pill {
-  display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5em;
-  padding: 0.95em 1.7em;
-  border: 2px solid #000;
-  border-radius: 999px;
-  background: #fff;
-  color: #000;
-  font-size: 0.8rem;
+  gap: 12px;
+  width: 249px;
+  aspect-ratio: 1;
+  margin-right: var(--obx-gap);
+  padding: 20px;
+  border-radius: 30px;
+}
+
+.obx-cover-tile__cover {
+  width: 112px;
+}
+
+.obx-cover-tile__sticker {
+  width: 120px;
+}
+
+.obx-cover-tile__author {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 1;
+  letter-spacing: 0.03em;
+  text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
-  transition: transform 0.2s, background-color 0.2s, color 0.2s;
 }
 
-.obx-pill a {
-  color: inherit;
-}
+/* ---------- 2 · Hero ---------- */
 
-.obx-pill:hover {
-  transform: translateY(-2px) rotate(-1deg);
-  background: var(--obx-yellow-100);
+.obx-sheet--hero {
+  padding-top: calc(56px + 48px);
 }
-
-.obx-pill--dark {
-  background: #000;
-  color: #fff;
-}
-
-.obx-pill--dark:hover {
-  background: var(--obx-blue);
-  color: #000;
-  transform: translateY(-2px) rotate(1deg);
-}
-
-.obx-pill--lg {
-  padding: 1.25em 2.3em;
-  font-size: 0.92rem;
-}
-
-.obx-pill:active {
-  transform: translateY(0) scale(0.96);
-}
-
-/* Nav entrance: pills drop in staggered on load */
-.obx-logo,
-.obx-nav .obx-pill {
-  animation: obx-rise 0.7s cubic-bezier(0.65, 0.05, 0, 1) backwards;
-}
-
-.obx-logo {
-  animation-delay: 0.05s;
-}
-
-.obx-nav__group > *:nth-child(1) {
-  animation-delay: 0.12s;
-}
-
-.obx-nav__group > *:nth-child(2) {
-  animation-delay: 0.18s;
-}
-
-.obx-nav__group > *:nth-child(3) {
-  animation-delay: 0.24s;
-}
-
-.obx-nav__group > *:nth-child(4) {
-  animation-delay: 0.3s;
-}
-
-.obx-nav__group > *:nth-child(5) {
-  animation-delay: 0.36s;
-}
-
-/* ---------- S1 · Hero ---------- */
 
 .obx-hero {
-  display: flex;
-  flex-direction: column;
-  min-height: clamp(600px, 92vh, 940px);
-}
-
-.obx-hero::before,
-.obx-hero::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-}
-
-.obx-hero::before {
-  width: 55vw;
-  height: 55vw;
-  top: -22%;
-  right: -12%;
-  background: radial-gradient(closest-side, rgba(77, 162, 255, 0.5), transparent 72%);
-}
-
-.obx-hero::after {
-  width: 45vw;
-  height: 45vw;
-  bottom: -28%;
-  left: -14%;
-  background: radial-gradient(closest-side, rgba(92, 74, 222, 0.32), transparent 72%);
-}
-
-.obx-hero__stage {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(1.2rem, 2.6vw, 2.2rem);
-  flex-grow: 1;
   justify-content: center;
-  padding: clamp(2rem, 5vh, 4rem) 16px clamp(3rem, 8vh, 5rem);
+  gap: 40px;
+  min-height: calc(100svh - 2 * var(--obx-gap) - 20px - 104px);
   text-align: center;
-}
-
-.obx-hero__mark {
-  position: relative;
-  display: flex;
-  justify-content: center;
 }
 
 .obx-hero__ribbon {
   position: absolute;
-  left: -3%;
-  top: 4%;
-  width: 106%;
-  height: 92%;
-  transform: rotate(-2deg);
+  inset: -8% -12% auto;
+  height: 70%;
+  pointer-events: none;
 }
 
-.obx-hero__title {
+.obx-hero__ribbon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.obx-wordmark {
   position: relative;
-  margin: 0;
-  font-family: var(--font-obx-display), sans-serif;
-  font-weight: 400;
-  font-size: clamp(3.2rem, 15vw, 14rem);
-  line-height: 0.9;
-  letter-spacing: -0.015em;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 0.18em;
+  font: 800 21vw/0.9 var(--font-display);
   text-transform: uppercase;
-  animation: obx-rise 0.9s cubic-bezier(0.65, 0.05, 0, 1) both;
 }
 
-.obx-hero__tagline {
-  margin: 0;
-  font-size: clamp(1.35rem, 3vw, 2.4rem);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  animation: obx-rise 0.9s 0.15s cubic-bezier(0.65, 0.05, 0, 1) both;
+.obx-wordmark__word {
+  display: inline-flex;
+}
+
+.obx-flap {
+  display: block;
+  height: 0.9em;
+  overflow: clip;
+}
+
+.obx-flap__stack {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(-50%);
+}
+
+.obx-flap__cell {
+  display: block;
+  height: 0.9em;
+}
+
+.obx-flap__cell--outline {
+  color: transparent;
+  -webkit-text-stroke: 0.015em var(--color-ink);
+}
+
+@media (max-width: 767px) {
+  .obx-wordmark {
+    font-size: 38vw;
+  }
+
+  .obx-wordmark__word {
+    flex-basis: 100%;
+    justify-content: center;
+  }
+}
+
+.obx-hero__tagline,
+.obx-hero__sub,
+.obx-hero__actions {
+  position: relative;
 }
 
 .obx-hero__sub {
-  max-width: 560px;
-  margin: 0;
-  font-size: clamp(1rem, 1.4vw, 1.125rem);
-  font-weight: 500;
-  line-height: 1.4;
-  animation: obx-rise 0.9s 0.2s cubic-bezier(0.65, 0.05, 0, 1) both;
+  max-width: 36ch;
 }
 
 .obx-hero__actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
-  animation: obx-rise 0.9s 0.3s cubic-bezier(0.65, 0.05, 0, 1) both;
+  gap: 8px;
 }
 
-@keyframes obx-rise {
-  from {
-    opacity: 0;
-    transform: translateY(56px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* ---------- Stickers ---------- */
-
-.obx-sticker {
-  --size: clamp(64px, 9vw, 120px);
+.obx-hero__sticker {
   position: absolute;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: var(--size);
-  height: var(--size);
-  border: 2.5px solid #000;
-  border-radius: 999px;
-  background: var(--bg, #fff);
-  box-shadow: 4px 6px 0 #000;
-  font-size: calc(var(--size) * 0.44);
-  rotate: var(--rot, 0deg);
-  animation: obx-float 6s ease-in-out infinite;
+  z-index: 1;
   pointer-events: none;
 }
 
-@keyframes obx-float {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  50% {
-    translate: 0 -14px;
+@media (max-width: 767px) {
+  .obx-hero__sticker:nth-of-type(n + 3) {
+    display: none;
   }
 }
 
-/* ---------- S3 · Statement ---------- */
+/* Hidden until the intro timeline takes over; visible after 2s if JS never runs. */
+@media (prefers-reduced-motion: no-preference) {
+  .obx-hero--pending :is(.obx-flap__stack, .obx-hero__tagline, [data-load-stagger], [data-hero-sticker]),
+  .obx-home:has(.obx-hero--pending) .obx-nav {
+    visibility: hidden;
+    animation: obx-intro-fallback 0s 2s forwards;
+  }
+}
 
-.obx-statement {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(10px, 2vw, 24px);
-  padding: clamp(4rem, 8vw, 7.5rem) 16px;
+@keyframes obx-intro-fallback {
+  to {
+    visibility: visible;
+  }
+}
+
+/* ---------- 3 · Showcase ---------- */
+
+.obx-showcase {
+  display: grid;
+  justify-items: center;
+  gap: 64px;
+  padding-top: 112px;
+}
+
+.obx-showcase__title {
+  max-width: 16ch;
   text-align: center;
 }
 
-.obx-statement__line {
-  margin: 0;
-  font-family: var(--font-obx-display), sans-serif;
-  font-weight: 400;
-  font-size: clamp(3.2rem, 11.5vw, 10.6rem);
-  line-height: 1.08;
-  letter-spacing: -0.01em;
+.obx-phone-wrap {
+  width: min(340px, 78vw);
+}
+
+@media (min-width: 768px) {
+  .obx-phone-wrap {
+    margin-bottom: 144px;
+  }
+}
+
+.obx-phone {
+  aspect-ratio: 9 / 19;
+  padding: 14px;
+  overflow: clip;
+  border: 2px solid var(--color-ink);
+  border-radius: 44px;
+  background: var(--color-paper);
+}
+
+.obx-phone__screen {
+  height: 100%;
+  overflow: clip;
+  border-radius: 32px;
+  background: var(--color-sky);
+}
+
+.obx-phone__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 10px 10px;
+}
+
+.obx-showcase__pairs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.obx-pair {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.obx-pair__title {
+  margin-bottom: 8px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.obx-mini {
+  display: flex;
+  flex: 0 0 180px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--color-ink);
+  border-radius: 20px;
+  background: var(--color-paper);
+}
+
+.obx-mini__chip,
+.obx-mini__step {
+  padding: 6px 10px;
+  border: 1px solid var(--color-ink);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
-.obx-statement__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(10px, 2vw, 24px);
+.obx-mini__chip:nth-child(odd) { background: var(--color-sunburst); }
+.obx-mini__chip:nth-child(even) { background: var(--color-lilac); }
+.obx-mini__step--done { background: var(--color-mint); }
+.obx-mini__step--now { background: var(--color-ink); color: var(--color-paper); }
+
+@media (max-width: 767px) {
+  .obx-showcase__pairs {
+    grid-template-columns: 1fr;
+  }
+
+  .obx-pair {
+    flex-direction: column;
+    text-align: center;
+  }
 }
 
-.obx-statement__sticker {
+/* ---------- 1 · Nav ---------- */
+
+/* Sticky over the first sheet; the negative margin lets the hero sit under it. */
+.obx-nav {
+  position: sticky;
+  top: 12px;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: calc(-56px - var(--obx-gap));
+  padding: 0 12px;
+  pointer-events: none;
+}
+
+.obx-nav > * {
+  pointer-events: auto;
+}
+
+.obx-nav__logo {
   display: grid;
   place-items: center;
-  width: clamp(96px, 16vw, 230px);
-  height: clamp(54px, 8.4vw, 122px);
-  border: 2.5px solid #000;
-  border-radius: 999px;
-  background: var(--obx-yellow);
-  box-shadow: 4px 6px 0 #000;
-  font-size: clamp(2.4rem, 5vw, 5rem);
-  rotate: -4deg;
-  animation: obx-float 6s ease-in-out infinite;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-paper);
+  font: 800 22px/1 var(--font-display);
+  transition: all 1s var(--obx-ease-bounce);
 }
 
-/* ---------- S4 · Features zig-zag ---------- */
+.obx-nav__logo:hover {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.obx-nav__right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.obx-nav__pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.obx-nav__li > a:not(.obx-btn) {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 18px;
+  border: 1px solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--color-paper);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  transform: none;
+  transition: all 0.5s var(--obx-ease-bounce);
+}
+
+.obx-nav__li > a:not(.obx-btn):hover {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.obx-nav__plus {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-paper);
+  cursor: pointer;
+  transition: all 0.5s var(--obx-ease-bounce);
+}
+
+.obx-nav__plus-h,
+.obx-nav__plus-v {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 2px;
+  background: var(--color-ink);
+  translate: -50% -50%;
+  transition: scale 0.5s var(--obx-ease-bounce);
+}
+
+.obx-nav__plus-v {
+  rotate: 90deg;
+}
+
+.obx-nav__plus[aria-expanded='true'] {
+  rotate: 90deg;
+}
+
+.obx-nav__plus[aria-expanded='true'] .obx-nav__plus-h {
+  scale: 0 1;
+}
+
+@media (max-width: 991px) {
+  .obx-nav__pills {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    flex-direction: column;
+    align-items: flex-end;
+    visibility: hidden;
+  }
+
+  .obx-nav__pills[data-open='true'] {
+    visibility: visible;
+  }
+}
+
+/* The "+" precedes the pills in the DOM (mobile Tab order); keep pills, "+", CTA visually on desktop. */
+@media (min-width: 992px) {
+  .obx-nav__pills {
+    order: -1;
+  }
+}
+
+/* ---------- 4 · Features ---------- */
 
 .obx-features {
   display: flex;
   flex-direction: column;
-  gap: clamp(3rem, 5.5vw, 5rem);
-  padding: clamp(4rem, 7.6vw, 7rem) var(--panel-x);
-}
-
-.obx-features__heading {
-  margin: 0;
-  font-size: clamp(1.9rem, 4.4vw, 4rem);
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  line-height: 1.05;
+  gap: clamp(64px, 8vw, 128px);
 }
 
 .obx-feature {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: clamp(2rem, 5.5vw, 5rem);
   align-items: center;
+  gap: clamp(24px, 4vw, 64px);
 }
 
-.obx-feature--flip .obx-feature__visual-wrap {
-  order: 2;
-}
-
-.obx-visual {
-  position: relative;
-  aspect-ratio: 7 / 6;
-  border: 2px solid #000;
-  border-radius: clamp(20px, 3vw, 40px);
-  display: grid;
-  place-items: center;
-}
-
-.obx-visual--yellow {
-  background: var(--obx-yellow);
-}
-
-.obx-visual--violet {
-  background: var(--obx-violet-700);
-}
-
-.obx-visual--blue {
-  background: var(--obx-blue);
-}
-
-/* Visual blocks scale in when their row reveals */
-.obx-visual {
-  transform: scale(0.94) rotate(-1.5deg);
-  transition: transform 0.7s cubic-bezier(0.65, 0.05, 0, 1);
-}
-
-.obx-reveal--in .obx-visual {
-  transform: none;
-}
-
-.obx-visual__emoji {
-  font-size: clamp(4.5rem, 10vw, 9.5rem);
-}
-
-.obx-visual__badge {
-  position: absolute;
-  right: 8%;
-  bottom: 8%;
-  display: grid;
-  place-items: center;
-  width: clamp(64px, 8vw, 112px);
-  height: clamp(64px, 8vw, 112px);
-  border: 2.5px solid #000;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 4px 6px 0 #000;
-  font-size: clamp(1.6rem, 3vw, 2.8rem);
-  animation: obx-float 5s ease-in-out infinite;
+.obx-feature--flip .obx-feature__visual {
+  order: -1;
 }
 
 .obx-feature__text {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: clamp(1.25rem, 2vw, 1.5rem);
+  gap: 24px;
 }
 
 .obx-feature__title {
-  margin: 0;
-  font-family: var(--font-obx-display), sans-serif;
-  font-weight: 400;
-  font-size: clamp(3rem, 7.6vw, 6.9rem);
-  line-height: 1;
-  text-transform: uppercase;
+  font-size: clamp(64px, 9vw, 160px);
 }
 
-.obx-feature__body {
-  max-width: 460px;
-  margin: 0;
-  font-size: clamp(1rem, 1.5vw, 1.375rem);
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-/* ---------- S5 · Categories carousel ---------- */
-
-.obx-cats-section {
-  padding: clamp(4rem, 7vw, 6.5rem) 0 clamp(2.5rem, 5vw, 5rem);
-}
-
-.obx-cats-section__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 0 var(--panel-x);
-}
-
-.obx-cats {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  padding: clamp(1.5rem, 3vw, 2.5rem) var(--panel-x) 8px;
-  scrollbar-width: none;
-}
-
-.obx-cats::-webkit-scrollbar {
-  display: none;
-}
-
-.obx-cat {
-  flex: none;
-  width: clamp(220px, 21vw, 300px);
-  aspect-ratio: 300 / 380;
-  box-sizing: border-box;
-  padding: clamp(16px, 2vw, 24px);
-  border: 2px solid #000;
-  border-radius: clamp(18px, 2.5vw, 24px);
-  color: #000;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transition: transform 0.25s cubic-bezier(0.65, 0.05, 0, 1), box-shadow 0.25s;
-}
-
-.obx-cat:hover {
-  transform: translateY(-6px) rotate(-1.5deg);
-  box-shadow: 6px 8px 0 #000;
-}
-
-.obx-cat__sticker {
-  align-self: flex-end;
+.obx-card {
   display: grid;
   place-items: center;
-  width: clamp(56px, 7vw, 90px);
-  height: clamp(56px, 7vw, 90px);
-  border: 2px solid #000;
-  border-radius: 999px;
-  background: #fff;
-  font-size: clamp(1.4rem, 2.6vw, 2.4rem);
+  aspect-ratio: 4 / 3;
+  padding: 24px;
+  border: 1px solid var(--color-ink);
+  border-radius: 20px;
 }
 
-.obx-cat__name {
-  align-self: flex-start;
-  font-family: var(--font-obx-display), sans-serif;
-  font-weight: 400;
-  font-size: clamp(2.4rem, 4.6vw, 4.2rem);
-  line-height: 1;
-  text-transform: uppercase;
-  transform: skewX(-8deg);
-  transform-origin: left bottom;
+.obx-card--lilac { background: var(--color-lilac); }
+.obx-card--blue { background: var(--color-blue); }
+.obx-card--sunburst { background: var(--color-sunburst); }
+
+.obx-art {
+  width: 100%;
+  height: auto;
 }
 
-/* ---------- S6 · Dual counter-scrolling marquee ---------- */
+@media (max-width: 767px) {
+  .obx-feature {
+    grid-template-columns: 1fr;
+  }
 
-.obx-mq2 {
+  .obx-feature__visual {
+    order: -1;
+  }
+}
+
+/* ---------- 5 · Statement ---------- */
+
+.obx-statement__text {
+  font-size: clamp(56px, 11.1vw, 160px);
+  text-align: center;
+}
+
+.obx-statement__line {
+  display: block;
+}
+
+.obx-featured {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 0.8em;
+  margin: 0 0.05em;
+  padding: 0.06em 0.12em 0.06em 0.06em;
+  vertical-align: middle;
+  border: 1px solid var(--color-ink);
+  border-radius: 20px;
+  background: var(--color-indigo);
+  color: var(--color-paper);
+  transition: all 0.5s var(--obx-ease-bounce);
+}
+
+.obx-featured:hover {
+  rotate: -3deg;
+}
+
+.obx-featured__cover {
+  width: auto;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.obx-featured__sticker {
+  width: auto;
+  height: 100%;
+}
+
+.obx-featured__meta {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: clamp(2rem, 4vw, 2.5rem) 0;
+  max-width: 14ch;
+  font: 500 16px/1.2 var(--font-sans);
+  text-align: left;
+  text-transform: none;
 }
 
-.obx-mq2 .obx-marquee__group {
-  gap: 0;
+.obx-featured__title {
+  font-weight: 700;
 }
 
-.obx-mq2__item {
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--font-obx-display), sans-serif;
-  font-weight: 400;
-  font-size: clamp(3.5rem, 13vw, 11.8rem);
-  line-height: 1;
-  text-transform: uppercase;
-  white-space: nowrap;
-  transform: skewX(calc(var(--vel, 0) * 1.4deg));
+@media (max-width: 767px) {
+  .obx-featured__meta {
+    display: none;
+  }
 }
 
-.obx-mq2__sep {
-  padding: 0 0.22em;
-  font-size: 0.45em;
-}
-
-.obx-mq2__row--blue .obx-mq2__item {
-  color: var(--obx-blue);
-  transform: skewX(calc(-8deg + var(--vel, 0) * 1.4deg));
-}
-
-/* ---------- S9 · Plans ---------- */
+/* ---------- 10 · Plans ---------- */
 
 .obx-plans {
   display: flex;
   flex-direction: column;
-  gap: clamp(2rem, 4vw, 3rem);
-  padding: clamp(4rem, 7.6vw, 7rem) var(--panel-x);
+  gap: 48px;
 }
 
-.obx-plans__head {
+.obx-plans__title {
+  font-size: clamp(56px, 11.1vw, 160px);
+}
+
+.obx-plans__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.obx-plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  min-height: 420px;
+  padding: 28px;
+  overflow: clip;
+  border: 1px solid var(--color-ink);
+  border-radius: 30px;
+}
+
+.obx-plan__name {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.obx-plan__books {
+  font-size: clamp(56px, 6vw, 96px);
+}
+
+.obx-plan__price {
+  margin-top: auto;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.obx-plan__price span {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.obx-plan__sticker {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 72px;
+  rotate: 10deg;
+}
+
+@media (max-width: 991px) {
+  .obx-plans__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .obx-plan {
+    min-height: 320px;
+  }
+}
+
+/* ---------- 6 · Category carousel ---------- */
+
+.obx-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.obx-cats__head {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -645,250 +895,426 @@
   gap: 24px;
 }
 
-.obx-plans__title {
-  margin: 0;
-  font-family: var(--font-obx-display), sans-serif;
-  font-weight: 400;
-  font-size: clamp(3.2rem, 8.6vw, 7.75rem);
-  line-height: 1;
-  text-transform: uppercase;
+.obx-cats__title {
+  font-size: clamp(56px, 11.1vw, 160px);
 }
 
-.obx-plans__body {
-  max-width: 380px;
-  margin: 0;
-  font-size: clamp(1rem, 1.4vw, 1.125rem);
-  font-weight: 500;
-  line-height: 1.45;
+.obx-cats__viewport {
+  padding-block: 8px;
+  margin-block: -8px;
+  margin-inline: calc(-1 * var(--obx-pad));
+  overflow: clip;
 }
 
-.obx-plans__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.obx-cats__track {
+  display: flex;
+  touch-action: pan-y;
+}
+
+.obx-cat {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  width: min(340px, 72vw);
+  aspect-ratio: 3 / 4;
+  margin-right: 16px;
+  padding: 24px;
+  border: 1px solid var(--color-ink);
+  border-radius: 30px;
+  user-select: none;
+}
+
+.obx-cat__name {
+  font-size: clamp(44px, 5vw, 72px);
+}
+
+.obx-cat__sticker {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 96px;
+  rotate: 8deg;
+}
+
+.obx-cats__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 16px;
 }
 
-.obx-plans__grid > .obx-reveal {
-  height: 100%;
-}
-
-.obx-plan {
-  position: relative;
+.obx-cats__dots {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  height: 100%;
-  min-height: clamp(360px, 32vw, 460px);
-  box-sizing: border-box;
-  padding: clamp(20px, 2.5vw, 32px);
-  border: 2px solid #000;
-  border-radius: clamp(18px, 2.5vw, 28px);
-  transition: transform 0.25s cubic-bezier(0.65, 0.05, 0, 1), box-shadow 0.25s;
 }
 
-.obx-plan:hover {
-  transform: translateY(-6px) rotate(-1deg);
-  box-shadow: 6px 8px 0 #000;
-}
-
-.obx-plan__label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.obx-plan__books {
-  font-family: var(--font-obx-display), sans-serif;
-  font-weight: 400;
-  font-size: clamp(3rem, 6.6vw, 6rem);
-  line-height: 1;
-  text-transform: uppercase;
-  transform: skewX(-8deg);
-  transform-origin: left bottom;
-}
-
-.obx-plan__spacer {
-  flex-grow: 1;
-}
-
-.obx-plan__price {
-  font-size: clamp(1.6rem, 2.4vw, 2.125rem);
-  font-weight: 700;
-}
-
-.obx-plan__price span {
-  font-size: clamp(0.85rem, 1.1vw, 1rem);
-  font-weight: 500;
-}
-
-.obx-plan__cta {
-  align-self: flex-start;
-}
-
-.obx-plan__sticker {
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
+.obx-dot {
   display: grid;
   place-items: center;
-  width: clamp(64px, 8vw, 110px);
-  height: clamp(64px, 8vw, 110px);
-  border: 2px solid #000;
-  border-radius: 999px;
-  background: #fff;
-  font-size: clamp(1.5rem, 2.8vw, 2.6rem);
-  animation: obx-float 5.5s ease-in-out infinite;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
 }
 
-/* ---------- S12 · Footer ---------- */
+.obx-dot::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #c4c4c4;
+  transition: all 0.5s var(--obx-ease-bounce);
+}
+
+.obx-dot[aria-selected='true']::before {
+  background: var(--color-ink);
+  scale: 1.3;
+}
+
+/* ---------- 8 · Tabs ---------- */
+
+.obx-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.obx-tabs__list {
+  display: inline-flex;
+  align-self: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--color-paper);
+}
+
+.obx-tabs__tab {
+  position: relative;
+  z-index: 0;
+  padding: 14px 28px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-ink);
+  font: 500 16px/1 var(--font-sans);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.obx-tabs__tab[aria-selected='true'] {
+  color: var(--color-paper);
+}
+
+.obx-tabs__pill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 999px;
+  background: var(--color-ink);
+}
+
+.obx-tabs__panels {
+  display: grid;
+}
+
+.obx-tab-panel {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+}
+
+.obx-tab-panel[data-active='false'] {
+  visibility: hidden;
+}
+
+.obx-tab-panel__visual {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  padding: 24px;
+  overflow: clip;
+  border: 1px solid var(--color-ink);
+  border-radius: 30px;
+}
+
+.obx-tab-panel__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.obx-tab-panel__title {
+  font-size: clamp(56px, 8vw, 128px);
+}
+
+@media (max-width: 767px) {
+  .obx-tab-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- 9 · How it works ---------- */
+
+.obx-how {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  gap: 48px;
+  scroll-margin-top: 88px;
+}
+
+.obx-how__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.obx-how__title {
+  font-size: clamp(64px, 9vw, 140px);
+}
+
+.obx-how__sub {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.obx-how__stage {
+  min-width: 0;
+}
+
+.obx-how__track {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.obx-how-card {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(340px, 78vw);
+  aspect-ratio: 3 / 4;
+  padding: 28px;
+  border: 1px solid var(--color-ink);
+  border-radius: 30px;
+  background: var(--color-lilac);
+  user-select: none;
+}
+
+.obx-how-card--stat {
+  background: var(--color-ember);
+}
+
+.obx-how-card__n {
+  font: 800 96px/0.8 var(--font-display);
+}
+
+.obx-how-card__title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.obx-how-card__stat {
+  margin-top: auto;
+  font-size: clamp(56px, 6vw, 96px);
+}
+
+.obx-how-card__sticker {
+  width: 96px;
+  rotate: -8deg;
+}
+
+.obx-how__controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+@media (max-width: 991px) {
+  .obx-how {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- 12 · Join + FAQ ---------- */
+
+.obx-join {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--obx-gap);
+}
+
+.obx-join__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px;
+  padding: clamp(28px, 4vw, 56px);
+  border-radius: 40px;
+  background: var(--color-sunburst);
+}
+
+.obx-join__card :focus-visible {
+  outline-color: var(--color-ink);
+}
+
+.obx-join__title {
+  font-size: clamp(56px, 6vw, 112px);
+}
+
+.obx-faq {
+  width: 100%;
+}
+
+.obx-faq details {
+  padding: 16px 0;
+  border-top: 1px solid var(--color-ink);
+}
+
+.obx-faq summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.obx-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.obx-faq summary::after {
+  content: '+';
+  transition: rotate 0.5s var(--obx-ease-bounce);
+}
+
+.obx-faq details[open] summary::after {
+  rotate: 45deg;
+}
+
+.obx-faq p {
+  margin-top: 12px;
+}
+
+@media (max-width: 991px) {
+  .obx-join {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- 13 · Footer ---------- */
 
 .obx-footer {
   display: flex;
   flex-direction: column;
-  gap: clamp(2.5rem, 5vw, 4.5rem);
-  padding: clamp(4rem, 7.6vw, 7rem) var(--panel-x) clamp(1.5rem, 3vw, 2.5rem);
+  gap: var(--obx-gap);
 }
 
-.obx-footer__top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 32px;
+.obx-footer__band {
+  position: relative;
 }
 
-.obx-footer__heading {
-  margin: 0;
-  font-family: var(--font-obx-display), sans-serif;
-  font-weight: 400;
-  font-size: clamp(3.2rem, 8.6vw, 7.75rem);
-  line-height: 1;
-  text-transform: uppercase;
+.obx-footer__badge {
+  position: absolute;
+  top: 50%;
+  right: 24px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 120px;
+  height: 120px;
+  border: 2px solid var(--color-paper);
+  border-radius: 50%;
+  background: var(--color-indigo);
+  color: var(--color-paper);
+  font: 800 48px/1 var(--font-display);
+  translate: 0 -50%;
 }
 
-.obx-footer__links {
+.obx-footer__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--obx-gap);
+}
+
+.obx-footer :focus-visible {
+  outline-color: var(--color-paper);
+}
+
+.obx-footer__tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--obx-gap);
+}
+
+.obx-footer__tile {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
+  justify-content: space-between;
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 20px;
+  border-radius: 30px;
+  background: var(--color-paper);
+  transition: all 0.5s var(--obx-ease-bounce);
 }
 
-.obx-footer__links a {
-  color: #000;
-  font-size: clamp(1.25rem, 2vw, 1.875rem);
-  font-weight: 700;
-  text-transform: uppercase;
+.obx-footer__tile:hover {
+  background: var(--color-lilac);
 }
 
-.obx-footer__links a:hover {
-  text-decoration: underline 3px;
-  text-underline-offset: 5px;
+.obx-footer__tile .obx-display {
+  font-size: clamp(28px, 3.5vw, 56px);
 }
 
-.obx-footer__bottom {
+.obx-footer__card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+  padding: clamp(28px, 5vw, 80px);
+  border-radius: 40px;
+  background: var(--color-mint);
+}
+
+.obx-footer__slogan {
+  font-size: clamp(56px, 8vw, 150px);
+}
+
+.obx-footer__meta {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 12px;
-  border-top: 2px solid #000;
-  padding-top: 18px;
+  gap: 16px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.obx-footer__legal {
-  margin: 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-/* ---------- Scroll reveal ---------- */
-
-.obx-reveal {
-  opacity: 0;
-  transform: translateY(32px);
-  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.65, 0.05, 0, 1);
-}
-
-.obx-reveal--in {
-  opacity: 1;
-  transform: none;
-}
-
-/* ---------- Responsive ---------- */
-
-@media (max-width: 900px) {
-  .obx-feature {
+@media (max-width: 991px) {
+  .obx-footer__grid {
     grid-template-columns: 1fr;
   }
 
-  .obx-feature--flip .obx-feature__visual-wrap {
-    order: 0;
+  .obx-footer__badge {
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
   }
-
-  .obx-plans__grid {
-    grid-template-columns: 1fr;
-  }
-
-  .obx-plan__sticker {
-    display: none;
-  }
-
-  .obx-footer__links {
-    align-items: flex-start;
-  }
-}
-
-@media (max-width: 640px) {
-  .obx-hero__title {
-    font-size: clamp(4rem, 26vw, 8rem);
-  }
-
-  .obx-hero__title span {
-    display: block;
-  }
-
-  .obx-hero__actions {
-    flex-direction: column;
-    align-self: stretch;
-  }
-
-  .obx-hero__actions .obx-pill {
-    width: 100%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .obx-home *,
-  .obx-home *::before,
-  .obx-home *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  .obx-reveal {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* ---------- Lenis smooth scroll ---------- */
-
-html.lenis,
-html.lenis body {
-  height: auto;
-}
-
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
-}
-
-.lenis.lenis-stopped {
-  overflow: hidden;
 }

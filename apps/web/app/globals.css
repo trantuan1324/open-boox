@@ -63,3 +63,31 @@ body {
     animation: none;
   }
 }
+
+/* Curtain transition when leaving the landing page (components/curtain). Hidden and click-through unless running. */
+.obx-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  perspective: 1200px;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.obx-curtain[data-state='covering'],
+.obx-curtain[data-state='covered'] {
+  pointer-events: auto;
+}
+
+.obx-curtain__fade {
+  position: absolute;
+  inset: 0;
+  background: var(--color-ink);
+}
+
+.obx-curtain__panel {
+  position: absolute;
+  inset: -4vh -4vw;
+  border-radius: 2em;
+}
