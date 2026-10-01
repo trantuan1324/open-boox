@@ -101,6 +101,8 @@ export function Tabs() {
 
       const tl = gsap.timeline({ defaults: { ease: 'slush', duration: 0.65 } });
       tl.set(oldPanel, { visibility: 'visible' }, 0)
+        .set(newPanel, { zIndex: 1 }, 0)
+        .set(oldPanel, { zIndex: 0 }, 0)
         .to(find(oldPanel, '.obx-tab-panel__text'), { autoAlpha: 0, yPercent: 10 }, 0)
         .to(find(oldPanel, '.obx-tab-panel__art'), { autoAlpha: 0, xPercent: -15 }, 0)
         .fromTo(
@@ -123,8 +125,14 @@ export function Tabs() {
           { x: 0, autoAlpha: 1 },
           0.275,
         )
-        .fromTo(find(newPanel, '.obx-tab-panel__art'), { yPercent: 10, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1 }, 0.2)
-        .set(oldPanel, { clearProps: 'visibility' });
+        .fromTo(
+          find(newPanel, '.obx-tab-panel__art'),
+          { xPercent: 0, yPercent: 10, autoAlpha: 0 },
+          { xPercent: 0, yPercent: 0, autoAlpha: 1 },
+          0.2,
+        )
+        .set(oldPanel, { clearProps: 'visibility' })
+        .set([oldPanel, newPanel], { clearProps: 'zIndex' });
       running.current = tl;
     },
     { dependencies: [active], scope: root },
