@@ -27,7 +27,7 @@ body:has(.obx-home) {
   }
 }
 
-.obx-home a {
+:where(.obx-home) a {
   color: inherit;
   text-decoration: none;
 }
