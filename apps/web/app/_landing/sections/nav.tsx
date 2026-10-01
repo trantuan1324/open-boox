@@ -88,7 +88,10 @@ export function Nav({ user }: { user: PublicUser | null }) {
       ref={root}
       className="obx-nav"
       onKeyDown={(event) => {
-        if (event.key === 'Escape') setOpen(false);
+        if (event.key === 'Escape' && open) {
+          setOpen(false);
+          root.current?.querySelector<HTMLButtonElement>('.obx-nav__plus')?.focus();
+        }
       }}
     >
       <Link href="/" className="obx-nav__logo" aria-label="Open Boox — trang chủ">

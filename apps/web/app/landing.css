@@ -598,10 +598,31 @@ body:has(.obx-home) {
 
 .obx-nav__pills {
   display: flex;
+  align-items: center;
   gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.obx-nav__li > a:not(.obx-btn) {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 18px;
+  border: 1px solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--color-paper);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  transform: none;
+  transition: all 0.5s var(--obx-ease-bounce);
+}
+
+.obx-nav__li > a:not(.obx-btn):hover {
+  background: var(--color-ink);
+  color: var(--color-paper);
 }
 
 .obx-nav__plus {
