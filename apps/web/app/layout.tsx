@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Barlow_Condensed, Be_Vietnam_Pro } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { HeaderGate } from './header-gate';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import './globals.css';
@@ -29,9 +30,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi" className={`${barlow.variable} ${beVietnam.variable}`}>
       <body className="flex min-h-screen flex-col gap-[8px] bg-ink px-[8px] pb-[8px] antialiased md:gap-[12px] md:px-[12px] md:pb-[12px]">
-        <SiteHeader />
+        <HeaderGate>
+          <SiteHeader />
+        </HeaderGate>
         <main className="flex flex-1 flex-col gap-[8px] md:gap-[12px]">{children}</main>
-        <SiteFooter />
+        <HeaderGate>
+          <SiteFooter />
+        </HeaderGate>
       </body>
     </html>
   );
