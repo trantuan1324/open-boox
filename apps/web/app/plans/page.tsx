@@ -1,16 +1,17 @@
 import type { PlanDto } from '@open-boox/shared';
+import { StickerBook, StickerCoin, StickerParcel } from '@/app/_landing/svg/stickers';
 import { PageTitle } from '@/components/ui/page-title';
 import { apiPublic } from '@/lib/api/server';
 import { formatVnd } from '@/lib/format';
 import { SubscribeButton } from './subscribe-button';
 
 const CARD_COLORS = ['bg-sunburst', 'bg-lilac', 'bg-blue'];
-const CARD_STICKERS = ['📚', '🪙', '📦'];
+const CARD_STICKERS = [StickerBook, StickerCoin, StickerParcel];
 
 export default async function PlansPage() {
   const plans = await apiPublic<PlanDto[]>('/plans');
   return (
-    <div className="sheet mx-auto flex w-full max-w-5xl flex-col gap-[40px] px-[20px] py-[48px] md:px-[64px] md:py-[80px]">
+    <div className="sheet sheet-pad flex w-full flex-col gap-[40px]">
       <div className="flex flex-col justify-between gap-[24px] md:flex-row md:items-end">
         <PageTitle>
           Một gói,
@@ -23,32 +24,30 @@ export default async function PlansPage() {
         </p>
       </div>
       <ul className="grid gap-[16px] md:grid-cols-3">
-        {plans.map((plan, i) => (
-          <li
-            key={plan.code}
-            className={`relative flex flex-col gap-[14px] rounded-[20px] border border-ink p-[24px] md:p-[32px] ${CARD_COLORS[i % CARD_COLORS.length]}`}
-          >
-            <span className="text-[13px] font-bold uppercase tracking-[0.03em]">{plan.name}</span>
-            <p className="display text-[48px] md:text-[72px]">
-              <em>
-                {plan.maxBooks} cuốn
-                <br />
-                cùng lúc
-              </em>
-            </p>
-            <p className="mt-auto text-[26px] font-bold md:text-[34px]">
-              <span className="whitespace-nowrap">{formatVnd(plan.monthlyPrice)}</span>
-              <span className="text-[14px] font-medium whitespace-nowrap md:text-[16px]"> / 30 ngày</span>
-            </p>
-            <SubscribeButton planCode={plan.code} />
-            <span
-              aria-hidden
-              className="absolute -right-[18px] -top-[18px] hidden h-[80px] w-[80px] rotate-[8deg] items-center justify-center rounded-full border border-ink bg-paper text-[36px] md:flex"
+        {plans.map((plan, i) => {
+          const Sticker = CARD_STICKERS[i % CARD_STICKERS.length];
+          return (
+            <li
+              key={plan.code}
+              className={`relative flex min-h-[320px] flex-col items-start gap-[16px] overflow-clip rounded-[30px] border border-ink p-[28px] md:min-h-[420px] ${CARD_COLORS[i % CARD_COLORS.length]}`}
             >
-              {CARD_STICKERS[i % CARD_STICKERS.length]}
-            </span>
-          </li>
-        ))}
+              <span className="text-[13px] font-bold uppercase tracking-[0.03em]">{plan.name}</span>
+              <p className="display text-[clamp(56px,6vw,96px)]">
+                <em>
+                  {plan.maxBooks} cuốn
+                  <br />
+                  cùng lúc
+                </em>
+              </p>
+              <p className="mt-auto text-[24px] font-bold md:text-[28px]">
+                <span className="whitespace-nowrap">{formatVnd(plan.monthlyPrice)}</span>
+                <span className="text-[16px] font-medium whitespace-nowrap"> / 30 ngày</span>
+              </p>
+              <SubscribeButton planCode={plan.code} />
+              <Sticker className="absolute top-[16px] right-[16px] w-[72px] rotate-[10deg]" />
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

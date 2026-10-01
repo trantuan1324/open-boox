@@ -17,24 +17,30 @@ body {
 }
 
 @layer components {
-  /* Section "sheet" — card bo lớn xếp trên nền đen */
+  /* Section "sheet" — card bo lớn xếp trên nền đen (radius 40 như landing) */
   .sheet {
-    border-radius: 20px;
+    border-radius: 30px;
     background: var(--color-paper);
   }
 
   @media (min-width: 768px) {
     .sheet {
-      border-radius: 30px;
+      border-radius: 40px;
     }
   }
 
-  /* Chữ display: Barlow Condensed 800, UPPERCASE, leading ép 0.8 */
+  /* Padding trong của sheet — lấy nguyên tham số của landing (.obx-sheet) */
+  .sheet-pad {
+    padding: clamp(48px, 7vw, 112px) clamp(16px, 5vw, 80px);
+  }
+
+  /* Chữ display: Barlow Condensed 800, UPPERCASE. Leading 1.2 — 0.8 làm dấu tiếng Việt
+     của hai dòng chồng lên nhau (đính chính của landing-v2, spec §2). */
   .display {
     font-family: var(--font-display);
     font-weight: 800;
     text-transform: uppercase;
-    line-height: 0.8;
+    line-height: 1.2;
   }
 }
 

@@ -54,7 +54,7 @@ export function BorrowConfirmView({ addresses }: { addresses: AddressDto[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-[31px]">
+    <div className="flex max-w-[820px] flex-col gap-[31px]">
       <section className={box}>
         <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Giao tới</h2>
         <AddressPicker addresses={addresses} value={addressId} onChange={setAddressId} />

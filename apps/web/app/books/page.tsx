@@ -1,5 +1,6 @@
 import { type BookListQuery, bookListQuerySchema, type BookSummary, type CategoryDto, type Paged } from '@open-boox/shared';
 import Link from 'next/link';
+import { StickerGlasses } from '@/app/_landing/svg/stickers';
 import { BookCard } from '@/components/books/book-card';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
@@ -27,8 +28,11 @@ export default async function BooksPage({
   const href = (change: Partial<BookListQuery>) => filterHref('/books', filters, change);
 
   return (
-    <div className="sheet mx-auto flex w-full max-w-6xl flex-col gap-[31px] px-[20px] py-[48px] md:px-[48px] md:py-[72px]">
-      <PageTitle>Sách</PageTitle>
+    <div className="sheet sheet-pad flex w-full flex-col gap-[31px]">
+      <div className="relative">
+        <PageTitle>Sách</PageTitle>
+        <StickerGlasses className="absolute top-[-0.2em] right-[2%] w-[72px] rotate-[10deg] md:w-[110px]" />
+      </div>
       <form action="/books" className="flex max-w-md items-end gap-[12px]">
         {filters.category && <input type="hidden" name="category" value={filters.category} />}
         {filters.availability && <input type="hidden" name="availability" value={filters.availability} />}
@@ -67,7 +71,7 @@ export default async function BooksPage({
           </Link>
         </div>
       ) : (
-        <ul className="grid grid-cols-2 gap-[16px] sm:grid-cols-3 md:gap-[24px] lg:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-[16px] sm:grid-cols-3 md:grid-cols-4 md:gap-[24px] lg:grid-cols-5">
           {result.items.map((book) => (
             <li key={book.id}>
               <BookCard book={book} />

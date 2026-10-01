@@ -15,18 +15,20 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   if (!book) notFound();
 
   return (
-    <div className="sheet mx-auto grid w-full max-w-5xl gap-[41px] px-[20px] py-[48px] md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:px-[48px] md:py-[72px]">
-      <BookCover src={book.coverUrl} title={book.title} sizes="(min-width: 768px) 40vw, 100vw" />
+    <div className="sheet sheet-pad grid w-full gap-[41px] md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <div>
+        <BookCover src={book.coverUrl} title={book.title} sizes="(min-width: 768px) 40vw, 100vw" />
+      </div>
       <div className="flex flex-col gap-[24px]">
         <Link
           href={`/books?category=${book.categorySlug}`}
-          className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline"
+          className="self-start rounded-full border border-ink bg-paper px-[16px] py-[10px] text-[12px] font-bold uppercase leading-none tracking-[0.03em] text-ink transition-all duration-500 ease-bounce hover:bg-ink hover:text-paper"
         >
           {book.categoryName}
         </Link>
         <PageTitle>{book.title}</PageTitle>
         <p className="text-[18px]">{book.author}</p>
-        <dl className="grid grid-cols-[max-content_1fr] gap-x-[31px] gap-y-[12px] rounded-[20px] border border-ink p-[24px] text-[16px]">
+        <dl className="grid grid-cols-[max-content_1fr] gap-x-[31px] gap-y-[12px] rounded-[20px] border border-ink bg-sky p-[24px] text-[16px]">
           <dt className="text-[12px] font-bold uppercase tracking-[0.03em]">Mua</dt>
           <dd>
             {book.salePrice === null ? (

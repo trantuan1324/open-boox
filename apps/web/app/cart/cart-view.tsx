@@ -10,7 +10,8 @@ import { useCart } from '@/lib/cart/use-cart';
 import { formatVnd } from '@/lib/format';
 
 const row = 'flex flex-wrap items-center justify-between gap-[12px] rounded-[20px] border border-ink p-[18px]';
-const next = 'self-start rounded-full bg-ink px-6 py-3.5 text-[13px] font-bold uppercase tracking-[0.03em] leading-none text-paper';
+const next =
+  'self-start rounded-full bg-ink px-[24px] py-[14px] text-[13px] font-bold uppercase leading-none tracking-[0.03em] text-paper transition-all duration-500 ease-bounce hover:-translate-y-[2px] hover:bg-paper hover:text-ink';
 
 export function CartView() {
   const buy = useCart();
@@ -29,7 +30,7 @@ export function CartView() {
   }
 
   return (
-    <div className="flex flex-col gap-[41px]">
+    <div className="flex max-w-[820px] flex-col gap-[41px]">
       {buy.lines.length > 0 && (
         <section className="flex flex-col gap-[24px]">
           <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Mua</h2>

@@ -16,9 +16,10 @@ export default async function SubscriptionPage() {
   ]);
 
   return (
-    <div className="sheet mx-auto flex w-full max-w-3xl flex-col gap-[31px] px-[20px] py-[48px] md:px-[48px] md:py-[72px]">
+    <div className="sheet sheet-pad flex w-full flex-col gap-[31px]">
       <PageTitle>Gói đăng ký</PageTitle>
-      {!subscription ? (
+      <div className="flex max-w-[720px] flex-col gap-[31px]">
+        {!subscription ? (
         <div className={box}>
           <p className="text-[16px]">Bạn chưa có gói nào đang hoạt động.</p>
           <Link href="/plans" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
@@ -48,7 +49,7 @@ export default async function SubscriptionPage() {
             {subscription.status === 'PENDING_PAYMENT' && subscription.pendingPaymentId && (
               <Link
                 href={`/checkout/mock/${subscription.pendingPaymentId}`}
-                className="self-start rounded-full bg-ink px-6 py-3.5 text-[13px] font-bold uppercase tracking-[0.03em] leading-none text-paper"
+                className="self-start rounded-full bg-ink px-[24px] py-[14px] text-[13px] font-bold uppercase leading-none tracking-[0.03em] text-paper transition-all duration-500 ease-bounce hover:-translate-y-[2px] hover:bg-paper hover:text-ink"
               >
                 Thanh toán
               </Link>
@@ -67,6 +68,7 @@ export default async function SubscriptionPage() {
           )}
         </>
       )}
+      </div>
     </div>
   );
 }

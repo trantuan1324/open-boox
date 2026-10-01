@@ -15,9 +15,10 @@ export default async function OrdersPage({
   const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
 
   return (
-    <div className="sheet mx-auto flex w-full max-w-3xl flex-col gap-[31px] px-[20px] py-[48px] md:px-[48px] md:py-[72px]">
+    <div className="sheet sheet-pad flex w-full flex-col gap-[31px]">
       <PageTitle>Đơn hàng</PageTitle>
-      {result.items.length === 0 ? (
+      <div className="flex max-w-[820px] flex-col gap-[31px]">
+        {result.items.length === 0 ? (
         <div className="flex flex-col gap-[12px] rounded-[20px] border border-ink p-[24px]">
           <p className="text-[16px]">Bạn chưa có đơn hàng nào.</p>
           <Link href="/books" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
@@ -55,6 +56,7 @@ export default async function OrdersPage({
           {page < totalPages && <Link href={`/account/orders?page=${page + 1}`}>Trang sau</Link>}
         </nav>
       )}
+      </div>
     </div>
   );
 }

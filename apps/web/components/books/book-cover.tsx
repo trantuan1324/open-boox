@@ -22,7 +22,7 @@ export function BookCover({ src, title, sizes }: { src: string | null; title: st
         />
       ) : (
         <div className="flex h-full items-end p-[12px]">
-          <span className="display text-[18px] leading-[0.9]">{title}</span>
+          <span className="display text-[18px]">{title}</span>
         </div>
       )}
     </div>

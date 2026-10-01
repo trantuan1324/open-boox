@@ -13,7 +13,7 @@ export const TextField = forwardRef<HTMLInputElement, Props>(function TextField(
         ref={ref}
         id={inputId}
         aria-invalid={Boolean(error)}
-        className="rounded-[16px] border border-ink bg-paper px-[16px] py-[12px] text-[16px]"
+        className="rounded-full border border-ink bg-paper px-[20px] py-[12px] text-[16px]"
         {...props}
       />
       {error && <p className="text-[12px] font-medium text-ember">{error}</p>}

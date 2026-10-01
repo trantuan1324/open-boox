@@ -21,7 +21,7 @@ export const SelectField = forwardRef<HTMLSelectElement, Props>(function SelectF
         ref={ref}
         id={selectId}
         aria-invalid={Boolean(error)}
-        className="rounded-[16px] border border-ink bg-paper px-[16px] py-[12px] text-[16px]"
+        className="rounded-full border border-ink bg-paper px-[20px] py-[12px] text-[16px]"
         {...props}
       >
         {placeholder !== undefined && <option value="">{placeholder}</option>}

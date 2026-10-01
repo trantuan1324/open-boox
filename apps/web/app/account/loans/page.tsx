@@ -19,9 +19,10 @@ export default async function LoansPage({
   const totalPages = Math.max(1, Math.ceil(loans.total / loans.pageSize));
 
   return (
-    <div className="sheet mx-auto flex w-full max-w-3xl flex-col gap-[31px] px-[20px] py-[48px] md:px-[48px] md:py-[72px]">
+    <div className="sheet sheet-pad flex w-full flex-col gap-[31px]">
       <PageTitle>Sách đang mượn</PageTitle>
-      {needsReturnReminder(subscription, loans.items) && (
+      <div className="flex max-w-[820px] flex-col gap-[31px]">
+        {needsReturnReminder(subscription, loans.items) && (
         <p role="status" className="rounded-[20px] border border-ink p-[18px] text-[16px] text-ember">
           Gói đã hết hạn — hãy trả sách.{' '}
           <Link href="/plans" className="font-bold uppercase tracking-[0.03em] underline">
@@ -48,6 +49,7 @@ export default async function LoansPage({
           {page < totalPages && <Link href={`/account/loans?page=${page + 1}`}>Trang sau</Link>}
         </nav>
       )}
+      </div>
     </div>
   );
 }

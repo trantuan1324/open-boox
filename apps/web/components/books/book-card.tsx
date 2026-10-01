@@ -8,11 +8,11 @@ export function BookCard({ book }: { book: BookSummary }) {
   return (
     <Link
       href={`/books/${book.slug}`}
-      className="flex h-full flex-col gap-[8px] rounded-[20px] border border-ink bg-paper p-[16px] transition hover:-translate-y-1"
+      className="flex h-full flex-col gap-[8px] rounded-[20px] border border-ink bg-paper p-[16px] transition-all duration-500 ease-bounce hover:-translate-y-[6px]"
     >
-      <BookCover src={book.coverUrl} title={book.title} sizes="(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 45vw" />
+      <BookCover src={book.coverUrl} title={book.title} sizes="(min-width: 1280px) 18vw, (min-width: 1024px) 22vw, (min-width: 640px) 30vw, 45vw" />
       <div className="flex flex-col gap-[4px]">
-        <h2 className="display text-[20px] leading-[0.9]">{book.title}</h2>
+        <h2 className="display text-[20px]">{book.title}</h2>
         <p className="text-[14px]">{book.author}</p>
         <p className="text-[14px] font-bold">{book.salePrice === null ? 'Không bán' : formatVnd(book.salePrice)}</p>
         {soldOut && <p className="text-[11px] font-bold uppercase tracking-[0.03em] text-ember">Hết hàng</p>}

@@ -18,33 +18,34 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   if (!order) notFound();
 
   return (
-    <div className="sheet mx-auto flex w-full max-w-3xl flex-col gap-[31px] px-[20px] py-[48px] md:px-[48px] md:py-[72px]">
-      <div className="flex flex-col gap-[12px]">
-        <Link href="/account/orders" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
-          Đơn hàng
-        </Link>
-        <PageTitle>Chi tiết đơn</PageTitle>
-        <p className="text-[16px]">
-          {formatDateTime(order.createdAt)} ·{' '}
-          <span className={`font-bold uppercase ${order.status === 'CANCELLED' ? 'text-ember' : ''}`}>
-            {ORDER_STATUS_LABEL[order.status]}
-          </span>
-        </p>
-      </div>
-
-      {order.status === 'PENDING_PAYMENT' && (
-        <div className="flex flex-wrap items-start gap-[12px]">
-          {order.pendingPaymentId && (
-            <Link
-              href={`/checkout/mock/${order.pendingPaymentId}`}
-              className="rounded-full bg-ink px-6 py-3.5 text-[13px] font-bold uppercase tracking-[0.03em] leading-none text-paper"
-            >
-              Thanh toán
-            </Link>
-          )}
-          <CancelOrderButton orderId={order.id} />
+    <div className="sheet sheet-pad flex w-full flex-col gap-[31px]">
+      <div className="flex max-w-[820px] flex-col gap-[31px]">
+        <div className="flex flex-col gap-[12px]">
+          <Link href="/account/orders" className="self-start text-[12px] font-bold uppercase tracking-[0.03em] underline">
+            Đơn hàng
+          </Link>
+          <PageTitle>Chi tiết đơn</PageTitle>
+          <p className="text-[16px]">
+            {formatDateTime(order.createdAt)} ·{' '}
+            <span className={`font-bold uppercase ${order.status === 'CANCELLED' ? 'text-ember' : ''}`}>
+              {ORDER_STATUS_LABEL[order.status]}
+            </span>
+          </p>
         </div>
-      )}
+
+        {order.status === 'PENDING_PAYMENT' && (
+          <div className="flex flex-wrap items-start gap-[12px]">
+            {order.pendingPaymentId && (
+              <Link
+                href={`/checkout/mock/${order.pendingPaymentId}`}
+                className="rounded-full bg-ink px-[24px] py-[14px] text-[13px] font-bold uppercase leading-none tracking-[0.03em] text-paper transition-all duration-500 ease-bounce hover:-translate-y-[2px] hover:bg-paper hover:text-ink"
+              >
+                Thanh toán
+              </Link>
+            )}
+            <CancelOrderButton orderId={order.id} />
+          </div>
+        )}
 
       <section className={box}>
         <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Sách</h2>
@@ -81,6 +82,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         <h2 className="text-[16px] font-bold uppercase tracking-[0.03em]">Giao tới</h2>
         <AddressLines address={order.address} />
       </section>
+      </div>
     </div>
   );
 }

@@ -4,12 +4,15 @@ import { CartLink } from './cart/cart-link';
 
 const ANNOUNCEMENTS = ['Gói mượn từ 79.000đ / 30 ngày', 'Giao & nhận sách tận nhà', 'Trả cuốn này, mượn cuốn khác'];
 const NAV_PILL =
-  'rounded-full border border-ink bg-paper px-[18px] py-[13px] text-[13px] font-bold uppercase leading-none tracking-[0.03em] text-ink transition hover:scale-[1.03]';
+  'inline-flex items-center rounded-full border border-ink bg-paper px-[18px] py-[13px] text-[13px] font-bold uppercase leading-none tracking-[0.03em] text-ink transition-all duration-500 ease-bounce hover:bg-ink hover:text-paper';
+const NAV_CTA =
+  'inline-flex items-center rounded-full bg-ink px-[20px] py-[13px] text-[13px] font-bold uppercase leading-none tracking-[0.03em] text-paper transition-all duration-500 ease-bounce hover:-translate-y-[2px] hover:bg-paper hover:text-ink';
 
+// Nav nổi kiểu landing: logo tròn + pill viền đen lơ lỏng trên nội dung, banner chạy chữ cuộn theo trang.
 export async function SiteHeader() {
   const user = await getCurrentUser();
   return (
-    <header className="sticky top-0 z-40 flex flex-col bg-ink">
+    <>
       <div aria-label="Thông báo" className="-mx-[8px] overflow-hidden bg-lilac py-[6px] md:-mx-[12px]">
         <div className="marquee-track">
           {[0, 1].map((copy) => (
@@ -26,15 +29,15 @@ export async function SiteHeader() {
           ))}
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-[8px] px-[4px] py-[12px]">
+      <div className="sticky top-[8px] z-40 flex flex-wrap items-center justify-between gap-[8px] px-[4px] md:top-[12px]">
         <Link
           href="/"
           aria-label="Open Boox — trang chủ"
-          className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-paper text-[14px] font-bold text-ink transition hover:scale-[1.05]"
+          className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-full border-2 border-ink bg-paper font-display text-[18px] font-extrabold uppercase text-ink transition-all duration-500 ease-bounce hover:bg-ink hover:text-paper md:h-[56px] md:w-[56px] md:text-[22px]"
         >
           OB
         </Link>
-        <nav className="flex flex-wrap items-center justify-end gap-[4px]">
+        <nav className="flex flex-wrap items-center justify-end gap-[6px]">
           <Link href="/books" className={NAV_PILL}>
             Sách
           </Link>
@@ -49,7 +52,7 @@ export async function SiteHeader() {
                   Quản trị
                 </Link>
               )}
-              <Link href="/account" className={NAV_PILL}>
+              <Link href="/account" className={NAV_CTA}>
                 Tài khoản
               </Link>
             </>
@@ -58,16 +61,13 @@ export async function SiteHeader() {
               <Link href="/login" className={NAV_PILL}>
                 Đăng nhập
               </Link>
-              <Link
-                href="/register"
-                className="ml-[4px] rounded-full bg-paper px-[20px] py-[13px] text-[13px] font-bold uppercase leading-none tracking-[0.03em] text-ink transition hover:scale-[1.03]"
-              >
+              <Link href="/register" className={NAV_CTA}>
                 Đăng ký ↗
               </Link>
             </>
           )}
         </nav>
       </div>
-    </header>
+    </>
   );
 }
